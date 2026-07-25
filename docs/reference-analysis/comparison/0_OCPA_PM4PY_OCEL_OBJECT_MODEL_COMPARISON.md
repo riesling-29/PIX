@@ -43,7 +43,7 @@
 ### 1.1 OCPA 기준선
 
 ```text
-Repository: D:\ChantaResearchGroup\PIX-References\ocpa-upstream
+Repository: ocpm/ocpa
 Branch:     main
 Commit:     de056e0203a3fa4a9bbc19a95e001eada323074a
 Version:    1.3.3
@@ -52,7 +52,7 @@ Version:    1.3.3
 ### 1.2 PM4Py 기준선
 
 ```text
-Repository: D:\ChantaResearchGroup\PIX-References\pm4py-upstream
+Repository: process-intelligence-solutions/pm4py
 Branch:     release
 Commit:     3329bbcbadce8764f7df660fd88636c30793fbd0
 Version:    2.7.23.3

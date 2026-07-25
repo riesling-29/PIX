@@ -6,7 +6,7 @@
 
 **참조 라이브러리:** PM4Py
 
-**참조 저장소:** `D:\ChantaResearchGroup\PIX-References\pm4py-upstream`
+**참조 저장소:** `https://github.com/process-intelligence-solutions/pm4py.git`
 
 **분석 브랜치:** `release`
 
@@ -47,7 +47,7 @@
 분석은 다음 로컬 checkout을 기준으로 수행했다.
 
 ```text
-Repository: D:\ChantaResearchGroup\PIX-References\pm4py-upstream
+Repository: process-intelligence-solutions/pm4py
 Remote:     https://github.com/process-intelligence-solutions/pm4py.git
 Branch:     release
 Commit:     3329bbcbadce8764f7df660fd88636c30793fbd0

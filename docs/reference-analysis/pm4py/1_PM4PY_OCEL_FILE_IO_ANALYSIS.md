@@ -6,7 +6,7 @@
 
 **참조 라이브러리:** PM4Py
 
-**참조 저장소:** `D:\ChantaResearchGroup\PIX-References\pm4py-upstream`
+**참조 저장소:** `https://github.com/process-intelligence-solutions/pm4py.git`
 
 **분석 브랜치:** `release`
 
@@ -43,7 +43,7 @@
 ## 1. 분석 기준
 
 ```text
-Repository: D:\ChantaResearchGroup\PIX-References\pm4py-upstream
+Repository: process-intelligence-solutions/pm4py
 Branch:     release
 Commit:     3329bbcbadce8764f7df660fd88636c30793fbd0
 Version:    2.7.23.3
@@ -345,6 +345,12 @@ Invalid row는 structured rejected-record result로 반환되지 않는다. In-m
 ### 5.3 Relation-filter propagation
 
 여러 importer 경로는 유지된 relationship을 기준으로 event, object, E2O, O2O, E2E, object change filtering을 전파한다. 모든 importer가 동일한 post-processing sequence를 실행하는 것은 아니므로 선택한 variant 수준에서 동작을 확인해야 한다.
+
+OCEL 2.0 Definition 2는 event가 object와 연결되지 않거나 object가 event와 연결되지 않은 경우를 허용한다. 그러나 `propagate_relations_filtering()`은 E2O가 비어 있으면 events, objects 및 나머지 component를 모두 empty로 만든다. E2O가 일부만 존재하는 경우에도 E2O에 나타나지 않은 event와 object를 제거한다.
+
+JSON Schema를 만족하는 “disconnected event 1건 + disconnected object 1건” 최소 OCEL 2.0 JSON을 `read_ocel2()`로 읽은 runtime probe에서는 최종 `OCEL`의 event와 object가 모두 0건이 되는 동작이 재현됐다.
+
+따라서 relation-filter propagation을 단순 consistency 보정으로만 볼 수 없다. Valid OCEL 2.0 record를 제거할 수 있는 semantic filtering이다. 이 helper가 disconnected record를 보존하도록 변경되거나 import path에서 호출되지 않게 되면 이 판단을 철회해야 한다.
 
 ---
 
@@ -711,6 +717,8 @@ Consistency와 filtering은 전달된 `OCEL`이 보유한 DataFrame을 교체하
 
 검사한 OCEL importer/exporter package 아래에서 `ocel.e2e`를 참조하는 코드는 발견하지 못했다.
 
+E2E는 PM4Py in-memory extension이지만 검사한 OCEL 2.0 Specification Definition 2의 구성 요소는 아니다. 따라서 E2E file round trip 부재는 PM4Py 기능 한계이지만 그 자체로 OCEL 2.0 미준수 근거는 아니다.
+
 ---
 
 ## 15. 주요 위험과 모호성
@@ -819,4 +827,4 @@ DatasetExportResult
 
 ## 19. 최종 평가
 
-**PM4Py의 `OCEL`은 event와 object entity를 개별 domain object로 구성한 graph가 아니라 E2O, O2O, E2E, object change를 포함한 여러 mutable Pandas DataFrame을 묶은 연산 중심 container다. Format별 importer와 exporter variant는 외부 OCEL file을 이 공통 객체로 수렴시킨다. 명시적 OCEL 2.0 JSON, XML, SQLite, compact CSV, bundle 경로는 classic CSV와 classic SQLite보다 E2O relationship, qualifier, O2O relationship, object change를 더 완전하게 보존한다. 그러나 객체 생성 자체는 dataset validity를 보장하지 않고, 검사한 file-I/O layer는 E2E relation을 round-trip하거나 normalization, rejected row, inferred data, mutation, semantic loss를 공통 형식으로 기록하지 않는다.**
+**PM4Py의 `OCEL`은 event와 object entity를 개별 domain object로 구성한 graph가 아니라 E2O, O2O, E2E, object change를 포함한 여러 mutable Pandas DataFrame을 묶은 연산 중심 container다. Format별 importer와 exporter variant는 외부 OCEL file을 이 공통 객체로 수렴시킨다. 명시적 OCEL 2.0 JSON, XML, SQLite, compact CSV, bundle 경로는 classic CSV와 classic SQLite보다 E2O relationship, qualifier, O2O relationship, object change를 더 완전하게 보존한다. 그러나 객체 생성 자체는 dataset validity를 보장하지 않고, relation-filter propagation은 명세가 허용한 disconnected event와 object를 제거할 수 있다. 또한 검사한 file-I/O layer는 E2E relation을 round-trip하거나 normalization, rejected row, inferred data, mutation, semantic loss를 공통 형식으로 기록하지 않는다. E2E는 OCEL 2.0 Definition 2의 요구사항이 아니므로 해당 부재와 표준 준수 판정은 분리해야 한다.**

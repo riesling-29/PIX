@@ -6,7 +6,7 @@
 
 **참조 라이브러리:** OCPA
 
-**참조 저장소:** `D:\ChantaResearchGroup\PIX-References\ocpa-upstream`
+**참조 저장소:** `https://github.com/ocpm/ocpa.git`
 
 **분석 브랜치:** `main`
 
@@ -42,7 +42,7 @@
 ## 1. 분석 기준
 
 ```text
-Repository: D:\ChantaResearchGroup\PIX-References\ocpa-upstream
+Repository: ocpm/ocpa
 Branch:     main
 Commit:     de056e0203a3fa4a9bbc19a95e001eada323074a
 Version:    1.3.3
@@ -507,6 +507,22 @@ edge attribute: qualifier
 
 Factory와 implementation은 mutable default argument인 `parameters={}`를 사용하며, importer는 필요하면 해당 dictionary에 `obj_names`를 추가한다. 여러 호출 사이의 default parameter state 공유 가능성은 runtime test가 필요한 source-level 위험이다.
 
+`event_object`를 object type별로 aggregate한 frame의 index는 source event ID다. 반면 update 대상 `event_df`는 source event ID를 index로 설정하지 않은 기본 RangeIndex 상태다.
+
+```text
+aggregated_data index:
+    e1, e2, ...
+
+event_df index:
+    0, 1, ...
+
+event_df.update(aggregated_data[object_type])
+```
+
+따라서 string event ID에서는 Pandas index alignment 때문에 object reference가 event table에 반영되지 않을 수 있다. Compatible current dependency로 수행한 제한된 probe에서는 24개 relational constraint를 만족한 sample의 object reference가 비어 entity object가 0건이 되었고, 뒤이은 debug sample helper에서 `ValueError`가 발생했다.
+
+OCPA의 pinned Pandas 1.3.5 환경을 현재 Python에서 재현하지 못했으므로 runtime exception 자체는 보조 근거다. 그러나 source index가 명시적으로 정렬되거나 pinned dependency probe가 반증하기 전까지 string event ID의 E2O 보존은 보장된 것으로 판단하지 않는다.
+
 SQLite exporter는 없다.
 
 ---
@@ -549,9 +565,21 @@ Event는 `event_id`, `event_activity`, `event_timestamp`, object type별 related
 
 ### 10.5 Event attribute 처리 위험
 
-Source inspection상 declared event-type attribute를 찾는 `try` branch에는 최종 `ev_dict` assignment가 없고, type lookup이 실패하는 `except` branch에서만 value를 기록한다. 따라서 선언된 event attribute가 누락될 가능성이 있다.
+Parser는 XML event attribute 이름에 먼저 `event_` prefix를 붙인 뒤, unprefixed name으로 구성된 event-type declaration dictionary를 조회한다.
 
-이는 source control flow에서 도출한 판단이며 runtime fixture로 재현하지 못했다. 실행 결과가 attribute를 정상 보존한다면 이 판단을 철회해야 한다.
+```text
+declaration key:
+    pr_creator
+
+lookup key:
+    event_pr_creator
+```
+
+표준적인 attribute name에서는 lookup이 실패해 `except` branch가 실행되므로 lexical value 자체는 `event_<name>` column에 기록된다. 그러나 declared primitive type은 적용되지 않고 string fallback으로 parsing된다.
+
+반대로 declaration name 자체가 이미 `event_` prefix를 포함해 lookup이 성공하는 비표준적 경우에는 `try` branch에 value assignment가 없어 attribute가 누락될 수 있다.
+
+따라서 일반적인 OCEL 2.0 XML에 대한 확인된 위험은 “선언된 event attribute 전체 누락”보다 “값은 남지만 declared type을 잃고 string으로 수렴”하는 것이다. Prefix 처리 또는 assignment control flow가 수정되면 이 판단을 철회해야 한다.
 
 XML importer는 file path를 stdout에 `print()`한다. OCEL 2.0 XML exporter는 없다.
 
@@ -803,4 +831,4 @@ de056e0203a3fa4a9bbc19a95e001eada323074a
 
 ## 19. 최종 평가
 
-**OCPA의 `OCEL`은 `Table + ObjectCentricEventLog + EventGraph`를 필수로 묶고 OCEL 2.0에서 `ObjectGraph + ObjectChangeTable`을 추가하는 mutable multi-representation composite다. 이 구조는 object-centric case, variant, discovery 계산에 편리하지만 representation consistency와 source identity 보존을 자동으로 보장하지 않는다. CSV와 classic JSON import는 event ID를 재생성하고 일부 path는 representation별로 다른 ID space를 만들며, classic XML은 composite OCEL 반환을 지원하지 않는다. 유일한 classic JSON exporter는 OCEL 2.0의 qualifier·O2O·object change를 보존하지 않고 E2E와 공통 loss report도 없다. 따라서 PIX는 OCPA의 object-centric semantics와 projection algorithm을 참고할 수 있지만 I/O 및 dataset contract는 evidence-preserving 방식으로 재설계해야 한다.**
+**OCPA의 `OCEL`은 `Table + ObjectCentricEventLog + EventGraph`를 필수로 묶고 OCEL 2.0에서 `ObjectGraph + ObjectChangeTable`을 추가하는 mutable multi-representation composite다. 이 구조는 object-centric case, variant, discovery 계산에 편리하지만 representation consistency와 source identity 보존을 자동으로 보장하지 않는다. CSV와 classic JSON import는 event ID를 재생성하고 일부 path는 representation별로 다른 ID space를 만들며, classic XML은 composite OCEL 반환을 지원하지 않는다. SQLite에는 source event ID와 RangeIndex 사이 E2O alignment 실패 경로가 있고, XML event attribute는 일반적인 선언에서 lexical value를 남기되 declared type을 잃고 string으로 수렴한다. 유일한 classic JSON exporter는 OCEL 2.0의 qualifier·O2O·object change를 보존하지 않고 E2E와 공통 loss report도 없다. 따라서 PIX는 OCPA의 object-centric semantics와 projection algorithm을 참고할 수 있지만 I/O 및 dataset contract는 evidence-preserving 방식으로 재설계해야 한다.**

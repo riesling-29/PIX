@@ -6,7 +6,7 @@
 
 **참조 라이브러리:** OCPA
 
-**참조 저장소:** `D:\ChantaResearchGroup\PIX-References\ocpa-upstream`
+**참조 저장소:** `https://github.com/ocpm/ocpa.git`
 
 **분석 브랜치:** `main`
 
@@ -45,7 +45,7 @@
 ### 1.1 확인된 저장소 상태
 
 ```text
-Repository: D:\ChantaResearchGroup\PIX-References\ocpa-upstream
+Repository: ocpm/ocpa
 Remote:     https://github.com/ocpm/ocpa.git
 Branch:     main
 Commit:     de056e0203a3fa4a9bbc19a95e001eada323074a
