@@ -1,42 +1,50 @@
-# PM4Py Overall Structure Analysis
+# PM4Py 전체 구조 분석
 
-**Document type:** Upstream reference analysis / overall structure baseline  
-**Target project:** PIX  
-**Reference library:** PM4Py  
-**Reference repository:** `D:\ChantaResearchGroup\PIX-References\pm4py-upstream`  
-**Analyzed branch:** `release`  
-**Analyzed commit:** `3329bbcbadce8764f7df660fd88636c30793fbd0`  
-**PM4Py version:** `2.7.23.3`  
-**Analysis date:** 2026-07-19  
-**Status:** Source-structure analysis baseline
+**문서 유형:** Upstream 참조 분석 / 전체 구조 기준선
 
----
+**대상 프로젝트:** PIX
 
-## 0. Purpose and Scope
+**참조 라이브러리:** PM4Py
 
-This document records the overall source structure of PM4Py before PIX decides what should be inherited, adapted, replaced, or left unused.
+**참조 저장소:** `D:\ChantaResearchGroup\PIX-References\pm4py-upstream`
 
-The analysis covers:
+**분석 브랜치:** `release`
 
-1. repository and package structure;
-2. public API organization;
-3. core algorithm-dispatch pattern;
-4. principal data and process-model objects;
-5. representative execution paths;
-6. object-centric functionality;
-7. dependency boundaries and result contracts;
-8. testing structure;
-9. preliminary implications for PIX.
+**분석 커밋:** `3329bbcbadce8764f7df660fd88636c30793fbd0`
 
-This document does not evaluate every PM4Py algorithm. It also does not establish that PM4Py code may be copied into PIX. Runtime performance, algorithmic correctness across all inputs, and licensing compatibility with the eventual PIX distribution model are outside the verified scope of this analysis.
+**PM4Py 버전:** `2.7.23.3`
+
+**분석일:** 2026-07-19
+
+**상태:** 소스 구조 분석 기준선
 
 ---
 
-## 1. Analysis Basis
+## 0. 목적과 범위
 
-### 1.1 Confirmed repository state
+이 문서는 PIX가 PM4Py에서 무엇을 계승·조정·교체하거나 사용하지 않을지 결정하기 전에 PM4Py의 전체 소스 구조를 기록한다.
 
-The analysis was performed against the following local checkout:
+분석 범위는 다음과 같다.
+
+1. 저장소와 패키지 구조
+2. 공개 API 구성
+3. 핵심 알고리즘 dispatch 패턴
+4. 주요 데이터 및 프로세스 모델 객체
+5. 대표 실행 경로
+6. 객체 중심 기능
+7. 의존성 경계와 결과 계약
+8. 테스트 구조
+9. PIX에 대한 예비 시사점
+
+이 문서는 PM4Py의 모든 알고리즘을 평가하지 않는다. 또한 PM4Py 코드를 PIX에 복사할 수 있다고 판단하지 않는다. 실행 성능, 모든 입력에 대한 알고리즘 정확성, 향후 PIX 배포 모델과의 라이선스 호환성은 이 분석에서 검증한 범위 밖이다.
+
+---
+
+## 1. 분석 기준
+
+### 1.1 확인된 저장소 상태
+
+분석은 다음 로컬 checkout을 기준으로 수행했다.
 
 ```text
 Repository: D:\ChantaResearchGroup\PIX-References\pm4py-upstream
@@ -46,47 +54,47 @@ Commit:     3329bbcbadce8764f7df660fd88636c30793fbd0
 Version:    2.7.23.3
 ```
 
-At the time of inspection, the upstream checkout had no local Git changes.
+검사 당시 upstream checkout에는 로컬 Git 변경 사항이 없었다.
 
-### 1.2 Confirmed source counts
+### 1.2 확인된 소스 파일 수
 
-The local tree contained 1,657 Python files under the `pm4py` package.
+로컬 트리의 `pm4py` 패키지 아래에는 Python 파일 1,657개가 있었다.
 
-| Area | Python files | Principal responsibility |
+| 영역 | Python 파일 수 | 주요 책임 |
 | --- | ---: | --- |
-| `pm4py/algo` | 881 | Discovery, conformance, filtering, transformation, evaluation, and simulation algorithms |
-| `pm4py/objects` | 359 | Event-log, OCEL, Petri-net, process-tree, BPMN, DFG, and related models |
-| `pm4py/statistics` | 156 | Frequency, temporal, variant, activity, and object-centric statistics |
-| `pm4py/visualization` | 142 | Graphviz and other model/result visualization |
-| `pm4py/streaming` | 58 | Streaming import, conversion, and online algorithms |
-| `pm4py/util` | 40 | Constants, parameter handling, date parsing, compression, and shared utilities |
-| top-level `pm4py/*.py` | 21 | User-facing facade modules and package metadata |
+| `pm4py/algo` | 881 | Discovery, conformance, filtering, transformation, evaluation, simulation 알고리즘 |
+| `pm4py/objects` | 359 | Event log, OCEL, Petri net, process tree, BPMN, DFG 및 관련 모델 |
+| `pm4py/statistics` | 156 | 빈도, 시간, variant, activity 및 객체 중심 통계 |
+| `pm4py/visualization` | 142 | Graphviz와 기타 모델·결과 시각화 |
+| `pm4py/streaming` | 58 | Streaming import, conversion 및 online 알고리즘 |
+| `pm4py/util` | 40 | 상수, parameter 처리, 날짜 parsing, 압축 및 공통 utility |
+| 최상위 `pm4py/*.py` | 21 | 사용자 대상 facade 모듈과 패키지 metadata |
 
-These counts describe physical source organization only. They do not measure code quality, complexity, or feature importance.
+이 수치는 물리적 소스 구성을 나타낼 뿐이며 코드 품질, 복잡도 또는 기능 중요도를 측정한 값은 아니다.
 
-### 1.3 License fact and unresolved compatibility
+### 1.3 라이선스 사실과 해결되지 않은 호환성
 
-The inspected repository declares the open-source edition as **GNU Affero General Public License version 3 (AGPL-3.0)**. The repository also states that a separate commercial license is available.
+검사한 저장소는 open-source edition의 라이선스를 **GNU Affero General Public License version 3(AGPL-3.0)**으로 선언한다. 별도의 commercial license도 제공한다고 명시한다.
 
-Whether PM4Py source code can be incorporated into PIX without changing PIX's intended licensing or deployment model is currently **unknown**, because the final PIX licensing and distribution conditions have not been established in the analyzed material. Architectural study and source-code reuse must therefore be treated as separate decisions.
+PM4Py 소스 코드를 PIX에 포함해도 PIX의 의도된 라이선스 또는 배포 모델이 바뀌지 않는지는 현재 **알 수 없음**이다. 분석 대상 자료에서 PIX의 최종 라이선스와 배포 조건이 정해지지 않았기 때문이다. 따라서 아키텍처 연구와 소스 코드 재사용은 별개의 결정으로 다뤄야 한다.
 
 ---
 
-## 2. Top-Level Repository Structure
+## 2. 최상위 저장소 구조
 
-The PM4Py repository is organized as follows:
+PM4Py 저장소는 다음과 같이 구성되어 있다.
 
 ```text
 pm4py-upstream/
-├── .github/                 # GitHub automation and repository metadata
-├── docs/                    # Documentation sources
-├── examples/                # Executable usage examples
-├── files/                   # Supporting project files
-├── notebooks/               # Notebook-based examples and analysis
-├── pm4py/                   # Installable Python package
-├── safety_checks/           # Additional checks
-├── tests/                   # Test runner, fixtures, and test modules
-├── third_party/             # Third-party license information
+├── .github/                 # GitHub 자동화 및 저장소 metadata
+├── docs/                    # 문서 소스
+├── examples/                # 실행 가능한 사용 예제
+├── files/                   # 프로젝트 지원 파일
+├── notebooks/               # Notebook 기반 예제와 분석
+├── pm4py/                   # 설치 가능한 Python 패키지
+├── safety_checks/           # 추가 검사
+├── tests/                   # Test runner, fixture, test module
+├── third_party/             # Third-party 라이선스 정보
 ├── README.md
 ├── CHANGELOG.md
 ├── COVERAGE.md
@@ -94,18 +102,18 @@ pm4py-upstream/
 └── setup.py
 ```
 
-The packaging entry point is `setup.py`. It loads version and package metadata from `pm4py/meta.py`, discovers packages whose names begin with `pm4py`, and installs the dependencies declared in `requirements.txt`.
+Packaging 진입점은 `setup.py`다. `pm4py/meta.py`에서 버전과 패키지 metadata를 읽고, 이름이 `pm4py`로 시작하는 패키지를 찾으며, `requirements.txt`의 의존성을 설치한다.
 
-The essential runtime dependency set includes NumPy, Pandas, NetworkX, Graphviz, SciPy, lxml, Matplotlib, pytz, and tqdm. Several additional integrations are optional.
+주요 runtime 의존성에는 NumPy, Pandas, NetworkX, Graphviz, SciPy, lxml, Matplotlib, pytz, tqdm이 포함된다. 그 밖의 여러 integration은 선택 사항이다.
 
 ---
 
-## 3. Installable Package Structure
+## 3. 설치 가능한 패키지 구조
 
-The main package has two distinct surfaces:
+주 패키지는 서로 다른 두 surface를 가진다.
 
-1. top-level user-facing facade modules;
-2. large internal implementation packages.
+1. 최상위 사용자 대상 facade 모듈
+2. 대규모 내부 구현 패키지
 
 ```text
 pm4py/
@@ -136,24 +144,24 @@ pm4py/
 └── util/
 ```
 
-### 3.1 Top-level facade modules
+### 3.1 최상위 facade 모듈
 
-The top-level modules expose simplified, domain-oriented functions:
+최상위 모듈은 단순화된 도메인 중심 함수를 제공한다.
 
-| Facade module | Representative responsibility |
+| Facade 모듈 | 대표 책임 |
 | --- | --- |
-| `read.py` | Read XES, PNML, BPMN, DFG, PTML, and OCEL formats |
-| `write.py` | Export event logs and process models |
-| `discovery.py` | Discover DFGs, process trees, Petri nets, BPMN, Declare, and related models |
-| `conformance.py` | Token replay, alignments, fitness, precision, and specialized conformance |
-| `filtering.py` | Case, event, path, temporal, variant, and OCEL filtering |
-| `convert.py` | Convert logs and process models between supported representations |
-| `analysis.py` | Soundness and structural analysis |
-| `stats.py` | User-facing statistical queries |
-| `ocel.py` | Object-centric summaries, discovery, filtering, and enrichment |
-| `vis.py` | User-facing visualization functions |
+| `read.py` | XES, PNML, BPMN, DFG, PTML, OCEL 형식 읽기 |
+| `write.py` | Event log와 process model 내보내기 |
+| `discovery.py` | DFG, process tree, Petri net, BPMN, Declare 등 발견 |
+| `conformance.py` | Token replay, alignment, fitness, precision 및 특수 conformance |
+| `filtering.py` | Case, event, path, temporal, variant, OCEL filtering |
+| `convert.py` | 지원 representation 사이의 log·process model 변환 |
+| `analysis.py` | Soundness 및 구조 분석 |
+| `stats.py` | 사용자 대상 통계 query |
+| `ocel.py` | 객체 중심 summary, discovery, filtering, enrichment |
+| `vis.py` | 사용자 대상 시각화 함수 |
 
-`pm4py/__init__.py` imports these modules and re-exports many of their functions directly. The intended user experience is therefore:
+`pm4py/__init__.py`는 이 모듈들을 import하고 많은 함수를 직접 다시 export한다. 의도된 사용 방식은 다음과 같다.
 
 ```python
 import pm4py
@@ -163,21 +171,21 @@ tree = pm4py.discover_process_tree_inductive(log)
 net, initial_marking, final_marking = pm4py.convert_to_petri_net(tree)
 ```
 
-The facade performs more than simple forwarding. Depending on the function, it may:
+Facade는 단순 forwarding 이상의 작업을 한다. 함수에 따라 다음을 수행할 수 있다.
 
-- validate required DataFrame columns;
-- construct internal parameter dictionaries;
-- select an algorithm variant;
-- route based on input type and argument count;
-- convert input or output representations;
-- choose multiprocessing behavior;
-- emit compatibility or deprecation warnings.
+- 필요한 DataFrame column 검증
+- 내부 parameter dictionary 구성
+- algorithm variant 선택
+- 입력 type과 argument 수에 따른 routing
+- 입력 또는 출력 representation 변환
+- multiprocessing 동작 선택
+- 호환성 또는 deprecation warning 출력
 
-### 3.2 Facade size
+### 3.2 Facade 규모
 
-Several facade modules are themselves substantial:
+일부 facade 모듈 자체도 상당히 크다.
 
-| Module | Top-level functions | Approximate lines |
+| 모듈 | 최상위 함수 수 | 대략적인 줄 수 |
 | --- | ---: | ---: |
 | `discovery.py` | 27 | 1,462 |
 | `conformance.py` | 21 | 1,285 |
@@ -186,15 +194,15 @@ Several facade modules are themselves substantial:
 | `ocel.py` | 27 | 870 |
 | `vis.py` | 47 | 1,820 |
 
-The facade is therefore an important architectural layer, but it is not uniformly thin.
+따라서 facade는 중요한 아키텍처 계층이지만 항상 얇은 것은 아니다.
 
 ---
 
-## 4. Main Internal Packages
+## 4. 주요 내부 패키지
 
 ### 4.1 `pm4py.algo`
 
-`algo` is the largest package and is the functional center of PM4Py.
+`algo`는 가장 큰 패키지이며 PM4Py 기능의 중심이다.
 
 ```text
 algo/
@@ -218,7 +226,7 @@ algo/
 └── transformation/
 ```
 
-Major discovery families include:
+주요 discovery 계열은 다음과 같다.
 
 ```text
 discovery/
@@ -238,7 +246,7 @@ discovery/
 └── transition_system/
 ```
 
-Major conformance families include:
+주요 conformance 계열은 다음과 같다.
 
 ```text
 conformance/
@@ -255,7 +263,7 @@ conformance/
 
 ### 4.2 `pm4py.objects`
 
-`objects` contains in-memory representations, model semantics, importers, exporters, and conversions.
+`objects`에는 in-memory representation, model semantics, importer, exporter, conversion이 들어 있다.
 
 ```text
 objects/
@@ -276,53 +284,53 @@ objects/
 └── conversion/
 ```
 
-This package is not limited to passive data contracts. Some subpackages also contain semantics, retrieval, filtering, conversion, importer, and exporter behavior.
+이 패키지는 수동적인 data contract만 담지 않는다. 일부 하위 패키지는 semantics, retrieval, filtering, conversion, importer, exporter 동작도 포함한다.
 
 ### 4.3 `pm4py.statistics`
 
-The statistics package calculates reusable process facts, including:
+Statistics 패키지는 재사용 가능한 process fact를 계산한다.
 
-- activity and attribute frequencies;
-- start and end activities;
-- variants;
-- directly/eventually-following behavior;
-- service and sojourn time;
-- overlap, concurrency, rework, and passed time;
-- trace and process-cube statistics;
-- object-centric statistics.
+- activity와 attribute 빈도
+- 시작·종료 activity
+- variant
+- directly/eventually-following behavior
+- service time과 sojourn time
+- overlap, concurrency, rework, passed time
+- trace와 process-cube 통계
+- 객체 중심 통계
 
-This area is conceptually close to part of the future PIX Compute Layer. Physically, however, PM4Py algorithms also import and compose these statistical functions directly.
+개념적으로 이 영역의 일부는 향후 PIX Compute Layer와 가깝다. 그러나 물리적으로 PM4Py 알고리즘은 이러한 통계 함수를 직접 import하고 조합하기도 한다.
 
 ### 4.4 `pm4py.visualization`
 
-Visualization is divided by process-model or result type, including Petri nets, BPMN, DFG, process trees, OCEL, transition systems, performance spectra, and alignment tables.
+시각화는 Petri net, BPMN, DFG, process tree, OCEL, transition system, performance spectrum, alignment table 등 process model 또는 결과 type별로 나뉜다.
 
-The most common rendering mechanism is Graphviz, with Matplotlib and NetworkX used in other paths.
+가장 일반적인 rendering 수단은 Graphviz이며, 다른 경로에서는 Matplotlib과 NetworkX도 사용한다.
 
 ### 4.5 `pm4py.streaming`
 
-The streaming package provides separate import, conversion, connectors, streams, and algorithms for online event processing. It is a parallel capability rather than the organizing center of the library.
+Streaming 패키지는 online event 처리를 위한 별도의 import, conversion, connector, stream, algorithm을 제공한다. 라이브러리 전체의 구성 중심이라기보다 병렬적인 capability다.
 
 ### 4.6 `pm4py.util`
 
-The utility package centralizes:
+Utility 패키지는 다음을 중앙화한다.
 
-- environment-controlled defaults;
-- standard XES and OCEL parameter keys;
-- generic parameter extraction;
-- algorithm-variant resolution;
-- date/time parsing;
-- DataFrame utilities;
-- compression and low-level helper functions.
+- 환경변수로 제어되는 기본값
+- 표준 XES·OCEL parameter key
+- 일반 parameter 추출
+- algorithm variant 해석
+- 날짜와 시간 parsing
+- DataFrame utility
+- 압축과 low-level helper
 
 ---
 
-## 5. Repeated Algorithm Organization Pattern
+## 5. 반복되는 알고리즘 구성 패턴
 
-The most characteristic PM4Py implementation pattern is:
+PM4Py의 가장 특징적인 구현 패턴은 다음과 같다.
 
 ```text
-user-facing function
+사용자 대상 함수
     ↓
 family-level algorithm.py
     ↓
@@ -333,12 +341,12 @@ variants/<implementation>.py
 apply(..., parameters=dict)
 ```
 
-The analyzed tree contained:
+분석한 트리에는 다음이 있었다.
 
-- 106 files named `algorithm.py`;
-- 164 directories named `variants`.
+- `algorithm.py`라는 이름의 파일 106개
+- `variants`라는 이름의 디렉터리 164개
 
-The common dispatcher resembles:
+일반적인 dispatcher 형태는 다음과 같다.
 
 ```python
 class Variants(Enum):
@@ -350,79 +358,79 @@ def apply(data, variant=Variants.CLASSIC, parameters=None):
     return exec_utils.get_variant(variant).apply(data, parameters)
 ```
 
-`pm4py.util.exec_utils` supports both `Enum` keys and raw string keys. This preserves compatibility between typed enumerations and older dictionary-based parameter usage.
+`pm4py.util.exec_utils`는 `Enum` key와 raw string key를 모두 지원한다. 이에 따라 typed enumeration과 과거 dictionary 기반 parameter 사용의 호환성을 유지한다.
 
-### 5.1 Strengths of this pattern
+### 5.1 이 패턴의 장점
 
-- a new implementation can be added without changing every caller;
-- one algorithm family can expose multiple backends;
-- callers can select performance or semantic variants;
-- implementation modules remain smaller than the public facade;
-- optional dependencies can be loaded only when a path is used.
+- 모든 caller를 바꾸지 않고 새 구현을 추가할 수 있다.
+- 한 algorithm family가 여러 backend를 제공할 수 있다.
+- caller가 성능 또는 의미론적 variant를 고를 수 있다.
+- 구현 모듈이 public facade보다 작게 유지된다.
+- 특정 경로를 사용할 때만 선택 의존성을 load할 수 있다.
 
-### 5.2 Structural costs of this pattern
+### 5.2 이 패턴의 구조적 비용
 
-- `apply()` does not communicate operator semantics by name;
-- `parameters: dict` weakens static validation;
-- variant-specific options are not represented by a uniform typed contract;
-- result types differ between algorithm families;
-- operator identity and version are not included in results;
-- unsupported, unavailable, and invalid-input states are not standardized.
+- `apply()`라는 이름만으로 operator 의미를 알 수 없다.
+- `parameters: dict`는 정적 검증을 약화한다.
+- variant별 option이 일관된 typed contract로 표현되지 않는다.
+- algorithm family마다 결과 type이 다르다.
+- 결과에 operator identity와 version이 포함되지 않는다.
+- unsupported, unavailable, invalid-input 상태가 표준화되어 있지 않다.
 
-These costs are observations about architectural suitability for PIX, not proof that the pattern is defective for PM4Py's own scientific-library purpose.
+이 비용은 PIX 아키텍처에 적합한지를 기준으로 한 관찰이며, PM4Py가 과학 라이브러리로서 잘못 설계됐다는 증거는 아니다.
 
 ---
 
-## 6. Representative Execution Paths
+## 6. 대표 실행 경로
 
 ### 6.1 XES import
 
-The public call:
+공개 호출은 다음과 같다.
 
 ```python
 log = pm4py.read_xes("event-log.xes")
 ```
 
-follows this approximate path:
+대략 다음 경로를 따른다.
 
 ```text
 pm4py.read_xes
-→ resolve local path or remote URL
-→ select parser/backend
+→ local path 또는 remote URL 해석
+→ parser/backend 선택
 → pm4py.objects.log.importer.xes.importer.apply
-→ selected Variants member
+→ 선택된 Variants member
 → variants/<parser>.apply
-→ EventLog, Pandas DataFrame, or optional lazy representation
-→ optional normalization/conversion
+→ EventLog, Pandas DataFrame 또는 선택적 lazy representation
+→ 선택적 normalization/conversion
 ```
 
-Supported variants in the inspected source include:
+검사한 소스가 지원하는 variant에는 다음이 포함된다.
 
-- chunk-regex parsing;
-- XML iterparse;
-- XES 2.0 iterparse;
-- memory-compressed iterparse;
-- line-by-line parsing;
-- optional Rust-backed parsing.
+- chunk-regex parsing
+- XML iterparse
+- XES 2.0 iterparse
+- memory-compressed iterparse
+- line-by-line parsing
+- 선택적 Rust 기반 parsing
 
-The public API defaults away from the legacy `EventLog` representation. `EventLog`, `Trace`, and `EventStream` are marked by runtime warnings as deprecated in favor of DataFrame-oriented use.
+공개 API의 기본 방향은 legacy `EventLog` representation에서 벗어나고 있다. `EventLog`, `Trace`, `EventStream`은 DataFrame 중심 사용을 권장하는 runtime deprecation warning을 가진다.
 
 ### 6.2 Inductive Miner
 
-The Process Tree path is:
+Process Tree 경로는 다음과 같다.
 
 ```text
 DataFrame / EventLog / DFG
-→ facade validation and property extraction
+→ facade 검증 및 property 추출
 → pm4py.algo.discovery.inductive.algorithm.apply
-→ normalize or compress traces to a univariate variant log
-→ select IM, IMf, or IMd
-→ recursive base-case, cut, and fall-through processing
-→ fold and sort the resulting ProcessTree
+→ trace를 univariate variant log로 normalize 또는 compress
+→ IM, IMf, IMd 선택
+→ base-case, cut, fall-through 재귀 처리
+→ 생성된 ProcessTree fold 및 sort
 → ProcessTree
 ```
 
-`discover_petri_net_inductive()` does not independently implement Petri-net discovery. It first calls Process Tree discovery and then converts the Process Tree into a Petri net with initial and final markings:
+`discover_petri_net_inductive()`는 Petri-net discovery를 독립적으로 구현하지 않는다. 먼저 Process Tree를 발견한 뒤 initial/final marking을 포함한 Petri net으로 변환한다.
 
 ```text
 log
@@ -432,27 +440,27 @@ log
 → PetriNet + initial marking + final marking
 ```
 
-This is an example of PM4Py using conversion paths to compose capabilities.
+이는 PM4Py가 conversion 경로로 capability를 조합하는 사례다.
 
 ### 6.3 Alignment conformance
 
-`conformance_diagnostics_alignments()` selects behavior from the runtime shape of its arguments:
+`conformance_diagnostics_alignments()`는 runtime argument 형태에 따라 동작을 선택한다.
 
 ```text
 PetriNet + markings → Petri-net alignments
 DFG + boundaries   → DFG alignments
 ProcessTree        → Process-tree alignments
 EventLog/DataFrame → edit-distance log-to-log alignments
-other model        → attempt conversion to Petri net, then align
+기타 model          → Petri net 변환 시도 후 align
 ```
 
-The facade also decides whether to use multiprocessing and whether to return the native list/dictionary diagnostics or a DataFrame.
+Facade는 multiprocessing 사용 여부와 native list/dictionary diagnostics 또는 DataFrame 반환 여부도 결정한다.
 
-This provides a convenient polymorphic user API, but the accepted signature and failure behavior cannot be fully understood from a single static return contract.
+편리한 polymorphic API를 제공하지만, 하나의 정적 return contract만으로 허용 signature와 failure 동작을 모두 이해하기는 어렵다.
 
 ### 6.4 Model conversion
 
-Model conversion is primarily type-directed:
+Model conversion은 주로 type에 따라 결정된다.
 
 ```text
 ProcessTree ─┐
@@ -462,165 +470,165 @@ POWL        ─┤
 DFG         ─┘
 ```
 
-Conversions are a significant internal integration mechanism. Some facade operations attempt a conversion automatically when a direct implementation is unavailable.
+Conversion은 중요한 내부 integration 수단이다. 일부 facade operation은 직접 구현이 없으면 자동 변환을 시도한다.
 
 ---
 
-## 7. Data and Model Objects
+## 7. 데이터와 모델 객체
 
-### 7.1 Traditional event-log model
+### 7.1 전통적인 event-log 모델
 
-The legacy object model consists of:
+Legacy object model은 다음과 같다.
 
 ```text
-Event       # mapping-like event attributes
-Trace       # sequence of Event plus trace attributes
-EventStream # sequence of events plus stream/log metadata
-EventLog    # EventStream-derived collection of traces
+Event       # event attribute의 mapping
+Trace       # Event sequence와 trace attribute
+EventStream # event sequence와 stream/log metadata
+EventLog    # Trace collection인 EventStream 파생형
 ```
 
-These objects are mutable. They expose list-like mutation operations such as `append`, `insert`, and item assignment.
+이 객체들은 mutable하며 `append`, `insert`, item assignment 같은 list형 변경 operation을 제공한다.
 
-The current public direction is predominantly DataFrame-based, while legacy objects remain for compatibility with established algorithms and consumers.
+현재 공개 API는 주로 DataFrame을 지향하지만, 기존 알고리즘과 consumer 호환성을 위해 legacy object도 유지한다.
 
-### 7.2 Process-model objects
+### 7.2 Process-model 객체
 
-PM4Py defines native objects for several model families:
+PM4Py는 다음 model family에 대한 native object를 정의한다.
 
-- Petri nets and markings;
-- process trees;
-- BPMN graphs;
-- directly-follows graphs;
-- heuristics nets;
-- transition systems;
-- tries;
-- POWL;
-- stochastic Petri nets;
-- object-centric Petri nets;
-- object-centric causal nets.
+- Petri net과 marking
+- process tree
+- BPMN graph
+- directly-follows graph
+- heuristics net
+- transition system
+- trie
+- POWL
+- stochastic Petri net
+- object-centric Petri net
+- object-centric causal net
 
-These objects are supported by model-specific conversion, semantics, importer, exporter, analysis, and visualization modules.
+이 객체들은 model-specific conversion, semantics, importer, exporter, analysis, visualization 모듈의 지원을 받는다.
 
-### 7.3 Object-Centric Event Log model
+### 7.3 Object-Centric Event Log 모델
 
-The PM4Py `OCEL` object is a mutable container around multiple Pandas DataFrames:
+PM4Py의 `OCEL` 객체는 여러 Pandas DataFrame을 담는 mutable container다.
 
 ```text
 OCEL
 ├── events
 ├── objects
-├── relations          # event-to-object relations
-├── o2o                # object-to-object relations
-├── e2e                # event-to-event relations
+├── relations          # event-to-object relation
+├── o2o                # object-to-object relation
+├── e2e                # event-to-event relation
 ├── object_changes
 ├── globals
 └── parameters
 ```
 
-The object also stores configurable column names for:
+객체는 다음에 사용할 column name도 설정 가능하게 보관한다.
 
-- event identifier;
-- event activity;
-- event timestamp;
-- object identifier;
-- object type;
-- relation qualifier;
-- changed field.
+- event identifier
+- event activity
+- event timestamp
+- object identifier
+- object type
+- relation qualifier
+- changed field
 
-The `relations` DataFrame is denormalized for calculation convenience: it may include event activity, event timestamp, and object type in addition to event and object identifiers.
+계산 편의를 위해 `relations` DataFrame은 denormalized되어 있다. Event/object identifier뿐 아니라 event activity, event timestamp, object type을 포함할 수 있다.
 
-### 7.4 OCEL consistency handling
+### 7.4 OCEL 정합성 처리
 
-The inspected `ocel_consistency.apply()` function:
+검사한 `ocel_consistency.apply()`는 다음을 수행한다.
 
-- converts identifier, activity, and type columns to strings;
-- removes rows containing null values in required processed columns;
-- removes rows with empty strings in those columns;
-- warns about duplicate event or object identifiers;
-- replaces missing relation qualifiers with empty strings;
-- mutates DataFrames held by the `OCEL` object;
-- returns the same logical OCEL container after normalization.
+- identifier, activity, type column을 string으로 변환
+- 처리 대상 필수 column에 null이 있는 row 제거
+- 해당 column에 empty string이 있는 row 제거
+- 중복 event 또는 object identifier warning
+- 누락된 relation qualifier를 empty string으로 교체
+- `OCEL` 객체의 DataFrame을 변경
+- normalization 후 같은 논리적 OCEL container 반환
 
-It does not return a structured integrity result carrying status, offending relation identifiers, evidence references, or assumptions. Filtering-propagation utilities can remove no-longer-reachable events, objects, or relations by mutating the relevant DataFrames.
+이 함수는 status, 문제가 있는 relation identifier, evidence reference, assumption을 포함한 structured integrity result를 반환하지 않는다. Filtering propagation utility는 더는 도달할 수 없는 event, object, relation을 관련 DataFrame에서 제거할 수 있다.
 
-Consequently, PM4Py consistency handling is primarily operational normalization for later analysis. It is not equivalent to PIX's proposed evidence-preserving integrity computation.
+따라서 PM4Py consistency 처리는 후속 분석을 위한 operational normalization에 가깝다. PIX가 제안하는 evidence-preserving integrity computation과 동일하지 않다.
 
 ---
 
-## 8. Object-Centric Function Distribution
+## 8. 객체 중심 기능의 분포
 
-Object-centric behavior is distributed across PM4Py rather than implemented as an independent internal engine:
+객체 중심 기능은 독립적인 내부 engine 하나에 모이지 않고 PM4Py 전반에 분포한다.
 
 ```text
 pm4py/ocel.py
-    User-facing OCEL facade
+    사용자 대상 OCEL facade
 
 pm4py/objects/ocel/
-    OCEL object, import/export, validation, consistency, filtering utilities
+    OCEL object, import/export, validation, consistency, filtering utility
 
 pm4py/algo/discovery/ocel/
-    OC-DFG, OCPN, OTG, ETOT, interleaving and related discovery
+    OC-DFG, OCPN, OTG, ETOT, interleaving 및 관련 discovery
 
 pm4py/algo/conformance/ocel/
-    OC-DFG, OTG, and ETOT comparison-based conformance
+    OC-DFG, OTG, ETOT 비교 기반 conformance
 
 pm4py/algo/transformation/ocel/
     Feature extraction, graph conversion, OLAP, splitting
 
 pm4py/statistics/ocel/
-    Object graphs, event-to-object statistics, interleavings
+    Object graph, event-to-object statistics, interleaving
 
 pm4py/visualization/ocel/
-    OC-DFG and OCPN visualization
+    OC-DFG와 OCPN 시각화
 ```
 
 ### 8.1 OCEL flattening
 
-`ocel_flattening(ocel, object_type)` projects an object-centric log into a traditional case-centric DataFrame:
+`ocel_flattening(ocel, object_type)`은 객체 중심 log를 전통적인 case 중심 DataFrame으로 projection한다.
 
 ```text
-selected object type
-→ objects of that type become case identifiers
-→ event-object relations connect cases to events
-→ event attributes are merged
-→ standard XES activity, timestamp, and case columns are produced
+선택된 object type
+→ 해당 type의 object가 case identifier가 됨
+→ event-object relation이 case와 event를 연결
+→ event attribute merge
+→ 표준 XES activity, timestamp, case column 생성
 ```
 
-This is a projection operation with direct relevance to PIX trace reconstruction. It also shows a semantic limitation: a single object type must be chosen as the case perspective, so flattening loses some of the original multi-object context.
+이 operation은 PIX trace reconstruction과 직접 관련된 projection이다. 동시에 한계를 보여준다. Case 관점으로 object type 하나를 선택해야 하므로 원래의 multi-object context 일부가 손실된다.
 
 ### 8.2 OC-DFG discovery
 
-The public OC-DFG path is:
+공개 OC-DFG 경로는 다음과 같다.
 
 ```text
 pm4py.discover_ocdfg
-→ build column and performance parameters
+→ column 및 performance parameter 구성
 → pm4py.algo.discovery.ocel.ocdfg.algorithm.apply
 → Variants.CLASSIC
 → variants.classic.apply
 → dictionary result
 ```
 
-The result dictionary includes activities, object types, per-object-type edges, start activities, end activities, and optional performance measurements.
+결과 dictionary는 activity, object type, object type별 edge, start activity, end activity와 선택적 performance measurement를 포함한다.
 
-### 8.3 Object summaries
+### 8.3 Object summary
 
-The top-level OCEL facade also performs several direct Pandas computations, such as:
+최상위 OCEL facade는 다음과 같은 직접적인 Pandas 계산도 수행한다.
 
-- lifecycle activity sequences per object;
-- lifecycle start and end timestamps;
-- lifecycle duration;
-- interacting-object graphs;
-- activities per object type;
-- related-object counts per event.
+- object별 lifecycle activity sequence
+- lifecycle 시작·종료 timestamp
+- lifecycle duration
+- interacting-object graph
+- object type별 activity
+- event별 관련 object 수
 
-This indicates that PM4Py does not enforce one universal boundary between low-level computation and user-facing orchestration.
+이는 PM4Py가 low-level computation과 사용자 대상 orchestration 사이에 하나의 보편적 경계를 강제하지 않는다는 점을 보여준다.
 
 ---
 
-## 9. Dependency Boundaries
+## 9. 의존성 경계
 
-The apparent dependency direction is approximately:
+표면적인 의존 방향은 대략 다음과 같다.
 
 ```text
 facade
@@ -630,37 +638,37 @@ algo
 objects / statistics / util
 ```
 
-The actual imports are not strictly one-way.
+실제 import가 엄격하게 단방향인 것은 아니다.
 
-Static inspection found examples of:
+정적 검사에서 다음 사례를 확인했다.
 
-- modules under `objects` importing `algo`;
-- multiple `algo` modules importing `statistics`;
-- at least one `algo` path importing visualization behavior;
-- facade modules importing conversion and algorithm implementations directly;
-- conformance functions falling back to model conversion.
+- `objects` 아래 모듈이 `algo`를 import
+- 여러 `algo` 모듈이 `statistics`를 import
+- 최소 하나의 `algo` 경로가 visualization 동작을 import
+- facade 모듈이 conversion과 algorithm 구현을 직접 import
+- conformance 함수가 model conversion으로 fallback
 
-PM4Py is therefore not organized around an enforced clean-layer or ports-and-adapters dependency rule. Its internal structure is better described as feature-oriented packages connected through common object types, dictionaries, conversion utilities, and dispatcher conventions.
+따라서 PM4Py는 clean layer 또는 ports-and-adapters 의존 규칙을 강제하는 구조가 아니다. 공통 object type, dictionary, conversion utility, dispatcher convention으로 연결된 feature-oriented package 구조에 가깝다.
 
-This description is not a criticism by itself. A broad scientific library may reasonably prioritize algorithm availability and composability over strict architectural isolation.
+이 설명 자체가 비판은 아니다. 범용 과학 라이브러리는 엄격한 아키텍처 격리보다 알고리즘 가용성과 조합 가능성을 우선할 수 있다.
 
 ---
 
-## 10. Input and Result Contracts
+## 10. 입력과 결과 계약
 
-### 10.1 Inputs
+### 10.1 입력
 
-PM4Py algorithms commonly accept one or more of:
+PM4Py 알고리즘은 일반적으로 다음 중 하나 이상을 받는다.
 
-- Pandas DataFrame;
-- legacy `EventLog` or `Trace`;
-- `OCEL`;
-- native process-model objects;
-- tuples of model plus initial/final state;
-- dictionaries representing graphs or configuration;
-- optional `parameters` dictionaries.
+- Pandas DataFrame
+- legacy `EventLog` 또는 `Trace`
+- `OCEL`
+- native process-model object
+- model과 initial/final state의 tuple
+- graph 또는 configuration dictionary
+- 선택적 `parameters` dictionary
 
-Column semantics are usually conveyed through standard string keys such as:
+Column 의미는 대개 다음과 같은 표준 string key로 전달한다.
 
 ```text
 concept:name
@@ -671,66 +679,66 @@ ocel:oid
 ocel:type
 ```
 
-### 10.2 Outputs
+### 10.2 출력
 
-There is no single result envelope shared by all algorithms. Return types include:
+모든 알고리즘이 공유하는 단일 result envelope는 없다. 반환 type에는 다음이 포함된다.
 
-- `pandas.DataFrame`;
-- `EventLog`;
-- `OCEL`;
-- `ProcessTree`;
-- `PetriNet` plus markings;
-- dictionaries;
-- lists of dictionaries;
-- numeric values;
-- tuples and sets.
+- `pandas.DataFrame`
+- `EventLog`
+- `OCEL`
+- `ProcessTree`
+- `PetriNet`과 marking
+- dictionary
+- dictionary list
+- numeric value
+- tuple과 set
 
-The following fields are not universally enforced:
+다음 field는 보편적으로 강제되지 않는다.
 
-- computation identifier;
-- operator name and version;
-- explicit status such as `computed`, `unavailable`, or `invalid_input`;
-- source event and object identifiers;
-- assumptions;
-- deterministic normalization identity;
-- evidence references;
-- withdrawal conditions.
+- computation identifier
+- operator name과 version
+- `computed`, `unavailable`, `invalid_input` 같은 명시적 status
+- source event와 object identifier
+- assumption
+- deterministic normalization identity
+- evidence reference
+- withdrawal condition
 
-This differs materially from the proposed PIX `ComputationResult` and `ProcessFinding` contracts.
+이는 제안된 PIX `ComputationResult`, `ProcessFinding` 계약과 실질적으로 다르다.
 
-### 10.3 Failure and unknown states
+### 10.3 Failure와 unknown 상태
 
-Failure signaling varies by function. Depending on the path, PM4Py may:
+Failure signaling은 함수마다 다르다. PM4Py는 경로에 따라 다음과 같이 동작할 수 있다.
 
-- raise a generic exception;
-- emit a warning;
-- attempt automatic conversion;
-- remove inconsistent rows;
-- return an empty structure;
-- return a diagnostics dictionary whose schema is algorithm-specific.
+- generic exception 발생
+- warning 출력
+- 자동 conversion 시도
+- 불일치 row 제거
+- empty structure 반환
+- algorithm별 schema를 가진 diagnostics dictionary 반환
 
-The absence of a universal result status means that an empty result cannot be assumed to have one common meaning across PM4Py.
+보편적인 result status가 없으므로 PM4Py의 empty result가 모든 경우에 동일한 의미라고 가정할 수 없다.
 
 ---
 
-## 11. Testing and Examples
+## 11. 테스트와 예제
 
-### 11.1 Confirmed physical structure
+### 11.1 확인된 물리 구조
 
-The inspected repository contained:
+검사한 저장소에는 다음이 있었다.
 
-- 102 Python test files;
-- 206 Python example files;
-- input fixtures and format-specific test data;
-- a custom test runner;
-- coverage-focused test modules;
-- documentation-oriented and simplified-interface tests.
+- Python test 파일 102개
+- Python example 파일 206개
+- 입력 fixture와 format별 test data
+- custom test runner
+- coverage 중심 test module
+- documentation 및 simplified-interface test
 
-Tests are mostly placed in a relatively flat `tests/` directory rather than mirroring every package path.
+Test는 모든 package path를 그대로 반영하기보다 비교적 평평한 `tests/` 디렉터리에 배치되어 있다.
 
-### 11.2 Repository-reported measurements
+### 11.2 저장소가 보고한 측정값
 
-The repository's `COVERAGE.md`, dated 2026-07-17, reports:
+2026-07-17자 저장소의 `COVERAGE.md`는 다음을 보고한다.
 
 ```text
 Tests discovered:       929
@@ -741,160 +749,156 @@ Statement coverage:     90.22%
 Covered statements:     64,403 / 71,387
 ```
 
-These are upstream-recorded figures. They were not independently reproduced during this structure analysis. Actual test results and coverage in the current PIX development environment are therefore **unknown**.
+이는 upstream이 기록한 수치다. 이 구조 분석에서 독립적으로 재현하지 않았다. 따라서 현재 PIX 개발 환경에서의 실제 test result와 coverage는 **알 수 없음**이다.
 
 ---
 
-## 12. Architectural Characterization
+## 12. 아키텍처 특성
 
-### 12.1 Confirmed structural facts
+### 12.1 확인된 구조적 사실
 
-- PM4Py exposes a broad functional facade through `pm4py/*.py` and `pm4py/__init__.py`.
-- The majority of source files are algorithm implementations.
-- Algorithm families repeatedly use `algorithm.py`, `Variants(Enum)`, variant modules, and `apply()` dispatch.
-- DataFrame is the preferred current representation for traditional event-log operations.
-- Native mutable model objects remain central for process models and OCEL.
-- Conversion paths are used to compose algorithms and model representations.
-- Object-centric functionality spans objects, discovery, conformance, transformation, statistics, and visualization packages.
-- Result shapes are heterogeneous and are not wrapped in a universal computation contract.
-- Internal package dependencies are not governed by a strict one-way layer boundary.
+- PM4Py는 `pm4py/*.py`와 `pm4py/__init__.py`를 통해 광범위한 기능 facade를 제공한다.
+- 소스 파일 대부분은 algorithm implementation이다.
+- Algorithm family는 `algorithm.py`, `Variants(Enum)`, variant module, `apply()` dispatch를 반복적으로 사용한다.
+- 전통적인 event-log operation의 현재 선호 representation은 DataFrame이다.
+- Native mutable model object는 process model과 OCEL에서 여전히 중심적이다.
+- Conversion 경로로 algorithm과 model representation을 조합한다.
+- 객체 중심 기능은 objects, discovery, conformance, transformation, statistics, visualization package에 걸쳐 있다.
+- Result shape은 서로 다르며 보편적인 computation contract로 감싸지지 않는다.
+- 내부 package 의존성은 엄격한 단방향 layer boundary를 따르지 않는다.
 
-### 12.2 Data-based interpretation
+### 12.2 데이터 기반 해석
 
-The observed structure is most accurately characterized as a **feature-oriented modular monolith for scientific process-mining algorithms**.
+관찰된 구조는 **과학적 process-mining algorithm을 위한 feature-oriented modular monolith**로 규정하는 것이 가장 정확하다.
 
-The evidence supporting this interpretation is:
+이 해석의 근거는 다음과 같다.
 
-1. one installable package contains a very broad feature set;
-2. algorithm families are modularized internally;
-3. common objects and converters connect those modules;
-4. facade functions route dynamically across implementations;
-5. package boundaries do not enforce a strict dependency direction;
-6. no independent compute-result or intelligence-result protocol governs the system.
+1. 하나의 설치 가능한 package가 매우 넓은 기능을 포함한다.
+2. Algorithm family는 내부적으로 modularized되어 있다.
+3. 공통 object와 converter가 이 모듈들을 연결한다.
+4. Facade 함수가 여러 구현 사이를 동적으로 routing한다.
+5. Package boundary가 엄격한 의존 방향을 강제하지 않는다.
+6. 독립적인 compute-result 또는 intelligence-result protocol이 시스템을 통제하지 않는다.
 
-This characterization should be withdrawn if a later full dependency analysis reveals enforced boundaries or runtime plugin contracts that are not visible in the inspected source paths.
+후속 전체 dependency 분석에서 현재 검사 경로로 보이지 않은 강제 경계 또는 runtime plugin contract가 확인되면 이 해석을 철회해야 한다.
 
 ---
 
-## 13. Preliminary PIX Inheritance Implications
+## 13. PIX 계승에 대한 예비 시사점
 
-### 13.1 Patterns worth retaining as references
+### 13.1 참조할 가치가 있는 패턴
 
-The following PM4Py patterns are plausible references for PIX:
+1. **Public facade와 구현 package의 분리**
+   Consumer가 내부 algorithm 위치를 알 필요가 없다.
 
-1. **Public facade separated from implementation packages**  
-   Consumers do not need to know internal algorithm locations.
+2. **Algorithm-family 구성**
+   관련 구현이 안정된 의미 단위 아래 모인다.
 
-2. **Algorithm-family organization**  
-   Related implementations are grouped under a stable semantic family.
+3. **교체 가능한 variant**
+   하나의 개념적 operation 뒤에 여러 구현을 둘 수 있다.
 
-3. **Replaceable variants**  
-   Multiple implementations can exist behind one conceptual operation.
+4. **명시적인 converter와 projection**
+   모든 algorithm에 모든 representation을 내장하지 않고 process representation을 변환할 수 있다.
 
-4. **Explicit converters and projections**  
-   Process representations can be transformed without embedding every representation in every algorithm.
+5. **DataFrame 중심 계산 경로**
+   안정된 contract 뒤에 둘 경우 tabular computation은 효율적이고 상호 운용 가능하다.
 
-5. **DataFrame-oriented computation paths**  
-   Tabular computation can be efficient and interoperable when kept behind stable contracts.
+6. **광범위한 fixture와 example coverage**
+   Algorithm에 실제 파일, negative path, format test, 실행 가능한 example이 함께 제공된다.
 
-6. **Broad fixture and example coverage**  
-   Algorithms are accompanied by real files, negative paths, format tests, and executable examples.
+### 13.2 현재 PIX 기준선과 충돌하는 패턴
 
-### 13.2 Patterns that conflict with the current PIX baseline
+1. **Mutable canonical OCEL container**
+   PIX에는 예측 가능한 neutral contract와 재현 가능한 computation input이 필요하다.
 
-The following patterns should not be inherited without redesign:
+2. **주요 operator contract로 쓰이는 untyped `parameters` dictionary**
+   PIX operator에는 명시적 semantics, assumption, versioning이 필요하다.
 
-1. **Mutable canonical OCEL container**  
-   PIX requires predictable neutral contracts and reproducible computation inputs.
+3. **서로 다른 unwrapped result**
+   PIX에는 computation status, source reference, unavailable-state 보존이 필요하다.
 
-2. **Untyped `parameters` dictionaries as the main operator contract**  
-   PIX operators require explicit semantics, assumptions, and versioning.
+4. **Invalid row를 제거하는 자동 normalization**
+   PIX는 integrity defect를 조용히 사라지게 하지 않고 보존·보고해야 한다.
 
-3. **Heterogeneous unwrapped results**  
-   PIX requires computation status, source references, and unavailable-state preservation.
+5. **암묵적 conversion과 fallback**
+   PIX는 semantic projection과 assumption을 가시화해야 한다.
 
-4. **Automatic normalization that removes invalid rows**  
-   PIX must preserve and report integrity defects rather than allowing them to disappear silently.
+6. **강제 경계 없는 compute와 interpretation**
+   PIX Compute Layer는 Intelligence Layer와 독립적으로 test할 수 있어야 한다.
 
-5. **Implicit conversion and fallback**  
-   PIX must make semantic projections and assumptions visible.
+7. **광범위한 기능 확장**
+   PM4Py의 discovery, visualization, machine learning, 범용 mining 범위는 PIX v0.1을 넘어선다.
 
-6. **Compute and interpretation without an enforced boundary**  
-   PIX's Compute Layer must remain independently testable from the Intelligence Layer.
+8. **라이선스 결정 전 직접적인 소스 계승**
+   아키텍처 학습만으로 코드 재사용의 법적 호환성이 성립하지 않는다.
 
-7. **Broad feature growth**  
-   PM4Py's discovery, visualization, machine learning, and general-purpose mining breadth exceeds PIX v0.1 scope.
+### 13.3 예비 adaptation mapping
 
-8. **Direct source-code inheritance before license resolution**  
-   Architectural learning does not itself establish legal compatibility for code reuse.
-
-### 13.3 Preliminary adaptation mapping
-
-| PM4Py concept | Possible PIX interpretation | Required PIX strengthening |
+| PM4Py 개념 | 가능한 PIX 해석 | PIX에서 필요한 강화 |
 | --- | --- | --- |
-| facade function | public PIX operator/API | preserve `compute → interpret → project` |
-| `algorithm.py` | operator dispatcher | explicit operator identity and version |
-| `Variants(Enum)` | operator implementation selection | typed configuration and deterministic selection |
-| `parameters: dict` | operator configuration | validated contract rather than open dictionary |
-| DataFrame/EventLog/OCEL | input representation | normalize into neutral `ProcessDataset` |
-| algorithm return value | computation output | wrap in `ComputationResult` |
-| diagnostics dictionary | process finding input | evidence-linked `ProcessFinding` |
-| OCEL flattening | object projection | preserve projection assumptions and lost context |
-| OCEL consistency utility | relation-integrity computation | report invalid references instead of silently repairing |
-| conversion fallback | explicit projection/conversion | record conversion path and semantic assumptions |
+| facade function | 공개 PIX operator/API | `compute → interpret → project` 보존 |
+| `algorithm.py` | operator dispatcher | 명시적인 operator identity와 version |
+| `Variants(Enum)` | operator 구현 선택 | typed configuration과 deterministic selection |
+| `parameters: dict` | operator configuration | open dictionary가 아닌 validated contract |
+| DataFrame/EventLog/OCEL | 입력 representation | neutral `ProcessDataset`으로 normalize |
+| algorithm return value | computation output | `ComputationResult`로 wrapping |
+| diagnostics dictionary | process finding 입력 | evidence-linked `ProcessFinding` |
+| OCEL flattening | object projection | projection assumption과 손실 context 보존 |
+| OCEL consistency utility | relation-integrity computation | invalid reference를 조용히 repair하지 않고 보고 |
+| conversion fallback | 명시적 projection/conversion | conversion path와 semantic assumption 기록 |
 
-This mapping is preliminary. It identifies architectural relationships, not approved implementation decisions.
-
----
-
-## 14. Unknowns Requiring Later Analysis
-
-The following items cannot be established from the completed structural inspection alone:
-
-- runtime performance of representative PM4Py operators;
-- memory behavior on Schumpeter-scale OCEL data;
-- deterministic behavior of every operator;
-- thread and multiprocessing reproducibility;
-- exact semantic differences between algorithm variants;
-- stability of internal APIs across PM4Py releases;
-- full treatment of malformed or dangling OCEL relations across all import formats;
-- fitness of PM4Py OCEL projections for Schumpeter mission data;
-- actual reuse value of specific algorithms for PIX v0.1;
-- legal compatibility between AGPL PM4Py source reuse and the future PIX license;
-- independently verified current test pass rate and coverage.
-
-These values and judgments remain **unknown** until targeted analyses or experiments are performed.
+이 mapping은 예비 판단이다. 아키텍처 관계를 식별할 뿐 승인된 구현 결정을 뜻하지 않는다.
 
 ---
 
-## 15. Validity and Withdrawal Conditions
+## 14. 후속 분석이 필요한 미확인 사항
 
-### 15.1 Validity
+완료한 구조 검사만으로는 다음을 확정할 수 없다.
 
-This analysis is valid for PM4Py commit:
+- 대표 PM4Py operator의 runtime performance
+- Schumpeter 규모 OCEL data에서의 memory behavior
+- 모든 operator의 deterministic behavior
+- thread 및 multiprocessing reproducibility
+- algorithm variant 사이의 정확한 의미 차이
+- PM4Py release 간 내부 API 안정성
+- 모든 import format에서 malformed 또는 dangling OCEL relation 처리
+- PM4Py OCEL projection이 Schumpeter mission data에 적합한지
+- 특정 algorithm의 PIX v0.1 실제 재사용 가치
+- AGPL PM4Py 소스 재사용과 향후 PIX license의 법적 호환성
+- 독립적으로 검증한 현재 test pass rate와 coverage
+
+이 수치와 판단은 targeted analysis 또는 experiment 전까지 **알 수 없음**이다.
+
+---
+
+## 15. 유효기간과 철회 조건
+
+### 15.1 유효기간
+
+이 분석은 다음 PM4Py commit에 유효하다.
 
 ```text
 3329bbcbadce8764f7df660fd88636c30793fbd0
 ```
 
-It should not be assumed to describe later upstream releases without comparison.
+비교 없이 이후 upstream release도 동일하다고 가정해서는 안 된다.
 
-### 15.2 Withdrawal conditions
+### 15.2 철회 조건
 
-Reassess or withdraw the relevant claims if:
+다음 경우 관련 판단을 재검토하거나 철회한다.
 
-- PM4Py changes its primary package layout;
-- the facade and algorithm dispatch mechanism is replaced;
-- a uniform typed computation-result contract is introduced;
-- OCEL becomes immutable or gains evidence-preserving integrity results;
-- dependency enforcement reveals strict boundaries not visible in this inspection;
-- runtime execution contradicts the traced call paths;
-- PIX expands from a narrow audit engine into a general-purpose process-mining suite;
-- PIX's licensing and distribution model makes direct PM4Py integration either clearly compatible or clearly incompatible;
-- deeper algorithm-level analysis shows that a current preliminary adaptation judgment is false.
+- PM4Py의 주요 package layout이 바뀐 경우
+- facade와 algorithm dispatch mechanism이 교체된 경우
+- 일관된 typed computation-result contract가 도입된 경우
+- OCEL이 immutable이 되거나 evidence-preserving integrity result를 제공하는 경우
+- dependency enforcement가 이 검사에서 보이지 않은 엄격한 경계를 드러내는 경우
+- runtime execution이 추적한 call path와 다른 경우
+- PIX가 좁은 audit engine에서 범용 process-mining suite로 확장되는 경우
+- PIX의 라이선스와 배포 모델상 PM4Py 직접 통합의 호환 또는 비호환이 명확해진 경우
+- 더 깊은 algorithm-level 분석이 현재의 예비 adaptation 판단을 반증하는 경우
 
 ---
 
-## 16. Final Assessment
+## 16. 최종 평가
 
-**PM4Py is a broad, feature-oriented modular monolith whose dominant extension pattern is `public facade → algorithm dispatcher → variant implementation`. Its algorithm organization, conversion mechanisms, and object-centric processing provide valuable references for PIX, but its mutable data containers, open parameter dictionaries, heterogeneous results, implicit normalization, and non-strict dependency boundaries do not satisfy PIX's proposed evidence-first computation and intelligence contracts without substantial redesign.**
+**PM4Py는 `public facade → algorithm dispatcher → variant implementation`을 주요 확장 패턴으로 사용하는 광범위한 feature-oriented modular monolith다. Algorithm 구성, conversion mechanism, 객체 중심 처리는 PIX에 유용한 참조지만, mutable data container, open parameter dictionary, 이질적인 result, 암묵적 normalization, 엄격하지 않은 dependency boundary는 상당한 재설계 없이 PIX가 제안하는 evidence-first computation 및 intelligence contract를 충족하지 못한다.**
