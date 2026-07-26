@@ -1,121 +1,189 @@
-# OCPA와 PM4Py의 OCEL 객체 이해 방식 비교
+# OCEL 2.0 표준, OCPA 및 PM4Py의 OCEL 객체 모델 비교
 
-**문서 유형:** Upstream 참조 비교 분석 / OCEL 객체 모델
-
-**대상 프로젝트:** PIX
-
-**비교 대상:** OCPA 1.3.3, PM4Py 2.7.23.3
-
-**분석일:** 2026-07-24
-
-**상태:** 기존 소스 분석 문서에 기반한 비교 기준선
+- **문서 유형:** Upstream 참조 비교 분석 / OCEL 메타모델 및 in-memory 객체
+- **대상 프로젝트:** PIX
+- **비교 대상:** OCEL 2.0, OCPA 1.3.3, PM4Py 2.7.23.3
+- **초기 분석일:** 2026-07-24
+- **재정리일:** 2026-07-26
+- **상태:** 공식 명세, upstream source 및 제한된 기존 runtime evidence에 기반한 비교 기준선
 
 ---
 
 ## 0. 목적과 범위
 
-이 문서는 OCPA와 PM4Py가 OCEL을 어떤 in-memory 객체로 이해하는지 비교한다.
-
-비교 범위는 다음과 같다.
-
-1. OCEL 객체의 중심 representation
-2. Event, object 및 relation 표현
-3. Graph와 process execution의 위치
-4. Mutability와 consistency 경계
-5. 파일 I/O 및 OCEL 2.0 의미론과의 관계
-6. PIX canonical dataset과 derived computation에 대한 시사점
-
-이 문서는 두 upstream source를 새로 실행하거나 round-trip test한 결과가 아니다. 다음 기존 분석 문서에서 확인된 내용을 교차 비교한다.
+이 문서는 다음 세 대상을 같은 의미 축에서 비교한다.
 
 ```text
-../ocpa/0_OCPA_OVERALL_STRUCTURE_ANALYSIS.md
-../ocpa/1_OCPA_OCEL_FILE_IO_ANALYSIS.md
-../pm4py/0_PM4PY_OVERALL_STRUCTURE_ANALYSIS.md
-../pm4py/1_PM4PY_OCEL_FILE_IO_ANALYSIS.md
+OCEL 2.0
+    규범적 메타모델과 reference serialization
+
+PM4Py OCEL
+    표준 데이터를 수용하는 관계형 DataFrame 중심 Python 객체
+
+OCPA OCEL
+    객체 중심 분석과 process execution을 지원하는 복합 Python 객체
 ```
 
-성능, memory consumption, 모든 malformed input의 동작, 완전한 OCEL 표준 준수는 이 비교만으로 확정할 수 없다.
+OCEL 2.0은 Python class가 아니다. 따라서 이 비교는 세 구현체의 우열 비교가
+아니라 다음 질문에 답하기 위한 것이다.
+
+1. 표준이 보존하도록 요구하는 의미는 무엇인가?
+2. PM4Py와 OCPA는 그 의미를 어떤 in-memory representation으로 바꾸는가?
+3. 각 representation에서 어떤 정보가 명시적이고 어떤 정보가 파생되는가?
+4. qualifier, object change, disconnected record 및 source identity가 보존되는가?
+5. PIX는 무엇을 canonical contract로 채택하고 무엇을 derived computation으로
+   분리해야 하는가?
+
+파일별 parser와 strict import conformance의 상세 경로는 다음 문서가 소유한다.
+
+```text
+1_OCPA_PM4PY_OCEL_FILE_IMPORT_AND_OCEL20_COMPLIANCE_COMPARISON.md
+```
+
+이 문서는 위 파일 import 비교를 객체 모델 관점에서 요약하지만 모든 parser
+분기를 다시 서술하지 않는다.
 
 ---
 
-## 1. 비교 기준
+## 1. 비교 기준과 증거
 
-### 1.1 OCPA 기준선
+### 1.1 OCEL 2.0
 
 ```text
-Repository: ocpm/ocpa
+Document: OCEL (Object-Centric Event Log) 2.0 Specification
+Version:  2.0
+Date:     2023-10-16
+URL:      https://www.ocel-standard.org/2.0/ocel20_specification.pdf
+```
+
+공식 명세는 JSON, XML 및 relational SQLite reference serialization을 설명한다.
+
+### 1.2 OCPA
+
+```text
+Repository: https://github.com/ocpm/ocpa.git
 Branch:     main
 Commit:     de056e0203a3fa4a9bbc19a95e001eada323074a
 Version:    1.3.3
 ```
 
-### 1.2 PM4Py 기준선
+### 1.3 PM4Py
 
 ```text
-Repository: process-intelligence-solutions/pm4py
+Repository: https://github.com/process-intelligence-solutions/pm4py.git
 Branch:     release
 Commit:     3329bbcbadce8764f7df660fd88636c30793fbd0
 Version:    2.7.23.3
 ```
 
-### 1.3 직접 비교 시 주의점
+### 1.4 비교 시 주의점
 
-OCPA 1.3.3의 package metadata는 `pm4py==2.2.32`에 직접 의존한다. 반면 PM4Py 분석 문서는 2.7.23.3을 대상으로 한다.
+OCPA 1.3.3의 package metadata는 `pm4py==2.2.32`에 의존한다. 이 문서는 OCPA
+1.3.3 자체 객체 모델과 PM4Py 2.7.23.3 자체 객체 모델을 비교하며, OCPA가
+내부적으로 사용하는 PM4Py 2.2.32와 2.7.23.3의 runtime 동등성을 주장하지 않는다.
 
-따라서 이 문서는 다음을 비교한다.
+증거 수준은 다음처럼 구분한다.
 
 ```text
-OCPA 1.3.3 자체의 OCEL 모델
-vs.
-PM4Py 2.7.23.3 자체의 OCEL 모델
-```
+확인된 사실
+    공식 명세 또는 지정 commit의 source에서 직접 확인
 
-이 비교를 OCPA 내부에서 실제 호출되는 PM4Py 2.2.32와 PM4Py 2.7.23.3의 runtime 동작 비교로 해석해서는 안 된다.
+관찰된 동작
+    기존 comparison/1에 기록된 제한된 runtime probe
+
+해석
+    확인된 구조가 갖는 책임과 위험에 대한 설명
+
+가설
+    PIX 구현과 반례 fixture로 아직 검증하지 않은 설계 예상
+
+미확정
+    현재 증거로 판단할 수 없음
+```
 
 ---
 
-## 2. 확인된 객체 구조
+## 2. OCEL 2.0 규범 모델
 
-### 2.1 OCPA
-
-OCPA의 최상위 `OCEL`은 여러 분석용 representation을 묶는 mutable composite다.
+명세 Definition 2의 핵심 구조는 다음과 같다.
 
 ```text
-OCPA OCEL
-├── log: Table
-├── obj: ObjectCentricEventLog
-├── graph: EventGraph
-├── parameters: dict
-├── o2o_graph: ObjectGraph | None
-└── change_table: ObjectChangeTable | None
+L = (
+    E, O,
+    EA, OA,
+    evtype, time, objtype,
+    eatype, oatype,
+    eaval, oaval,
+    E2O, O2O
+)
 ```
 
-각 representation은 동일한 논리적 log를 서로 다른 방식으로 나타낸다.
+각 요소의 의미는 다음과 같다.
 
 ```text
-Table
-    Event 중심 DataFrame
-    Object type별 column에 관련 object ID collection 저장
+E
+    Event identity 집합
 
-ObjectCentricEventLog
-    Event와 Obj entity dictionary
-    Event.omap으로 E2O 표현
+O
+    Object identity 집합
 
-EventGraph
-    같은 object를 공유하는 timestamp-ordered event 사이의 edge
+EA / OA
+    Event attribute와 object attribute 이름
 
-ObjectGraph
-    O2O edge와 qualifier
+evtype / objtype
+    Event type과 object type
 
-ObjectChangeTable
-    Object type별 attribute-change DataFrame
+eatype / oatype
+    Attribute value type
+
+eaval
+    Event attribute value
+
+oaval
+    Timestamp가 포함된 object attribute value history
+
+E2O ⊆ Event × Qualifier × Object
+    Qualified event-to-object relation
+
+O2O ⊆ Object × Qualifier × Object
+    Qualified object-to-object relation
 ```
 
-`process_executions`와 `variants`는 `OCEL` property에 처음 접근할 때 계산되고 instance 내부에 cache된다. Variant 계산은 `Table`에 `event_variant` column을 추가할 수 있다.
+### 2.1 Relation identity
 
-### 2.2 PM4Py
+표준 relation의 identity는 endpoint pair만이 아니다.
 
-PM4Py의 `OCEL`은 역할별 Pandas DataFrame과 metadata를 묶는 mutable container다.
+```text
+(e1, "item", o1)
+(e1, "target", o1)
+```
+
+두 relation은 source와 target이 같아도 qualifier가 다르므로 서로 다른
+relation이다. O2O도 같은 원칙을 적용한다.
+
+### 2.2 Dynamic object attribute
+
+Object attribute는 하나의 현재 값만 갖는 것이 아니라 timestamp에 따른 값
+history를 가질 수 있다. 따라서 마지막 값만 남기는 representation은 표준 의미를
+축소할 수 있다.
+
+### 2.3 Disconnected record
+
+Definition 2는 모든 event 또는 object가 반드시 E2O에 참여해야 한다는 totality
+constraint를 명시하지 않는다. 따라서 E2O가 없다는 이유만으로 record를 제거할
+표준 근거는 확인되지 않았다.
+
+### 2.4 E2E
+
+E2E relation은 Definition 2의 구성 요소가 아니다. 구현체가 E2E를 제공할 수는
+있지만 이는 OCEL 2.0 core metamodel의 확장으로 구분해야 한다.
+
+---
+
+## 3. PM4Py의 OCEL 객체
+
+PM4Py의 `pm4py.objects.ocel.obj.OCEL`은 역할별 Pandas DataFrame과 metadata를
+묶는 mutable container다.
 
 ```text
 PM4Py OCEL
@@ -129,7 +197,7 @@ PM4Py OCEL
 └── parameters
 ```
 
-각 table은 다음 의미를 가진다.
+### 3.1 역할별 표현
 
 ```text
 events
@@ -139,7 +207,7 @@ objects
     Object ID, object type, object attribute
 
 relations
-    E2O endpoint, qualifier 및 denormalized event/object metadata
+    Event ID, object ID, qualifier 및 denormalized metadata
 
 o2o
     Source object, target object, qualifier
@@ -148,329 +216,453 @@ e2e
     Source event, target event, qualifier
 
 object_changes
-    Object, timestamp, changed field 및 변경 값
+    Object ID, timestamp, changed field 및 변경 값
 ```
 
-Graph와 process execution은 core `OCEL`의 필수 field가 아니다. 필요한 algorithm이나 projection이 DataFrame에서 파생한다.
+E2O와 O2O가 독립 row이므로 같은 endpoint pair에 여러 qualifier가 존재하는
+경우를 직접 표현할 수 있다.
+
+### 3.2 중심 관점
+
+확인된 field와 importer 경로를 바탕으로 하면 PM4Py는 OCEL을 다음 관점으로
+다룬다고 해석할 수 있다.
+
+> Event, object 및 relation record를 보관하고 format adapter와 algorithm에
+> 공급하는 관계형 dataset container.
+
+Graph, object projection 및 process execution은 core `OCEL` field가 아니라
+필요한 algorithm이 table에서 도출하는 결과다.
+
+### 3.3 Consistency와 mutation
+
+확인된 경로에는 다음 동작이 있다.
+
+- Identifier의 string normalization;
+- timestamp parsing과 temporal sort;
+- invalid 또는 empty 필수 field row 제거 가능;
+- 누락 qualifier 대체;
+- relation filtering의 event, object, O2O, E2E 및 object change 전파;
+- export 전 consistency/filtering에 의한 caller object 변경 가능.
+
+이 동작이 존재해도 어떤 source record가 제거·대체·coercion됐는지 structured
+result로 반환하지 않는다. 따라서 PM4Py 객체를 evidence-preserving canonical
+dataset으로 바로 사용할 근거는 부족하다.
 
 ---
 
-## 3. OCEL을 이해하는 중심 관점
+## 4. OCPA의 OCEL 객체
 
-### 3.1 확인된 사실
-
-OCPA는 하나의 log를 Table, entity dictionary, EventGraph로 동시에 materialize한다. Process execution과 variant 계산도 `OCEL` 객체가 lazy하게 제공한다.
-
-PM4Py는 event, object 및 relation 종류를 DataFrame으로 분리한다. File importer와 exporter는 format별 외부 representation을 이 공통 container로 수렴시키거나 다시 serialize한다.
-
-### 3.2 데이터 기반 해석
-
-OCPA의 객체 구조는 다음 관점에 가깝다.
-
-> OCEL은 object를 통해 연결된 event 흐름을 바로 분석할 수 있도록 여러 계산용 view를 결합한 작업공간이다.
-
-PM4Py의 객체 구조는 다음 관점에 가깝다.
-
-> OCEL은 event, object 및 relation record를 보관하고 여러 algorithm과 format adapter에 공급하는 관계형 dataset container다.
-
-이 문장의 “작업공간”과 “관계형 dataset container”는 source class에 선언된 공식 용어가 아니라, 확인된 field 구성과 실행 경로를 설명하기 위한 해석이다.
-
-OCPA가 하나의 authoritative representation과 나머지 derived cache 사이의 강제 경계를 도입하거나, PM4Py가 graph와 process execution을 core object invariant로 편입한 사실이 확인되면 이 해석을 철회해야 한다.
-
----
-
-## 4. 같은 OCEL 요소에 대한 표현 차이
-
-| OCEL 요소 | OCPA | PM4Py |
-| --- | --- | --- |
-| Event | `Table` row와 `Event` entity에 중복 표현 | `events` DataFrame row |
-| Object | Object-type column reference와 `Obj` entity | `objects` DataFrame row |
-| E2O | `Event.omap`, object-type별 event column, object-event mapping | 독립 `relations` DataFrame |
-| E2O qualifier | OCEL 2.0 importer에서 EventGraph node attribute dictionary로 전달 | `relations`의 qualifier column |
-| O2O | 선택적 `ObjectGraph` edge | 독립 `o2o` DataFrame |
-| E2E | Core model에 확인된 field 없음 | 독립 `e2e` DataFrame |
-| Object change | Object type별 `ObjectChangeTable` | 독립 `object_changes` DataFrame |
-| Event ordering | 필수 `EventGraph`에 materialize | Timestamp 및 relation table에서 필요할 때 계산 |
-| Process execution | `OCEL`의 lazy derived property | 별도 projection 또는 algorithm 결과 |
-| Variant | `OCEL`의 lazy derived property와 Table mutation 가능 | 별도 algorithm/statistics 경로 |
-
-### 4.1 E2O 차이
-
-OCPA의 E2O는 여러 representation에 분산된다.
+OCPA의 `ocpa.objects.log.ocel.OCEL`은 하나의 논리적 log를 여러 분석용
+representation으로 materialize하는 mutable composite다.
 
 ```text
-Table:
-    object type별 column
-
-Entity view:
-    Event.omap
-    obj_event_mapping
-
-EventGraph:
-    object를 공유하는 event 사이의 ordering edge
+OCPA OCEL
+├── log: Table
+├── obj: ObjectCentricEventLog
+├── graph: EventGraph
+├── parameters: dict
+├── o2o_graph: ObjectGraph | None
+└── change_table: ObjectChangeTable | None
 ```
 
-PM4Py의 E2O는 `relations` DataFrame을 중심으로 표현된다.
+### 4.1 Representation별 역할
 
 ```text
-event ID
-object ID
-qualifier
-event activity
-event timestamp
-object type
+Table
+    Event 중심 DataFrame
+    Object type별 column에 관련 object ID collection 저장
+
+ObjectCentricEventLog
+    Event와 Obj entity dictionary
+    Event.omap과 object-event mapping
+    Object별 sequence와 trace
+
+EventGraph
+    같은 object를 공유하는 timestamp-ordered event graph
+    일부 importer에서 E2O qualifier dictionary도 보유
+
+ObjectGraph
+    O2O edge와 qualifier
+
+ObjectChangeTable
+    Object type별 attribute-change table
 ```
 
-PM4Py의 relation은 endpoint와 qualifier를 명시하기 쉽지만 activity, timestamp, object type을 중복 저장하는 denormalization 때문에 `events` 또는 `objects` table과 불일치할 수 있다.
+`process_executions`와 `variants`는 `OCEL` property 접근 시 계산되고 cache된다.
+Variant 계산은 `Table`에 derived column을 추가할 수 있다.
 
-OCPA는 object-sharing event flow를 즉시 계산하기 쉽지만 동일 relation fact가 여러 representation에 존재하므로 drift 가능성이 있다.
+### 4.2 중심 관점
 
-### 4.2 Graph 차이
+확인된 field와 lazy calculation을 바탕으로 하면 OCPA는 OCEL을 다음 관점으로
+다룬다고 해석할 수 있다.
 
-OCPA에서 `EventGraph`는 top-level `OCEL`의 필수 구성 요소다. Event ordering과 object-sharing semantics가 dataset object에 함께 들어간다.
+> Object를 통해 연결된 event 흐름을 즉시 분석할 수 있도록 원본과 파생 view를
+> 결합한 분석 작업공간.
 
-PM4Py에서 graph는 core persistence model이 아니다. Graph, flattening, OC-DFG 등은 relation table에서 도출하는 computation에 가깝다.
+### 4.3 Identity와 consistency
 
-이 차이는 다음 질문에 대한 답이 다르다는 뜻이다.
+확인된 importer path에는 다음 동작이 있다.
 
-```text
-"이 event들이 object를 통해 어떤 순서로 연결되는가?"
+- 일부 CSV/classic JSON path의 sequential event ID 생성;
+- `Table`, `EventGraph`, entity view 사이의 ID-space 차이 가능;
+- E2O fact의 object-type column, `Event.omap` 및 graph metadata 중복;
+- constructor에서 representation 간 invariant를 강제하지 않음;
+- lazy calculation에 의한 cache와 Table 변경.
 
-OCPA:
-    OCEL 객체가 graph로 이미 보유해야 한다.
-
-PM4Py:
-    OCEL relation에서 필요할 때 계산할 수 있다.
-```
+OCPA `OCEL` instance가 생성됐다는 사실만으로 모든 representation이 같은 source
+identity와 completeness를 공유한다고 볼 수 없다.
 
 ---
 
-## 5. Identity와 consistency 경계
+## 5. 표준 요소별 3자 비교
 
-### 5.1 OCPA
-
-확인된 OCPA importer path에는 다음 동작이 있다.
-
-- CSV에서 source event ID 대신 sequential ID 생성
-- Classic JSON event dictionary key 대신 sequential integer ID 생성
-- 일부 path에서 `Table`과 `EventGraph`는 source ID를 사용하지만 entity view는 1-based ID를 새로 생성
-- Top-level constructor가 Table, entity dictionary 및 graph 사이의 일관성을 검증하지 않음
-- Lazy calculation이 cache와 Table column을 변경
-
-따라서 OCPA `OCEL` instance 하나가 생성되었다는 사실만으로 representation들이 동일한 event identity를 공유한다고 볼 수 없다.
-
-### 5.2 PM4Py
-
-확인된 PM4Py 경로에는 다음 동작이 있다.
-
-- Identifier를 string으로 normalization
-- Timestamp parsing과 temporal sort
-- 필수 field가 null 또는 empty인 row 제거 가능
-- 누락 qualifier 대체
-- Relation filtering을 event, object, O2O, E2E 및 object change에 전파 가능
-- Export 전에 consistency와 filtering을 실행하여 caller의 `OCEL`을 변경할 가능성
-
-PM4Py는 OCPA와 같은 representation별 event-ID 재생성 문제가 비교 문서에서 확인되지는 않았다. 그러나 어떤 record가 변환 또는 제거됐는지 structured result로 반환하지 않으므로 evidence-preserving identity를 보장한다고 단정할 수 없다.
-
-### 5.3 비교
-
-| 위험 | OCPA | PM4Py |
-| --- | --- | --- |
-| 여러 representation 사이 identity drift | 높음: 확인된 ID-space 차이 존재 | 상대적으로 낮지만 table 간 중복 metadata 불일치 가능 |
-| Invalid record 처리의 비가시성 | 공통 import result 없음 | Row 제거가 structured report 없이 발생 가능 |
-| Query 또는 write의 mutation | Lazy property가 Table 변경 가능 | Export consistency/filtering이 object 변경 가능 |
-| 생성 시 semantic validation | 없음 | 없음 |
-| Source-to-normalized ID mapping | 없음 | 공통 contract 없음 |
-
-“높음”은 정량적 발생 확률이 아니라 source에서 구체적인 ID-space 불일치 경로가 확인됐다는 상대 비교다. 실제 dataset에서 drift가 발생하는 빈도는 알 수 없음이다.
+| 비교 항목 | OCEL 2.0 표준 | PM4Py 2.7.23.3 | OCPA 1.3.3 |
+| --- | --- | --- | --- |
+| 성격 | 규범적 의미 모델 | 관계형 DataFrame container | 분석용 composite workspace |
+| Event | ID, type, time, typed attributes | `events` row | `Table` row와 `Event` entity |
+| Object | ID, type, time-indexed attributes | `objects` row | `Obj` entity와 type별 reference |
+| Type schema | Event/object type과 attribute type 명시 | DataFrame column/dtype 및 importer metadata로 변환 | metadata, Table 및 entity 모델에 분산 |
+| E2O | `(event, qualifier, object)` | 독립 `relations` row | `omap`, type별 column, qualifier dictionary |
+| O2O | `(source, qualifier, target)` | 독립 `o2o` row | `ObjectGraph`의 `DiGraph` edge |
+| Dynamic object attribute | Timestamp별 history | `object_changes` | `ObjectChangeTable` |
+| 같은 endpoint의 복수 qualifier | 서로 다른 relation | 독립 row로 표현 가능 | dictionary/`DiGraph`에서 collapse 가능 |
+| E2E | Core 요소 아님 | 별도 확장 table | Core field 확인되지 않음 |
+| Graph | 표준 canonical component 아님 | algorithm이 필요할 때 파생 | top-level `OCEL`의 필수/선택 component |
+| Process execution | 표준이 정의하지 않음 | 별도 projection/algorithm | lazy property와 cache |
+| Disconnected record | invalid로 판정할 근거 없음 | filtering으로 삭제되는 반례 | 안정적 보존 근거 없음 |
+| 자동 schema validation | 공식 schema 제공 | importer 기본 실행 아님 | 기본 실행 근거 없음 |
+| Structured loss report | 구현 책임 | 없음 | 없음 |
+| Mutability | 구현체에 위임 | mutable table/container | mutable composite/cache |
 
 ---
 
-## 6. OCEL 2.0과 파일 I/O가 객체 이해에 미치는 영향
+## 6. OCEL 2.0 reference format과 수용 범위
 
-OCPA는 OCEL 2.0 SQLite/XML에서 읽은 O2O와 object change를 optional graph/table로 composite에 덧붙인다. 유일하게 확인된 exporter는 classic JSON이며 다음을 사용하지 않는다.
+### 6.1 표준
+
+공식 reference serialization은 다음 세 가지다.
 
 ```text
-ocel.log
-ocel.graph
-ocel.o2o_graph
-ocel.change_table
+JSON
+XML
+Relational SQLite
 ```
 
-따라서 OCPA의 객체 모델은 분석에 필요한 OCEL 2.0 구조를 부분적으로 보유할 수 있지만 persistence surface는 그 구조와 대칭적이지 않다.
+### 6.2 PM4Py
 
-PM4Py는 E2O, O2O, object change를 독립 table로 두고 다음 명시적 OCEL 2.0 format과 대응시킨다.
+PM4Py에는 다음 명시적 경로가 확인됐다.
 
-- Compact CSV
-- Standard JSON
-- XML
-- SQLite
-- CSV/Parquet bundle
-- GZIP JSON/XML
+- Standard OCEL 2.0 JSON;
+- OCEL 2.0 XML;
+- OCEL 2.0 SQLite;
+- compact CSV, bundle 및 GZIP extension.
 
-PM4Py의 객체 모델은 format adapter의 공통 중간 representation 역할이 더 분명하다.
+Compact CSV와 bundle은 OCEL 2.0 의미 요소를 담을 수 있지만 공식 reference
+serialization과 같은 의미로 취급해서는 안 된다.
 
-두 모델 모두 검사된 file-I/O layer에서는 E2E round trip을 지원하지 않는다. PM4Py에 `e2e` DataFrame이 존재한다는 사실만으로 file persistence가 지원된다고 해석해서는 안 된다.
+### 6.3 OCPA
+
+OCPA에는 다음 범위가 확인됐다.
+
+- Standard JSON 전용 importer 없음;
+- OCEL 2.0 XML importer 존재;
+- OCEL 2.0 SQLite importer 존재;
+- O2O, qualifier 및 object change를 일부 representation에 수용.
+
+지원 경로 존재만으로 모든 표준 의미가 모든 internal representation에 손실 없이
+전달된다고 볼 수 없다.
 
 ---
 
-## 7. 계산 구조에 미치는 영향
+## 7. 제한된 reference example 관찰
 
-### 7.1 OCPA 방식
-
-OCPA는 다음 계산에 유리하다.
-
-- Object-sharing 기반 EventGraph traversal
-- Connected-component process execution
-- Leading-object process execution
-- Graph hashing과 isomorphism 기반 variant
-- OCPN discovery 및 object-centric conformance
-
-그 대가는 canonical input과 derived state가 같은 mutable object에 섞인다는 점이다.
+기존 `comparison/1`에 기록된 schema-valid standard example의 논리적 크기는
+다음과 같다.
 
 ```text
-input representation
-+ derived graph
-+ process-execution cache
-+ variant cache
-+ algorithm이 기록한 column
-= 하나의 mutable OCEL
+Events:          13
+Objects:          9
+E2O:             20
+O2O:              7
+Object changes:   3
 ```
 
-### 7.2 PM4Py 방식
+### 7.1 PM4Py
 
-PM4Py는 다음 경계에 유리하다.
+| 형식 | Event | Object | E2O | Qualified E2O | O2O | Object change |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Standard JSON | 13 | 9 | 20 | 20 | 7 | 3 |
+| XML | 13 | 9 | 20 | 20 | 7 | 3 |
+| SQLite | 13 | 9 | 20 | 20 | 7 | 3 |
 
-- Format별 import/export
-- Relation 종류별 filtering
-- DataFrame 기반 통계와 projection
-- Object type별 flattening
-- Algorithm에 따라 필요한 graph 또는 model을 별도 생성
+검사된 연결형 예제에서는 세 importer가 공통 PM4Py `OCEL` component count로
+수렴했다. 이는 모든 유효 OCEL 2.0 instance의 손실 없는 수용을 입증하지 않는다.
 
-그 대가는 core `OCEL`만 보아서는 process execution이나 event graph semantics가 결정되지 않는다는 점이다. Projection operator, object type 선택 및 algorithm parameter가 별도로 필요하다.
+### 7.2 OCPA
+
+| 형식 | 관찰 결과 |
+| --- | --- |
+| Standard JSON | 지원 경로 없음, classic factory에서 key error |
+| XML | Table은 13 events와 20 references, entity view는 6/9 objects |
+| SQLite | relational validation을 통과한 예제에서 importer exception |
+
+이 결과는 기존 문서의 제한된 runtime probe다. 이번 재정리 작업에서는 probe를
+다시 실행하지 않았다.
 
 ---
 
-## 8. PIX 관점의 설계 시사점
+## 8. Strict conformance를 단정할 수 없는 이유
 
-### 8.1 참조할 수 있는 요소
+### 8.1 PM4Py 반증
 
-PM4Py에서 참조할 수 있는 요소는 다음과 같다.
+- Definition 2에서 invalid로 판정할 근거가 없는 disconnected event/object 삭제;
+- JSON/XML import 시 schema validation을 기본 수행하지 않음;
+- invalid 또는 filtered row의 structured loss report 부재;
+- object attribute history 처리의 source-order 의존 가능성.
 
-- Event, object, E2O, O2O, E2E, object change의 명시적 분리
-- Classic format과 OCEL 2.0 adapter의 분리
-- Format adapter가 하나의 공통 dataset model로 수렴하는 구조
-- Type별 relational 및 bundle layout
+### 8.2 OCPA 반증
 
-OCPA에서 참조할 수 있는 요소는 다음과 같다.
+- Standard JSON importer 부재;
+- valid relational sample의 importer failure;
+- representation별 event identity drift 가능;
+- XML entity view의 object 누락 경로;
+- E2O/O2O의 동일 endpoint 복수 qualifier collapse 가능;
+- automatic schema validation과 structured loss report 부재.
 
-- Object-sharing EventGraph 의미론
-- Connected-component와 leading-object projection
-- Process execution과 object-centric variant 정의
-- O2O graph와 object-change computation의 활용 방식
+### 8.3 상대 평가의 범위
 
-### 8.2 그대로 사용할 수 없는 요소
+검사된 source와 example에서는 PM4Py가 다음 항목에서 상대적으로 강한 근거를
+가진다.
 
-두 library 모두 다음 PIX 요구를 직접 충족하지 않는다.
+- 세 reference serialization의 명시적 import path;
+- Event/object/relation의 독립 table;
+- qualifier multiplicity의 독립 row 표현;
+- 형식별 동일 component count;
+- 별도 validation helper.
 
-- Immutable 또는 deterministic canonical dataset
-- Source identifier와 normalized identifier mapping
-- Rejected, inferred, coerced record의 구조화된 보고
-- Omitted component와 lossy conversion의 명시
-- Computation status와 operator identity
-- Source evidence reference와 assumption
-- Empty result, unavailable, unsupported 및 invalid-input의 구분
+이 상대 평가는 PM4Py의 완전 준수를 의미하지 않는다. 어느 library도 현재
+증거만으로 모든 유효 OCEL 2.0을 손실 없이 수용하는 strict conforming importer로
+판정할 수 없다.
 
-### 8.3 가능한 PIX 경계
+---
 
-다음은 비교 결과에서 도출한 설계 후보이며 승인된 architecture 결정이 아니다.
+## 9. 계산 구조에 대한 의미
+
+### 9.1 PM4Py
+
+PM4Py 객체 구조는 다음 작업에 유리하다.
+
+- format adapter의 공통 중간 representation;
+- relation 종류별 filtering;
+- object-type projection과 flattening;
+- 필요에 따른 graph/model 생성.
+
+Core `OCEL`만으로 process execution 의미가 결정되지는 않는다. 선택한 object
+type, projection operator 및 algorithm parameter가 별도로 필요하다.
+
+### 9.2 OCPA
+
+OCPA 객체 구조는 다음 작업에 유리하다.
+
+- object-sharing EventGraph traversal;
+- connected-component process execution;
+- leading-object process execution;
+- graph 기반 variant와 object-centric analysis.
+
+그 대가는 canonical input, graph, process-execution cache 및 variant state가 하나의
+mutable `OCEL` 객체에 섞일 수 있다는 점이다.
+
+### 9.3 반론
+
+OCPA의 복합 representation은 분석 응답성을 위한 의도된 최적화일 수 있으며,
+복합 구조 자체가 오류를 의미하지 않는다. PM4Py의 DataFrame 분리도 relation
+denormalization과 mutation 위험을 자동으로 해결하지 않는다.
+
+따라서 PIX의 구조 결정은 library 형태의 단순 복제가 아니라 source identity,
+determinism 및 evidence lineage 요구를 기준으로 해야 한다.
+
+---
+
+## 10. PIX 채택 판단
+
+### 10.1 OCEL 2.0
+
+```text
+Role:
+    NORMATIVE SEMANTIC BASELINE
+
+Decision:
+    CONCEPTUAL REUSE
+```
+
+채택 후보:
+
+- Event와 object의 독립 identity;
+- 명시적인 event/object type;
+- typed attribute;
+- timestamp가 포함된 object attribute history;
+- qualified E2O와 O2O;
+- relation multiplicity.
+
+### 10.2 PM4Py
+
+```text
+Decision:
+    REFERENCE ONLY
+
+Selected design elements:
+    CONCEPTUAL REUSE
+```
+
+참조할 요소:
+
+- Event, object, E2O, O2O 및 object change의 물리적 분리;
+- format adapter가 공통 dataset model로 수렴하는 구조;
+- relation을 독립 row로 유지하는 방식.
+
+채택하지 않을 요소:
+
+- PM4Py object 또는 runtime dependency;
+- pandas-first public contract;
+- destructive normalization과 silent filtering;
+- broad discovery/visualization/model ecosystem.
+
+### 10.3 OCPA
+
+```text
+Decision:
+    REFERENCE ONLY
+
+Selected design elements:
+    CONCEPTUAL REUSE
+```
+
+참조할 요소:
+
+- Object-sharing EventGraph 의미론;
+- connected-component와 leading-object process execution;
+- object-centric variant 및 graph 활용 방식.
+
+채택하지 않을 요소:
+
+- OCPA object 또는 runtime dependency;
+- canonical input과 derived cache를 결합한 mutable workspace;
+- qualifier를 endpoint dictionary/`DiGraph`로 축약하는 representation;
+- factory/variant framework의 자동 도입.
+
+### 10.4 PIX 독립 구현
+
+```text
+Decision:
+    INDEPENDENT REIMPLEMENTATION
+```
+
+가능한 canonical dataset 경계:
 
 ```text
 ProcessDataset
+├── event_types
+├── object_types
 ├── events
 ├── objects
-├── e2o_relations
-├── o2o_relations
-├── e2e_relations
-└── object_changes
-        │
-        ├── EventGraph computation
-        ├── ProcessExecution computation
-        ├── Variant computation
-        └── ObjectProjection computation
+├── event_attribute_values
+├── object_attribute_values
+├── event_object_relations
+└── object_object_relations
 ```
 
-이 후보는 PM4Py처럼 relation record를 canonical dataset에서 명시적으로 분리하고, OCPA의 EventGraph와 process execution을 versioned derived computation으로 배치한다.
+필수 보존 규칙 후보:
 
-필요한 추가 계약은 다음과 같다.
+- Event/object를 E2O 존재 여부와 무관하게 보존;
+- E2O/O2O identity를 `(source, qualifier, target)`으로 유지;
+- source ID와 normalized ID를 별도 mapping으로 기록;
+- object attribute history에 timestamp와 source position 기록;
+- schema-valid와 semantic-valid를 구분;
+- 삭제, coercion, inference 및 unavailable component를 result에 기록;
+- EventGraph와 process execution을 canonical dataset에서 파생한 versioned
+  computation으로 취급;
+- E2E가 필요하면 OCEL 2.0 core와 분리한 명시적 extension으로 취급.
+
+### 10.5 Algorithm 결정
 
 ```text
-DatasetImportResult
-├── dataset
-├── identifier_mapping
-├── normalized_fields
-├── synthetic_fields
-├── rejected_records
-├── inferred_records
-├── unavailable_components
-├── assumptions
-└── source_references
-
-ComputationResult
-├── operator
-├── operator_version
-├── status
-├── source_dataset_identity
-├── result
-├── assumptions
-└── evidence_references
+Decision:
+    DEFER
 ```
 
-PIX가 analysis-ready mutable workspace를 canonical dataset보다 우선하거나, source identity와 evidence lineage를 요구하지 않게 되면 이 설계 후보의 근거가 약해진다.
+Object projection, trace reconstruction, process execution 및 graph algorithm은
+각각의 입력 계약, 결정성, 반례 fixture 및 evidence behavior를 검증한 뒤 채택 또는
+독립 구현을 결정한다. 이 문서는 알고리즘 채택을 승인하지 않는다.
+
+### 10.6 검증 전 가설
+
+다음은 현재 구조 비교에서 도출한 가설이다.
+
+> OCEL 2.0 의미에 정렬된 canonical dataset을 immutable source로 유지하고 graph,
+> process execution 및 variant를 versioned derived computation으로 분리하면,
+> OCPA식 복수 representation을 한 객체에 함께 유지하는 방식보다 source identity와
+> loss evidence를 더 명확하게 보존할 수 있다.
+
+이 가설은 PIX 구현과 대표 fixture로 검증되지 않았다. 직접 library object를
+사용하는 방식이 동일한 determinism과 evidence lineage를 더 낮은 복잡도로
+제공하거나, canonical/derived 분리가 실제 vertical slice를 불필요하게 방해한다는
+근거가 나오면 철회한다.
 
 ---
 
-## 9. 미확인 사항
+## 11. 미확인 사항
 
-현재 문서 비교만으로는 다음을 확정할 수 없다.
+현재 근거만으로 다음은 알 수 없음이다.
 
-- OCPA가 내부적으로 의도하는 authoritative OCEL representation
-- 실제 dataset에서 OCPA representation drift가 발생하는 빈도
-- PM4Py relation denormalization 불일치가 발생하는 빈도
-- 두 객체 모델의 대규모 OCEL memory overhead
-- Lazy graph/cache와 on-demand graph 계산의 상대 성능
-- 모든 timestamp 및 primitive type의 round-trip equality
-- Duplicate 또는 dangling relation에 대한 모든 variant의 runtime 동작
-- PM4Py 2.2.32와 2.7.23.3의 OCEL model 차이가 OCPA integration에 미치는 영향
-- 두 library가 OCEL 표준 전체를 완전히 준수하는지 여부
+- OCPA pinned dependency 전체를 재현한 환경에서의 모든 importer 결과;
+- PM4Py Python importer와 optional Rust importer의 모든 edge-case 동등성;
+- JSON/XML/SQLite의 모든 primitive type과 timezone round-trip equality;
+- 동일 timestamp의 복수 object attribute change 순서 의미;
+- malformed 또는 dangling relation의 모든 variant별 동작;
+- 실제 dataset에서 representation drift 또는 silent loss가 발생하는 빈도;
+- 두 객체 모델의 대규모 memory와 처리량;
+- 모든 유효 OCEL 2.0 instance에 대한 strict conformance;
+- OCEL 2.0 XML example과 XSD relation element 불일치의 최종 공식 해석.
 
-검증되지 않은 성능·발생 빈도·표준 준수 수치는 알 수 없음이다.
+검증되지 않은 성공률, 손실 빈도, 성능 및 정확도 수치는 알 수 없음이다.
 
 ---
 
-## 10. 유효기간과 철회 조건
+## 12. 유효기간과 철회 조건
 
-이 비교는 다음 두 commit에 유효하다.
+이 비교는 다음 기준선에 유효하다.
 
 ```text
-OCPA:   de056e0203a3fa4a9bbc19a95e001eada323074a
+OCEL:  Specification Version 2.0, document date 2023-10-16
+OCPA:  de056e0203a3fa4a9bbc19a95e001eada323074a
 PM4Py: 3329bbcbadce8764f7df660fd88636c30793fbd0
 ```
 
 다음 경우 관련 판단을 재검토하거나 철회한다.
 
-- OCPA가 하나의 canonical immutable OCEL model을 도입한 경우
-- OCPA가 representation invariant와 source-ID mapping을 강제하는 경우
-- OCPA가 graph와 cache를 canonical input에서 분리한 경우
-- PM4Py가 relation denormalization을 제거하거나 immutable relation model을 도입한 경우
-- PM4Py가 graph와 process execution을 core `OCEL` invariant로 편입한 경우
-- 어느 쪽이든 structured import/export loss result를 도입한 경우
-- 어느 쪽이든 E2E file serialization을 추가한 경우
-- Runtime round-trip 및 mutation test가 기존 source 분석을 반증한 경우
-- PIX의 canonical dataset 또는 evidence-lineage 요구가 변경된 경우
+- OCEL 2.0 공식 errata 또는 후속 표준이 relation/object-change 의미를 변경한 경우;
+- OCPA가 standard JSON importer를 추가한 경우;
+- OCPA가 representation invariant와 source-ID mapping을 강제한 경우;
+- OCPA가 E2O/O2O를 multi-relation structure로 변경한 경우;
+- OCPA가 canonical input과 graph/cache를 분리한 경우;
+- PM4Py가 disconnected event/object를 보존하도록 filtering contract를 변경한 경우;
+- PM4Py가 import 시 schema·semantic validation과 structured loss report를 제공한
+  경우;
+- 어느 library든 immutable evidence-preserving OCEL contract를 도입한 경우;
+- runtime round-trip 또는 mutation test가 기존 source 분석을 반증한 경우;
+- PIX의 canonical dataset, determinism 또는 evidence-lineage 요구가 변경된 경우.
 
 ---
 
-## 11. 최종 평가
+## 13. 최종 평가
 
-**OCPA는 OCEL을 object를 통해 연결된 event 흐름을 즉시 분석하기 위한 `Table + entity dictionary + graph` 복합 작업공간으로 이해하고, PM4Py는 event·object·relation record를 format adapter와 algorithm에 공급하는 관계형 DataFrame dataset으로 이해한다. OCPA 방식은 process execution과 graph variant 계산에 직접적이지만 복수 representation의 identity와 consistency drift 위험이 크고, PM4Py 방식은 relation 및 OCEL 2.0 I/O mapping이 명시적이지만 destructive normalization, denormalized metadata 및 mutation을 공통 evidence report 없이 수행할 수 있다. PIX가 source identity와 evidence lineage를 우선한다면 PM4Py식 relation 분리를 canonical dataset의 출발점으로 삼고 OCPA식 EventGraph·process execution·variant를 명시적인 versioned derived computation으로 분리하는 설계가 현재 증거에 가장 부합한다.**
+**OCEL 2.0은 PIX가 보존해야 할 event, object, type, dynamic attribute 및 qualified
+relation의 규범적 의미 기준이다. PM4Py는 이 의미를 독립 relation row와 공통
+DataFrame container로 수용하여 reference serialization 대응과 qualifier
+multiplicity에서 상대적으로 강하지만, disconnected record 제거와 silent
+normalization 때문에 그대로 canonical contract가 될 수 없다. OCPA는
+EventGraph·process execution·variant 분석에 직접적인 복합 workspace를 제공하지만
+원본과 파생 representation의 identity drift 및 multi-qualifier collapse 위험 때문에
+표준 보존 모델로 채택하기 어렵다. PIX는 OCEL 2.0 의미를 독립적으로 구현하고,
+PM4Py식 relation 분리를 canonical dataset 설계에 참고하며, OCPA식 graph와
+process execution은 검증된 versioned derived computation으로만 도입해야 한다.**
