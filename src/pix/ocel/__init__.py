@@ -1,5 +1,6 @@
 """PIX canonical OCEL data model."""
 
+from pix.ocel.build import BuildResult, build
 from pix.ocel.model import (
     E2O,
     O2O,
@@ -16,9 +17,11 @@ from pix.ocel.model import (
     ValueType,
 )
 from pix.ocel.report import Issue, Level, Report
+from pix.ocel.validate import validate
 
 __all__ = [
     "Attribute",
+    "BuildResult",
     "E2O",
     "Event",
     "EventAttr",
@@ -34,4 +37,6 @@ __all__ = [
     "Report",
     "Value",
     "ValueType",
+    "build",
+    "validate",
 ]
