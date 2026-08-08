@@ -36,7 +36,7 @@ STRUCTURAL_MODULES = (
 
 
 def test_package_import_and_version() -> None:
-    assert pix.__version__ == "0.1.0"
+    assert pix.__version__ == "0.1.1"
 
 
 def test_public_owner_modules_import() -> None:
