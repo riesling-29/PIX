@@ -15,6 +15,7 @@ from pix.ocel.model import (
     Value,
     ValueType,
 )
+from pix.ocel.report import Issue, Level, Report
 
 __all__ = [
     "Attribute",
@@ -22,12 +23,15 @@ __all__ = [
     "Event",
     "EventAttr",
     "EventType",
+    "Issue",
+    "Level",
     "O2O",
     "OCEL",
     "OCEL_EPOCH",
     "Object",
     "ObjectAttr",
     "ObjectType",
+    "Report",
     "Value",
     "ValueType",
 ]
