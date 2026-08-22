@@ -38,6 +38,12 @@ STRUCTURAL_MODULES = (
     "pix.ocel.canonical.v1",
     "pix.ocel.ingest",
     "pix.ocel.ingest.contract",
+    "pix.ocel.ingest.reader",
+    "pix.ocel.ingest.formats.common",
+    "pix.ocel.ingest.formats.json",
+    "pix.ocel.ingest.formats.sqlite",
+    "pix.ocel.ingest.formats.xml",
+    "pix.ocel.metadata",
     "pix.ocel.model",
     "pix.ocel.report",
     "pix.ocel.validate",
@@ -46,7 +52,7 @@ STRUCTURAL_MODULES = (
 
 
 def test_package_import_and_version() -> None:
-    assert pix.__version__ == "0.1.2"
+    assert pix.__version__ == "0.2.0"
 
 
 def test_public_owner_modules_import() -> None:

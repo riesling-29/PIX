@@ -6,11 +6,13 @@ global validation, and derived graph/trace structures belong elsewhere.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
 from math import isfinite
-from typing import TypeAlias
+from typing import TypeAlias, TypeVar
+
+from pix.ocel.metadata import OCELImportInfo, OCELWarning, TimezoneInfo
 
 
 class ValueType(str, Enum):
@@ -263,6 +265,60 @@ class O2O:
 
 
 @dataclass(frozen=True, slots=True)
+class OCELInfo:
+    """Deterministic, JSON-friendly structural information about an OCEL.
+
+    The profile contains descriptive counts only. It does not validate the
+    dataset or derive process executions, traces, or graph analytics.
+    """
+
+    event_type_count: int
+    object_type_count: int
+    event_count: int
+    object_count: int
+    e2o_count: int
+    o2o_count: int
+    event_counts_by_type: tuple[tuple[str, int], ...]
+    object_counts_by_type: tuple[tuple[str, int], ...]
+    e2o_counts_by_qualifier: tuple[tuple[str, int], ...]
+    o2o_counts_by_qualifier: tuple[tuple[str, int], ...]
+    disconnected_event_count: int
+    objects_without_e2o_count: int
+    earliest_event_time: datetime | None
+    latest_event_time: datetime | None
+
+    def to_dict(self) -> dict[str, object]:
+        """Return a stable representation suitable for people, JSON, and AI."""
+
+        return {
+            "eventTypeCount": self.event_type_count,
+            "objectTypeCount": self.object_type_count,
+            "eventCount": self.event_count,
+            "objectCount": self.object_count,
+            "e2oCount": self.e2o_count,
+            "o2oCount": self.o2o_count,
+            "eventCountsByType": dict(self.event_counts_by_type),
+            "objectCountsByType": dict(self.object_counts_by_type),
+            "e2oCountsByQualifier": dict(self.e2o_counts_by_qualifier),
+            "o2oCountsByQualifier": dict(self.o2o_counts_by_qualifier),
+            "disconnectedEventCount": self.disconnected_event_count,
+            "objectsWithoutE2OCount": self.objects_without_e2o_count,
+            "earliestEventTime": _describe_time(self.earliest_event_time),
+            "latestEventTime": _describe_time(self.latest_event_time),
+        }
+
+    def summary(self) -> str:
+        """Return a compact human-readable summary."""
+
+        return (
+            f"OCEL(events={self.event_count}, objects={self.object_count}, "
+            f"event_types={self.event_type_count}, "
+            f"object_types={self.object_type_count}, e2o={self.e2o_count}, "
+            f"o2o={self.o2o_count})"
+        )
+
+
+@dataclass(frozen=True, slots=True)
 class OCEL:
     """Immutable canonical OCEL dataset.
 
@@ -279,7 +335,12 @@ class OCEL:
     objects: tuple[Object, ...] = ()
     e2o: tuple[E2O, ...] = ()
     o2o: tuple[O2O, ...] = ()
-
+    import_info: OCELImportInfo | None = field(
+        default=None,
+        compare=False,
+        hash=False,
+        repr=False,
+    )
     def __post_init__(self) -> None:
         _require_tuple(
             self.event_types,
@@ -311,6 +372,238 @@ class OCEL:
             O2O,
             "OCEL.o2o",
         )
+        if self.import_info is not None and not isinstance(
+            self.import_info, OCELImportInfo
+        ):
+            raise TypeError("OCEL.import_info must be OCELImportInfo or None")
+
+    @property
+    def timezone_type(self) -> str:
+        """Return the timezone used by canonical timestamp values."""
+
+        if self.import_info is not None:
+            return self.import_info.timezone.canonical_timezone
+        return "UTC"
+
+    @property
+    def timezone_info(self) -> TimezoneInfo:
+        """Return source-to-canonical timezone conversion information."""
+
+        if self.import_info is not None:
+            return self.import_info.timezone
+        return TimezoneInfo()
+
+    @property
+    def warnings(self) -> tuple[OCELWarning, ...]:
+        """Return aggregated import warnings retained by the reader."""
+
+        if self.import_info is None:
+            return ()
+        return self.import_info.warnings
+
+    def info(self) -> OCELInfo:
+        """Return deterministic structural information without mutating data."""
+
+        event_counts = _count_by(tuple(event.type for event in self.events))
+        object_counts = _count_by(tuple(obj.type for obj in self.objects))
+        e2o_qualifiers = _count_by(
+            tuple(relation.qualifier for relation in self.e2o)
+        )
+        o2o_qualifiers = _count_by(
+            tuple(relation.qualifier for relation in self.o2o)
+        )
+        related_events = {relation.event for relation in self.e2o}
+        related_objects = {relation.object for relation in self.e2o}
+        event_times = tuple(event.time for event in self.events)
+
+        return OCELInfo(
+            event_type_count=len(self.event_types),
+            object_type_count=len(self.object_types),
+            event_count=len(self.events),
+            object_count=len(self.objects),
+            e2o_count=len(self.e2o),
+            o2o_count=len(self.o2o),
+            event_counts_by_type=event_counts,
+            object_counts_by_type=object_counts,
+            e2o_counts_by_qualifier=e2o_qualifiers,
+            o2o_counts_by_qualifier=o2o_qualifiers,
+            disconnected_event_count=sum(
+                event.id not in related_events for event in self.events
+            ),
+            objects_without_e2o_count=sum(
+                obj.id not in related_objects for obj in self.objects
+            ),
+            earliest_event_time=min(event_times) if event_times else None,
+            latest_event_time=max(event_times) if event_times else None,
+        )
+
+    def describe(self) -> dict[str, object]:
+        """Return a stable structural description for people and AI clients."""
+
+        description = self.info().to_dict()
+        description["timezoneType"] = self.timezone_type
+        description["timezoneInfo"] = self.timezone_info.to_dict()
+        description["warnings"] = tuple(
+            warning.to_dict() for warning in self.warnings
+        )
+        if self.import_info is not None:
+            description["importInfo"] = self.import_info.to_dict()
+        return description
+
+    def summary(self) -> str:
+        """Return a compact human-readable dataset summary."""
+
+        return self.info().summary()
+
+    def get_event(self, event_id: str) -> Event:
+        """Return one event by ID, rejecting missing or ambiguous matches."""
+
+        _require_text(event_id, "event_id")
+        matches = tuple(event for event in self.events if event.id == event_id)
+        return _one_by_id(matches, "event", event_id)
+
+    def get_object(self, object_id: str) -> Object:
+        """Return one object by ID, rejecting missing or ambiguous matches."""
+
+        _require_text(object_id, "object_id")
+        matches = tuple(obj for obj in self.objects if obj.id == object_id)
+        return _one_by_id(matches, "object", object_id)
+
+    def events_by_type(self, event_type: str) -> tuple[Event, ...]:
+        """Return events whose declared type name matches exactly."""
+
+        _require_text(event_type, "event_type")
+        return tuple(event for event in self.events if event.type == event_type)
+
+    def objects_by_type(self, object_type: str) -> tuple[Object, ...]:
+        """Return objects whose declared type name matches exactly."""
+
+        _require_text(object_type, "object_type")
+        return tuple(obj for obj in self.objects if obj.type == object_type)
+
+    def e2o_for_event(
+        self,
+        event_id: str,
+        *,
+        qualifier: str | None = None,
+    ) -> tuple[E2O, ...]:
+        """Return qualified E2O records without collapsing multiplicity."""
+
+        _require_text(event_id, "event_id")
+        if qualifier is not None:
+            _require_string(qualifier, "qualifier")
+        return tuple(
+            relation
+            for relation in self.e2o
+            if relation.event == event_id
+            and (qualifier is None or relation.qualifier == qualifier)
+        )
+
+    def e2o_for_object(
+        self,
+        object_id: str,
+        *,
+        qualifier: str | None = None,
+    ) -> tuple[E2O, ...]:
+        """Return E2O records targeting one object."""
+
+        _require_text(object_id, "object_id")
+        if qualifier is not None:
+            _require_string(qualifier, "qualifier")
+        return tuple(
+            relation
+            for relation in self.e2o
+            if relation.object == object_id
+            and (qualifier is None or relation.qualifier == qualifier)
+        )
+
+    def objects_for_event(
+        self,
+        event_id: str,
+        *,
+        qualifier: str | None = None,
+    ) -> tuple[Object, ...]:
+        """Return unique objects referenced by one event."""
+
+        relations = self.e2o_for_event(event_id, qualifier=qualifier)
+        object_ids = {relation.object for relation in relations}
+        return tuple(obj for obj in self.objects if obj.id in object_ids)
+
+    def events_for_object(
+        self,
+        object_id: str,
+        *,
+        qualifier: str | None = None,
+    ) -> tuple[Event, ...]:
+        """Return unique events referring to one object."""
+
+        relations = self.e2o_for_object(object_id, qualifier=qualifier)
+        event_ids = {relation.event for relation in relations}
+        return tuple(event for event in self.events if event.id in event_ids)
+
+    def outgoing_o2o(
+        self,
+        object_id: str,
+        *,
+        qualifier: str | None = None,
+    ) -> tuple[O2O, ...]:
+        """Return directed O2O records originating at one object."""
+
+        _require_text(object_id, "object_id")
+        if qualifier is not None:
+            _require_string(qualifier, "qualifier")
+        return tuple(
+            relation
+            for relation in self.o2o
+            if relation.source == object_id
+            and (qualifier is None or relation.qualifier == qualifier)
+        )
+
+    def incoming_o2o(
+        self,
+        object_id: str,
+        *,
+        qualifier: str | None = None,
+    ) -> tuple[O2O, ...]:
+        """Return directed O2O records targeting one object."""
+
+        _require_text(object_id, "object_id")
+        if qualifier is not None:
+            _require_string(qualifier, "qualifier")
+        return tuple(
+            relation
+            for relation in self.o2o
+            if relation.target == object_id
+            and (qualifier is None or relation.qualifier == qualifier)
+        )
+
+
+def _count_by(values: tuple[str, ...]) -> tuple[tuple[str, int], ...]:
+    counts: dict[str, int] = {}
+    for value in values:
+        counts[value] = counts.get(value, 0) + 1
+    return tuple(sorted(counts.items()))
+
+
+def _describe_time(value: datetime | None) -> str | None:
+    if value is None:
+        return None
+    return value.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
+
+
+_Entity = TypeVar("_Entity", Event, Object)
+
+
+def _one_by_id(
+    matches: tuple[_Entity, ...],
+    kind: str,
+    identifier: str,
+) -> _Entity:
+    if not matches:
+        raise KeyError(f"unknown {kind} id: {identifier}")
+    if len(matches) > 1:
+        raise ValueError(f"{kind} id is not unique: {identifier}")
+    return matches[0]
 
 
 __all__ = [
@@ -321,6 +614,7 @@ __all__ = [
     "EventType",
     "O2O",
     "OCEL",
+    "OCELInfo",
     "OCEL_EPOCH",
     "Object",
     "ObjectAttr",

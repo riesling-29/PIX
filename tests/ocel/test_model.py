@@ -328,3 +328,62 @@ def test_qualifier_must_be_a_string_but_may_be_empty() -> None:
             "o1",
             1,  # type: ignore[arg-type]
         )
+
+
+def test_ocel_information_and_queries_preserve_relation_evidence() -> None:
+    log = OCEL(
+        event_types=(EventType("create"), EventType("approve")),
+        object_types=(ObjectType("order"),),
+        events=(
+            Event("e1", "create", T0),
+            Event("e2", "approve", T1),
+            Event("e3", "approve", T1),
+        ),
+        objects=(Object("o1", "order"), Object("o2", "order")),
+        e2o=(
+            E2O("e1", "o1", "target"),
+            E2O("e1", "o1", "audit"),
+            E2O("e2", "o1", "target"),
+        ),
+        o2o=(
+            O2O("o1", "o2", "parent"),
+            O2O("o2", "o1", "reference"),
+        ),
+    )
+
+    assert log.get_event("e1").type == "create"
+    assert log.get_object("o1").type == "order"
+    assert tuple(event.id for event in log.events_by_type("approve")) == (
+        "e2",
+        "e3",
+    )
+    assert tuple(obj.id for obj in log.objects_for_event("e1")) == ("o1",)
+    assert tuple(event.id for event in log.events_for_object("o1")) == (
+        "e1",
+        "e2",
+    )
+    assert len(log.e2o_for_event("e1")) == 2
+    assert len(log.e2o_for_event("e1", qualifier="audit")) == 1
+    assert log.outgoing_o2o("o1")[0].target == "o2"
+    assert log.incoming_o2o("o1")[0].source == "o2"
+
+    info = log.info()
+    assert info.event_count == 3
+    assert info.object_count == 2
+    assert info.event_counts_by_type == (("approve", 2), ("create", 1))
+    assert info.disconnected_event_count == 1
+    assert info.objects_without_e2o_count == 1
+    assert log.describe()["earliestEventTime"] == "2026-07-28T09:00:00Z"
+    assert log.summary() == (
+        "OCEL(events=3, objects=2, event_types=2, object_types=1, "
+        "e2o=3, o2o=2)"
+    )
+
+
+def test_ocel_id_queries_reject_missing_or_ambiguous_entities() -> None:
+    with pytest.raises(KeyError, match="unknown event id"):
+        OCEL().get_event("missing")
+
+    duplicate = OCEL(events=(Event("e1", "create", T0),) * 2)
+    with pytest.raises(ValueError, match="not unique"):
+        duplicate.get_event("e1")

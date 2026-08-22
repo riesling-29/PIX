@@ -5,11 +5,12 @@ interpretation engine.
 
 ## Status
 
-PIX `0.1.2` provides an immutable in-memory OCEL model, deterministic dataset
-construction and semantic validation, a versioned canonical byte serializer,
-SHA-256 dataset identity, and evidence-preserving import-result contracts.
+PIX `0.2.0` provides evidence-preserving OCEL 2.0 JSON, XML, and SQLite
+readers, an immutable in-memory OCEL model, deterministic dataset construction
+and semantic validation, a versioned canonical byte serializer, SHA-256 dataset
+identity, and evidence-preserving import results.
 
-PIX does not yet provide external file readers or writers, OCEL 2.0 interchange
+PIX does not yet provide external file writers, OCEL 2.0 interchange
 serializers, process-intelligence operators, or a production-ready public API.
 PM4Py and OCPA remain reference implementations and are not PIX runtime
 dependencies.
@@ -17,10 +18,10 @@ dependencies.
 ## Implemented OCEL flow
 
 ```text
-source adapters (future)
+OCEL 2.0 JSON / XML / SQLite
         |
         v
-import-result contracts
+source evidence -> format adapter -> import result
         |
         v
 immutable OCEL model -> deterministic build -> semantic validation
@@ -33,22 +34,43 @@ The canonical format is an internal identity representation, not an OCEL 2.0
 file format. Its byte-level rules are documented in
 [`docs/specifications/PIX_OCEL_CANONICAL_V1.md`](docs/specifications/PIX_OCEL_CANONICAL_V1.md).
 
+Start with the
+[OCEL reading user guide](docs/user-guide/OCEL_READING_GUIDE.md) for supported
+inputs, timestamp behavior, object inspection, and failure diagnostics.
+
 ## Public OCEL API
 
-The `pix.ocel` namespace exports the model, builder, validator, canonical
-serializer and digest, and import-result contracts. A minimal valid dataset can
-be identified as follows:
+The `pix.ocel` namespace exports convenient readers, diagnostic import results,
+the model, builder, validator, and canonical identity functions:
 
 ```python
-from pix.ocel import OCEL, canonical_digest
+from pix.ocel import import_ocel, read_ocel
 
-identity = canonical_digest(OCEL())
-print(identity.identifier)
+ocel = read_ocel("example.jsonocel")
+print(ocel.summary())
+print(ocel.describe())
+print(ocel.timezone_type)  # UTC
+print(ocel.timezone_info.to_dict())
+print(ocel.warnings)
+print(ocel.events_by_type("create order"))
+
+# Use import_ocel when failure evidence is needed instead of an exception.
+result = import_ocel("example.sqlite")
+print(result.summary())
+print(result.describe())
 ```
 
 Invalid semantic candidates do not receive canonical bytes or a digest. Import
-results retain structured issues, transformations, source evidence, and—when
-available—the invalid candidate for diagnostics.
+results retain structured issues, transformations, source hash and size, and,
+when mapping completed, the invalid candidate for diagnostics. `read_ocel()`
+raises `OCELImportError`; its `result` attribute exposes the same evidence.
+
+The reader represents canonical timestamps in UTC. Numeric-offset timestamps,
+including supported legacy forms, retain their instants. When a timestamp has
+no timezone, PIX assumes UTC, emits one aggregated
+`TimezoneAssumptionWarning`, and retains the count in `ocel.timezone_info` and
+`ocel.warnings`. Import provenance does not affect OCEL equality or its
+canonical digest.
 
 ## Dependency boundary
 
@@ -64,7 +86,8 @@ OCPA, or pandas. Python `>=3.10` is required.
 
 ```text
 docs/                  Architecture, specifications, version baselines, and references
-src/pix/ocel/          OCEL model, validation, canonical identity, and ingest contracts
+docs/user-guide/       Task-oriented public API user guides
+src/pix/ocel/          OCEL readers, model, validation, and canonical identity
 src/pix/               Remaining layer-owner modules
 tests/ocel/            OCEL behavior tests and canonical golden vectors
 tests/fixtures/        Local sample event logs; excluded from release commits by default
@@ -94,7 +117,7 @@ python -m pytest -q -p no:cacheprovider
 Remove-Item Env:PYTHONDONTWRITEBYTECODE
 ```
 
-Passing the current checks establishes consistency only for the implemented
-contracts and tested canonical vectors. It does not establish external-format
-compatibility, scalability, process-intelligence correctness, or production
-readiness.
+Passing the current checks establishes consistency for the implemented
+contracts, format adapters, and tested canonical vectors. It does not establish
+compatibility with every producer-specific extension, scalability at arbitrary
+data volumes, process-intelligence correctness, or production readiness.
