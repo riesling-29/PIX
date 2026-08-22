@@ -10,6 +10,7 @@ PUBLIC_OWNER_MODULES = (
     "pix.compute",
     "pix.engine",
     "pix.intelligence",
+    "pix.ocel",
     "pix.projection",
 )
 
@@ -31,12 +32,21 @@ STRUCTURAL_MODULES = (
     "pix.intelligence.findings",
     "pix.intelligence.recommendations",
     "pix.intelligence.rules",
+    "pix.ocel.build",
+    "pix.ocel.canonical",
+    "pix.ocel.canonical.contract",
+    "pix.ocel.canonical.v1",
+    "pix.ocel.ingest",
+    "pix.ocel.ingest.contract",
+    "pix.ocel.model",
+    "pix.ocel.report",
+    "pix.ocel.validate",
     "pix.projection.process_state",
 )
 
 
 def test_package_import_and_version() -> None:
-    assert pix.__version__ == "0.1.1"
+    assert pix.__version__ == "0.1.2"
 
 
 def test_public_owner_modules_import() -> None:

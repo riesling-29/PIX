@@ -1,45 +1,73 @@
 # PIX
 
-PIX is an independent, deterministic Process Intelligence computation and interpretation engine.
+PIX is an independent, deterministic Process Intelligence computation and
+interpretation engine.
 
 ## Status
 
-PIX is currently at package-foundation initialization. The repository provides
-installable package metadata, layer-owner modules, and import-boundary tests only.
-No production capability is claimed, and no process operator is implemented yet.
+PIX `0.1.2` provides an immutable in-memory OCEL model, deterministic dataset
+construction and semantic validation, a versioned canonical byte serializer,
+SHA-256 dataset identity, and evidence-preserving import-result contracts.
 
-## Internal architecture
+PIX does not yet provide external file readers or writers, OCEL 2.0 interchange
+serializers, process-intelligence operators, or a production-ready public API.
+PM4Py and OCPA remain reference implementations and are not PIX runtime
+dependencies.
 
-The intended responsibility flow is:
+## Implemented OCEL flow
 
 ```text
-contracts
-→ compute
-→ intelligence
-→ projection
-→ engine / api
+source adapters (future)
+        |
+        v
+import-result contracts
+        |
+        v
+immutable OCEL model -> deterministic build -> semantic validation
+                                               |
+                                               v
+                                Canonical V1 bytes -> SHA-256 digest
 ```
 
-The owner modules currently document these boundaries without implementing their
-future behavior.
+The canonical format is an internal identity representation, not an OCEL 2.0
+file format. Its byte-level rules are documented in
+[`docs/specifications/PIX_OCEL_CANONICAL_V1.md`](docs/specifications/PIX_OCEL_CANONICAL_V1.md).
+
+## Public OCEL API
+
+The `pix.ocel` namespace exports the model, builder, validator, canonical
+serializer and digest, and import-result contracts. A minimal valid dataset can
+be identified as follows:
+
+```python
+from pix.ocel import OCEL, canonical_digest
+
+identity = canonical_digest(OCEL())
+print(identity.identifier)
+```
+
+Invalid semantic candidates do not receive canonical bytes or a digest. Import
+results retain structured issues, transformations, source evidence, and—when
+available—the invalid candidate for diagnostics.
 
 ## Dependency boundary
 
 ```text
-Schumpeter → PIX
-PIX ─X→ Schumpeter
+Schumpeter -> PIX
+PIX -X-> Schumpeter
 ```
 
-PIX must not import Schumpeter. PM4Py and OCPA are architectural references, not
-PIX runtime dependencies, and their source code is maintained outside this
-repository.
+PIX must not import Schumpeter. It also has no runtime dependency on PM4Py,
+OCPA, or pandas. Python `>=3.10` is required.
 
 ## Repository structure
 
 ```text
-docs/        Architecture, prompts, and reference-analysis records
-src/pix/     Installable PIX package and layer-owner modules
-tests/       Foundation import and dependency-boundary tests
+docs/                  Architecture, specifications, version baselines, and references
+src/pix/ocel/          OCEL model, validation, canonical identity, and ingest contracts
+src/pix/               Remaining layer-owner modules
+tests/ocel/            OCEL behavior tests and canonical golden vectors
+tests/fixtures/        Local sample event logs; excluded from release commits by default
 ```
 
 ## Development
@@ -50,7 +78,7 @@ Install the package with development tools:
 python -m pip install -e ".[dev]"
 ```
 
-Run the foundation checks:
+Run the checks:
 
 ```bash
 PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -p no:cacheprovider
@@ -58,7 +86,7 @@ python -m ruff check .
 python -m ruff format --check .
 ```
 
-On PowerShell, set the bytecode environment variable before running pytest:
+On PowerShell:
 
 ```powershell
 $env:PYTHONDONTWRITEBYTECODE = "1"
@@ -66,6 +94,7 @@ python -m pytest -q -p no:cacheprovider
 Remove-Item Env:PYTHONDONTWRITEBYTECODE
 ```
 
-Passing these foundation tests shows only that packaging and declared import
-boundaries are internally consistent. It is not production certification and
-does not establish process-intelligence correctness.
+Passing the current checks establishes consistency only for the implemented
+contracts and tested canonical vectors. It does not establish external-format
+compatibility, scalability, process-intelligence correctness, or production
+readiness.
