@@ -1,3 +1,5 @@
+<!-- 한국어 버전 -->
+
 # OCPA와 PM4Py의 파일별 OCEL 생성 과정 및 OCEL 2.0 준수 비교
 
 **문서 유형:** Upstream 참조 비교 분석 / OCEL file import 및 OCEL 2.0
@@ -636,7 +638,7 @@ PM4Py 2.7.23.3은 JSON, XML 및 SQLite를 각각 읽어 모두 다음 크기의 
 | XML | 13 | 9 | 20 | 20 | 7 | 3 |
 | SQLite | 13 | 9 | 20 | 20 | 7 | 3 |
 
-이 결과는 해당 예제에서 세 importer가 공통 object model로 수렴한다는 근거다. 모든 합법적 OCEL 2.0 instance에 대한 동등성을 입증하지는 않는다.
+이 결과는 해당 예제에서 세 importer가 공통 data model로 수렴한다는 근거다. 모든 합법적 OCEL 2.0 instance에 대한 동등성을 입증하지는 않는다.
 
 ### 6.3 OCPA
 
@@ -840,3 +842,850 @@ OCEL:  Specification Version 2.0, document date 2023-10-16
 ## 12. 최종 평가
 
 **OCPA 1.3.3은 CSV와 classic JSON을 분석용 복합 `OCEL`로 만들고 OCEL 2.0 XML·SQLite의 O2O, qualifier 및 object change를 일부 representation에 수용하지만, standard JSON 부재, valid SQLite example의 실패 경로, XML의 object 누락과 typed attribute 손실, representation별 ID drift 및 multi-qualifier collapse 때문에 OCEL 2.0 strict importer로 판단할 근거가 없다. PM4Py 2.7.23.3은 standard JSON·XML·SQLite와 추가 compact/bundle format을 공통 relational `OCEL`로 수렴시키며 검사한 연결형 예제에서는 세 reference format의 component count를 동일하게 보존했으므로 상대적으로 명세 적합성이 높다. 그러나 명세가 허용한 disconnected event/object를 relation filtering에서 삭제하는 반례와 기본 schema validation·loss report 부재가 확인되므로 PM4Py 역시 완전 준수로 단정할 수 없다. PIX는 PM4Py의 explicit relation model을 출발점으로 삼되, schema validation과 semantic validation을 분리하고 disconnected record, source identity, multi-qualifier relation 및 모든 normalization/loss evidence를 canonical import contract에 명시해야 한다.**
+
+---
+
+<!-- English version -->
+
+# OCPA and PM4Py file-by-file OCEL creation process and OCEL 2.0 compliance comparison
+
+**Document type:** Upstream reference comparison analysis / OCEL file import and OCEL 2.0
+
+**Target project:** PIX
+
+**The target:** OCPA 1.3.3, PM4Py 2.7.23.3
+
+This is `OCEL (Object-Centric Event Log) 2.0 Specification`, Version 2.0, 2023-10-16
+
+**Analysis date:** 2026-07-25
+
+**Status:** Source inspection and limited runtime probe based comparison baseline
+
+---
+
+## 0. Purpose and scope
+
+This document compares the process by which OCPA and PM4Py read the external representation of file formats and create each in-memory `OCEL`.
+
+The scope of comparison is as follows:
+
+1. Public import API and extension dispatch
+2. CSV, the classic JSON/XML/SQLite is being processed
+3. OCEL 2.0 JSON, XML, SQLite is dealt with
+4. PM4Py's compact CSV, GZIP and CSV/Parquet bundle are expanded
+5. Identifier, event/object type, attribute, E2O, qualifier, O2O and object attribute history preservation
+6. Validation, normalization, filtering and mutation
+7. OCEL 2.0 metamodel meaning conservation and compliance with reference serialization
+
+This document can be opened in a shell file complying with shell and shell ZOCEL 2.0. It does not use shell in the same sense.
+
+```text
+Parser acceptance
+    파일이 예외 없이 parsing되는가?
+
+Reference syntax conformance
+    JSON Schema, XML XSD 또는 relational constraint를 만족하는가?
+
+Metamodel preservation
+    Definition 2의 event, object, attribute 및 relation 의미가 보존되는가?
+
+Round-trip conformance
+    Import 후 export했을 때 같은 의미를 재구성할 수 있는가?
+```
+
+This comparison focuses on import and in-memory object creation. Export round trip, large-scale performance and malformed-input operations of all primitive types are not confirmed.
+
+---
+
+## 1. Comparison criteria and basis
+
+### 1.1 Upstream baseline
+
+```text
+OCPA
+Repository: ocpm/ocpa
+Branch:     main
+Commit:     de056e0203a3fa4a9bbc19a95e001eada323074a
+Version:    1.3.3
+
+PM4Py
+Repository: process-intelligence-solutions/pm4py
+Branch:     release
+Commit:     3329bbcbadce8764f7df660fd88636c30793fbd0
+Version:    2.7.23.3
+```
+
+OCPA 1.3.3 is based on PM4Py 2.2.32 in the package metadata. The implementation of PM4Py itself compared here is 2.7.23.3 so it is not the same as the dependency version within OCPA.
+
+### 1.2 OCEL 2.0 goal baseline
+
+The checklist is a local copy of the following official document:
+
+- [OCEL 2.0 Specification](https://www.ocel-standard.org/2.0/ocel20_specification.pdf)
+- Version 2.0
+- Documents displayed date 2023-10-16
+- JSON, XML and relational SQLite implementations include description
+
+The key elements of Target Definition 2 are as follows:
+
+```text
+E, O
+EA, OA
+evtype, time, objtype
+eatype, oatype
+eaval, oaval
+E2O ⊆ Event × Qualifier × Object
+O2O ⊆ Object × Qualifier × Object
+```
+
+It also allows if an event is not connected to an object or if an object is not connected to an event. Thus removing a record without — E2O can reduce the valid OCEL meaning rather than a simple normalization.
+
+E2E relation is not a component of Definition 2. Therefore, the absence of E2E file persistence may be a separate function limit, but OCEL 2.0 is not used as a subset basis.
+
+### 1.3 XML inconsistency within the
+
+The verified target PDF contains an artifact that conflicts with each other about the XML relation element.
+
+```text
+Section 7.1 XML example:
+    <relationship object-id="..." qualifier="..."/>
+
+Section 7.2 embedded XSD:
+    <xs:element name="object"> ...
+    relation selector도 .../objects/object 사용
+```
+
+The official XSD linking the name also used the `object` element at the time of inspection. In contrast, PDF descriptions and examples use `relationship`.
+
+Therefore, this document judges XML into the following two layers.
+
+- The source, target, and qualifier meanings of the relationship are preserved.
+- The name of a particular element matches one of the PDF examples or XSD.
+
+Before this conflict is resolved, XML relation element name alone does not determine complete sentence compliance.
+
+### 1.4 Status of the runtime probe
+
+The limited runtime probe used the following data:
+
+- PM4Py of the `ocel20_example.jsonocel` repository
+- PM4Py of the `ocel20_example.xmlocel` repository
+- PM4Py/OCPA from the `ocel20_example.sqlite` repository
+- Minimum JSON with disconnected event/object allowed by Definition 2
+
+OCPA's pinned dependency Pandas 1.3.5 and NumPy 1.22.4 could not be installed in the Python 3.13 environment used. Therefore, the OCPA runtime result is an auxiliary basis using compatible current dependency. However, the ID-index alignment and attribute lookup problems recorded below confirmed not only the runtime results but also the pinned source control flow.
+
+---
+
+## 2. Support format and public API
+
+### 2.1 Comparison of the input surface
+
+| Enter family | OCPA 1.3.3 | PM4Py 2.7.23.3 |
+| --- | --- | --- |
+| CSV event table | CSV factory dedicated to you | `read_ocel()` classic CSV |
+| Classic JSON-OCEL 1.0 | OCEL factory dedicated to you | `read_ocel()` |
+| Classic XML-OCEL 1.0 | DataFrame back only supported | `read_ocel()` |
+| Classic SQLite | There's no confirmed route. | `read_ocel()` |
+| OCEL 2.0 standard JSON | There's no support path. | `read_ocel2()` |
+| OCEL 2.0 XML | XML factory dedicated to you | `read_ocel2()` |
+| OCEL 2.0 SQLite | SQLite factory dedicated to you | `read_ocel2()` |
+| Compact OCEL 2.0 CSV | There's no support path. | `read_ocel2()` expansion |
+| JSON/XML GZIP | There's no support path. | `read_ocel2()` |
+| CSV/Parquet bundle | There's no support path. | `read_ocel2()` expansion |
+
+PM4Py's compact CSV and bundle are not included in the three reference serialization defined in detail in the Manual PDF. However, Target Section 9 allows and recommends that the new storage format implement the OCEL 2.0 metamodel. Therefore, these two are rated as — OCEL 2.0 semantic extension format — , but are not to be confused with formal JSON Schema, XML XSD or relational constraint compliance.
+
+### 2.2 Dispatch method
+
+OCPA does not have a single facade that automatically selects all formats as an extension.
+
+```text
+CSV
+    ocpa.objects.log.importer.csv.factory.apply
+
+Classic JSON/XML
+    ocpa.objects.log.importer.ocel.factory.apply
+
+OCEL 2.0 SQLite
+    ocpa.objects.log.importer.ocel2.sqlite.factory.apply
+
+OCEL 2.0 XML
+    ocpa.objects.log.importer.ocel2.xml.factory.apply
+```
+
+PM4Py separates the classic from the OCEL 2.0 facade.
+
+```text
+read_ocel()
+    .csv
+    .jsonocel
+    .xmlocel
+    .sqlite
+
+read_ocel2()
+    .ocel.zip 또는 bundle directory
+    .sqlite
+    .csv
+    .json / .jsonocel 및 GZIP
+    .xml / .xmlocel 및 GZIP
+```
+
+`.jsonocel`, `.xmlocel`, `.sqlite` can be classical or OCEL 2.0 importer depending on the facade called.
+
+---
+
+## 3. Common OCEL generated structure
+
+### 3.1 OCPA
+
+OCPA importer collects external data into event-centric DataFrame and creates multiple representations at the same time.
+
+```text
+External file
+    ↓
+Format-specific parsing
+    ↓
+Event DataFrame
+    ├──→ Table
+    ├──→ df_to_ocel → ObjectCentricEventLog
+    └──→ eog_from_log → EventGraph
+                     +
+                optional ObjectGraph
+                optional ObjectChangeTable
+    ↓
+OCPA OCEL
+```
+
+In this structure, the same source fact is copied into multiple expressions.
+
+- Event ID: `Table` and entity dictionary
+- E2O: object-type by DataFrame column and `Event.omap`
+- E2O qualifier: EventGraph node attribute dictionary
+- O2O: `nx.DiGraph`
+- Object attribute history: change table by object-type
+
+Importers do not verify the equivalence of these representations, so the success of production alone does not guarantee consistency.
+
+### 3.2 PM4Py
+
+The PM4Py importer separates the external data by role into DataFrame.
+
+```text
+External file
+    ↓
+Format-specific parsing
+    ↓
+events / objects / relations / o2o / object_changes
+    ↓
+ID와 timestamp normalization
+    ↓
+OCEL(...)
+    ↓
+ocel_consistency
+    ↓
+propagate_relations_filtering
+    ↓
+PM4Py OCEL
+```
+
+PM4Py maintains E2O and O2O as independent rows so that it directly represents cases where there are multiple different qualifiers at the same endpoint than OCPA.
+
+On the other hand, the final consistency/filtering step can change or remove the source record and does not return the common rejected-record report.
+
+---
+
+## 4. Formal processing of OCPA
+
+### 4.1 CSV
+
+```text
+CSV
+    ↓ pd.read_csv
+object-type cell
+    ↓ ast.literal_eval
+event ID
+    ↓ source ID를 무시하고 0..N-1 string 생성
+timestamp
+    ↓ Pandas datetime 변환 및 sort
+    ↓
+Table
+    +
+df_to_ocel
+        ↓ event를 1..N으로 다시 enumerate
+        ↓ object-type column에서 Obj 생성
+    +
+EventGraph
+    ↓
+OCPA OCEL
+```
+
+The defined range of meanings are event, activity, timestamp, event attribute and object-type E2O reference.
+
+The CSV path does not have the following OCEL 2.0 element.
+
+- E2O qualifier
+- O2O
+- dynamic object attribute value
+
+Therefore OCPA CSV is not OCEL 2.0 reference serialization nor is it a format that preserves the entire metamodel.
+
+### 4.2 Classic JSON-OCEL
+
+```text
+Classic JSON dictionary
+    ↓ parse_events / parse_objects
+ObjectCentricEventLog
+    ↓ JSON-to-CSV conversion
+Table + EventGraph
+    ↓
+OCPA OCEL
+```
+
+Source event dictionary key is not preserved and is replaced with sequential integer ID. The missing `start_timestamp` is reinforced with an event timestamp.
+
+This parser requires a classic namespace such as `ocel:events`, `ocel:objects`, and `ocel:omap`. Standard OCEL 2.0 JSON does not read the `events`, `objects`, `eventTypes`, and `objectTypes` structures of the JSON.
+
+`KeyError: 'ocel:events'` occurred when the schema-valid standard JSON from the runtime probe was transmitted to this factory.
+
+### 4.3 Classic XML-OCEL
+
+The Classic XML variant may return the event/object DataFrame, but the composite `OCEL` return is explicitly rejected.
+
+```text
+return_df=True
+    → event DataFrame
+    → optional object DataFrame
+
+return_df=False
+    → ValueError
+```
+
+So the classic XMLFrom OCPA `OCEL`It doesn't count as a direct convergent open path.
+
+### 4.4 OCEL 2.0 SQLite
+
+OCPA The table read by the SQLite importer corresponds to the target relational layout.
+
+```text
+event
+object
+event_map_type
+object_map_type
+event_<mapped-event-type>
+object_<mapped-object-type>
+event_object
+object_object
+```
+
+The configuration process is as follows:
+
+```text
+event + event_<type>
+    ↓ merge
+event DataFrame
+
+event_object + object
+    ↓ event ID × object type별 set aggregation
+    ↓ event DataFrame의 object-type column에 update
+
+event DataFrame
+    ├──→ Table
+    ├──→ df_to_ocel
+    └──→ EventGraph
+
+object_object
+    ↓ nx.DiGraph
+
+object_<type>
+    ↓ ObjectChangeTable
+```
+
+In Pinned source, the index of aggregated E2O is the source event ID and the index of destination `event_df` has a path to call `DataFrame.update()` from Status, the basic RangeIndex. In common string event IDs such as `e1`, `e2`, the index does not match and the object reference is not reflected.
+
+When I read a 13-event example that satisfied 24 relational constraints in a limited runtime probe, the following sequence was reproduced.
+
+```text
+E2O update 결과 entity용 object 0건
+    ↓
+df_to_ocel의 debug sample helper가 3개 object sampling 시도
+    ↓
+ValueError: Sample larger than population or is negative
+```
+
+OCPA The runtime judgment must be withdrawn if no further action in the OCPA pinned dependency combination is different from this result. However, the meaning preservation judgment for the string event ID is maintained until the source index alignment is modified.
+
+### 4.5 OCEL 2.0 XML
+
+```text
+object-types / event-types
+    ↓ attribute type dictionary
+
+objects
+    ├──→ object ID → type dictionary
+    ├──→ ObjectGraph
+    └──→ object-type별 attribute history
+
+events
+    ├──→ event DataFrame
+    ├──→ object-type별 E2O column
+    └──→ event ID → object ID → qualifier dictionary
+
+event DataFrame
+    ├──→ Table
+    ├──→ df_to_ocel
+    └──→ EventGraph
+```
+
+Confirmed conservation and loss are as follows:
+
+| Factors | The observation |
+| --- | --- |
+| Event ID | In the table, the source ID, in the entity view, the 1-based regenerated ID. |
+| Event type/time | Save to Table |
+| Event attribute | The lexical value is saved, but the declaration type lookup fails and is usually string processing. |
+| E2O endpoint | Save to the object-type event column |
+| E2O qualifier | Move the event/object dictionary to the EventGraph node attribute |
+| O2O | Save to the edge of `nx.DiGraph` |
+| Object attribute history | Save it to `ObjectChangeTable` |
+| Object entity | Save only the object reconfigured from event DataFrame to entity view |
+
+Event attribute parser checks the unprefixed key of the declaration dictionary after inserting `event_` before the attribute name. In standard declarations, the lookup fails, so the value is preserved, but the declared primitive type is not applied and string fallback is used.
+
+`df_to_ocel` assigns the `DataFrame.itertuples()` row to the object type name attribute access. If a character that cannot be used in a Python identifier, such as a blank, is in the name of the object type, the column cannot be found.
+
+The probes of the 13-event, 9-object, 20-E2O examples observed the following:
+
+```text
+Table:
+    13 events
+    20 object references
+    source event IDs 유지
+
+Entity view:
+    13 events
+    regenerated event IDs
+    6 objects
+    공백이 없는 Invoice/Payment object만 남음
+```
+
+The denominator defines the object type name as a string and is not limited to the Python identifier. Therefore, this lack does not balance with the preservation of standard meanings.
+
+### 4.6 Relation multiplicity
+
+E2O and O2O in Definition 2 are triple sets including qualifier. The same endpoint pair can exist multiple times as different qualifiers, and the relational section specifies this.
+
+OCPA uses the following structure.
+
+```text
+E2O qualifier:
+    qualifier_dict[event_id][object_id] = qualifier
+
+O2O:
+    nx.DiGraph.add_edge(source, target, qualifier=...)
+```
+
+Both structures cannot maintain the multiple qualifier of the same endpoint pair as an independent relation and can be overlaid with a later value.
+
+---
+
+## 5. Formal processing of PM4Py
+
+### 5.1 Classic CSV
+
+Classic CSV importer reads the extended event table and the optional objects table.
+
+```text
+event CSV
+    ↓ object-type column의 list parsing
+events + E2O relations
+
+optional object CSV
+    ↓ objects
+
+object file 없음
+    ↓ E2O reference에서 object 추론
+
+    ↓ OCEL → consistency/filtering
+```
+
+OCEL 2.0 is not a complete preservation format, as it does not represent qualifier, O2O and object attribute history in a stable manner.
+
+### 5.2 Classic JSON/XML/SQLite
+
+The classic family of `read_ocel()` transfers the OCEL 1.0 or PM4Py classic representation to a common DataFrame container.
+
+```text
+Classic source
+    ↓ format parser
+events / objects / relations
+    ↓ OCEL
+```
+
+Although there are paths to recognise extended O2O and change according to Variant, explicit `read_ocel2()` reference-profile import is not considered the same contract.
+
+### 5.3 Compact OCEL 2.0 CSV
+
+PM4Py compact CSV distinguishes entity types by row shape and `ot:<object-type>` cell grammar.
+
+```text
+event row
+    ID + activity + timestamp
+
+object declaration row
+    ID/activity/timestamp 없음
+
+object change row
+    timestamp만 존재
+
+O2O row
+    special activity marker
+```
+
+The importer breaks down the object ID, qualifier and JSON-encoded object attribute from the reference string and creates the next DataFrame.
+
+```text
+events
+objects
+relations
+o2o
+object_changes
+```
+
+This format broadly covers the OCEL 2.0 metamodel elements but is a PM4Py-specific serialization that cannot be verified by the JSON Schema, XML XSD or relational constraint of the PDF.
+
+### 5.4 Standard OCEL 2.0 JSON
+
+```text
+objectTypes / eventTypes
+    ↓ attribute type dictionary
+
+events
+    ↓ activity, timestamp, attributes
+    ↓ typed E2O relationship
+
+objects
+    ↓ base attributes
+    ↓ later values → object_changes
+    ↓ relationships → O2O
+
+temporary classic-shaped dictionary
+    ↓ classic.get_base_ocel
+    ↓ OCEL
+    ↓ consistency/filtering
+```
+
+The confirmed benefits are as follows:
+
+- Direct recognition of the standard top-level array
+- Keep the E2O qualifier as an independent relation row
+- Keep the O2O qualifier in an independent row.
+- Divide the object attribute value history into base and change.
+- GZIP input support
+
+The constraints are:
+
+- `read_ocel2_json()` itself does not run JSON Schema validation.
+- The same-name entry of the object attribute selects the first item of the file array as the base and does not sort the timestamp sequence first.
+- When type conversion fails, some values may remain as the original representation.
+- The final relation-filter propagation removes the disconnected event/object.
+
+### 5.5 OCEL 2.0 XML
+
+```text
+object-types / event-types
+    ↓ declared type map
+
+objects
+    ↓ objects, O2O, attribute history
+
+events
+    ↓ events, E2O, event attributes
+
+DataFrame 생성 및 temporal sort
+    ↓ OCEL
+    ↓ consistency/filtering
+```
+
+Parser does not check the relationship container's child tag name itself, but reads the `object-id` and `qualifier` attributes. Thus, both the `relationship` and the `object` form of embedded XSD of the PDF example can be parsing, but this does not mean that strict XSD validation is performed.
+
+`read_ocel2_xml()` does not automatically execute XSD validation. There is also a `validation.xmlocel.apply()` helper, but the caller must explicitly call along with the schema path.
+
+### 5.6 OCEL 2.0 SQLite
+
+PM4Py uses a type map and a type-specific table to create a role-based DataFrame.
+
+```text
+event + event_map_type + event_<type>
+    ↓ events
+
+object + object_map_type + object_<type>
+    ↓ base objects + object_changes
+
+event_object
+    ↓ relations + denormalized event/object metadata
+
+object_object
+    ↓ o2o
+
+    ↓ temporal sort
+    ↓ OCEL
+    ↓ consistency/filtering
+```
+
+Direct importers have a relational validation option, but the default value is `False`.
+
+```text
+validation=False
+except_if_invalid=False
+```
+
+The public `read_ocel2_sqlite()` facade only transmits encoding from the verified source so does not directly expose this option. The caller requiring validation must use a lower-level importer or validation helper separately.
+
+### 5.7 Bundle and GZIP
+
+GZIP JSON/XML enters the standard importer after the compression wrapper, so the compression does not change the in-memory model.
+
+Bundle reads the table path and primitive type from the metadata and concatenates the event/object type CSV or Parquet table, E2O, O2O and object-change table.
+
+```text
+ocel-meta.json
+events/event_<type>.*
+objects/object_<type>.*
+object_changes/object_changes_<type>.*
+relations/e2o.*
+relations/o2o.*
+```
+
+Bundle is not a formal reference serialization, but a metamodel-oriented extension. It is confirmed from the source that the semantic element of the name can be stored, but the cross-tool interoperability of all bundle variants is unknown.
+
+---
+
+## 6. The result of creating the same OCEL 2.0 example
+
+### 6.1 Reference example
+
+The standard JSON example satisfying the JSON Schema and the corresponding XML/SQLite example have the following logical dimensions:
+
+```text
+events:          13
+objects:          9
+E2O:             20
+O2O:              7
+object changes:   3
+```
+
+### 6.2 PM4Py
+
+PM4Py 2.7.23.3 read JSON, XML and SQLite respectively and all made `OCEL` of the following size.
+
+| The format. | Event | Object | E2O | Qualified E2O | O2O | Object change |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Standard JSON | 13 | 9 | 20 | 20 | 7 | 3 |
+| XML | 13 | 9 | 20 | 20 | 7 | 3 |
+| SQLite | 13 | 9 | 20 | 20 | 7 | 3 |
+
+This results in three importers converging into a common data model. does not prove equality for all legal OCEL 2.0 instances.
+
+### 6.3 OCPA
+
+| The format. | The results. |
+| --- | --- |
+| Standard JSON | No support path, key error from classic factory |
+| XML | Table made 13 events and 20 references, but entity view only keeps 6/9 objects. |
+| SQLite | Reproduce the importer exception in an example that passed relational validation. |
+
+OCPA XML's `Table`, entity dictionary, EventGraph, ObjectGraph and ObjectChangeTable can have different identities and completeness so you can't look at any of them and judge that the entire import has been preserved.
+
+---
+
+## 7. OCEL 2.0 requirements by comparison
+
+The word "judgment" means:
+
+```text
+지원
+    명시적 representation과 import 경로가 확인됨
+
+부분
+    일부 representation에는 존재하지만 loss 또는 drift 경로가 확인됨
+
+미지원
+    명시적 import 경로가 없음
+
+유보
+    명세 artifact 충돌 또는 runtime evidence 부족으로 확정 불가
+```
+
+| Requirements | OCPA 1.3.3 | PM4Py 2.7.23.3 |
+| --- | --- | --- |
+| Standard JSON import | Subscriber | Support |
+| XML import | Part of it. | Support |
+| Relational SQLite import | Part: source path but valid sample failure repeat | Support |
+| Save the event ID | Part: Recycling by representation | Support: string normalization occurring |
+| Event type and timestamp | Support | Support |
+| Typed event attribute | XML declared type lookup inconsistency | Support, conversion failure is strict rejection or |
+| Object and object type | Part: Available in event-derived entity view | Support |
+| Dynamic object attribute | Part: Preservation on the change table, distribution of representation | Support |
+| Qualified E2O | Endpoint pairwise qualifier collapse possible | Support |
+| Qualified O2O | Part: `DiGraph` is a multi-qualifier collapse possible | Support |
+| Unconnected event/object | There is no stable conservation basis. | Unpreserved: Delete to relation filtering |
+| Schema validation automatically run | There's no one. | There's no one. |
+| No validation utility | Unidentified | JSON/XML/relational helper is located |
+| Structured rejected/loss report | There's no one. | There's no one. |
+
+### 7.1 Grounds for not adhering to strict compliance
+
+The following contradictions exist regarding OCPA:
+
+- There is no standard JSON importer.
+- Valid relational sample importer failure
+- XML object type missing entity by name
+- Representation by event ID drift
+- Collapse qualifier of the same endpoint
+- Automatic schema validation is not available
+
+The following contradictions exist regarding PM4Py:
+
+- Delete disconnected event/object allowed by Definition 2
+- JSON/XML does not automatically perform schema validation on import
+- Invalid row can be removed without structured report
+- JSON/XML object attribute history can depend on the source order
+
+Therefore, no library can determine that all valid OCEL 2.0 is a strict conforming importer that accepts all OCEL 2.0 without loss within the scope examined.
+
+### 7.2 Preservation of relative meaning
+
+Comparing only the verified standard example with the source representation, PM4Py has a stronger foundation in the following areas than OCPA.
+
+- Explanatory import path for all three reference serialization
+- Independent table of event/object/relation
+- Express the multiplication qualifier of the same endpoint pair
+- JSON/XML/SQLite the same component count of the example
+- Not a validation helper
+
+This comparative assessment does not mean that PM4Py is fully compliant. Disconnected record deletion is a confirmed default that directly conflicts with Definition 2.
+
+---
+
+## 8. XML UBO range of sentence sentences
+
+XML example of target PDF, embedded XSD and connected XSD do not match regarding relation child name.
+
+For this reason the following is not currently confirmed.
+
+- `<relationship>` is the only standard
+- `<object>` is the only standard
+- We need to allow both in a consistent form.
+
+Confirmed facts are as follows:
+
+- OCPA and PM4Py parser can read both forms without checking the child tag name.
+- Parser acceptance is not the same as XSD validation.
+- The `relationship` example from the PM4Py repository was invalidated by the XSD examined.
+- OCPA The repository. `object` An example. `time="0"`And the relation entry required `type` It was invalidated by the XSD test.
+
+If the formal name or schema errata combines an element model into one, this should be deleted.
+
+---
+
+## 9. The point of view of PIX
+
+### 9.1 Minimum steps of the import adapter
+
+To avoid the loss path of the two libraries, the PIX importer needs to separate parsing and canonicalization.
+
+```text
+SourceArtifact
+    ↓
+SyntaxValidationResult
+    ↓
+ParsedOCELRecords
+    ↓
+SemanticValidationResult
+    ↓
+Canonical ProcessDataset
+    ↓
+Derived EventGraph / ProcessExecution / Variant
+```
+
+### 9.2 Evidence needed
+
+```text
+DatasetImportResult
+├── source_format
+├── source_format_version
+├── syntax_profile
+├── syntax_validation
+├── semantic_validation
+├── dataset
+├── identifier_mapping
+├── normalized_fields
+├── rejected_records
+├── inferred_records
+├── omitted_components
+├── lossy_conversions
+├── assumptions
+└── source_references
+```
+
+### 9.3 Recommended conservation rules
+
+- Event and object are preserved irrespective of whether or not E2O exists.
+- E2O and O2O are not endpoint pairs but maintain `(source, qualifier, target)` identity.
+- We'll leave the source ID and normalized ID as star mapping.
+- Object attribute value records the timestamp and source position together, not the source order.
+- Distinguish between Schema-valid and Semantic-valid.
+- Remove the row from the import or coerce the type to record the result.
+- EventGraph is derived from canonical relation and does not mix with source dataset.
+
+This is a design candidate drawn from the current comparison and is not an approved PIX architecture decision.
+
+---
+
+## 10. Uncertainties
+
+The following is currently unknown.
+
+- OCPA pinned dependence in an environment where the SQLite importer makes the same exception
+- PM4Py Python all the edge-case equivalence of the importer and optional rust importer
+- JSON/XML all primitive type and timezone round-trip equality
+- The final meaning of two libraries when the same object attribute exists multiple times on the same timestamp
+- All variants of the malformed relation and the dangling endpoint
+- Compact CSV and third-party interoperability of bundle
+- Large-scale OCEL format memory and processing capacity
+- XML example/Final interpretation of the formal errata for the XSD collision
+
+Unverified success rates, loss frequency and performance figures are unknown.
+
+---
+
+## 11. Validity and Withdrawal Conditions
+
+This comparison is valid for the following upstream commit and intent documents.
+
+```text
+OCPA:   de056e0203a3fa4a9bbc19a95e001eada323074a
+PM4Py: 3329bbcbadce8764f7df660fd88636c30793fbd0
+OCEL:  Specification Version 2.0, document date 2023-10-16
+```
+
+In the following cases, the relevant judgments shall be reviewed or withdrawn.
+
+- If OCPA has added a standard JSON importer,
+- If OCPA corrects the alignment of the SQLite E2O index
+- OCPA has introduced source ID invariant and representation consistency validation.
+- If OCPA changes the E2O/O2O to a multi-relation structure
+- If PM4Py changes the filtering contract to preserve the disconnected event/object
+- If PM4Py performs import time schema and semantic validation by default
+- If any library introduces a structured rejected/loss report
+- If the optional rust backend shows the Python backend and other meaningful preservation results
+- OCEL 2.0 XML example and if the official errata for the XSD collision is published
+- If the Pinned dependency runtime test contradicts the source-level judgment,
+- If PIX changes the requirement of evidence-lineage or canonical dataset
+
+---
+
+## 12. The final evaluation
+
+**OCPA 1.3.3 is CSVCome on, classic. JSONComplex for analysis `OCEL`I'm going to make it. OCEL 2.0 XML·SQLiteThe O2O accepts qualifier and object change to some representation, but the standard JSON Absence, valid SQLite The failure path of example, XMLBecause of the loss of the object and the typed attribute, representation-specific ID drift and multi-qualifier collapse OCEL There's no reason to judge a 2.0 strict importer. PM4Py 2.7.23.3 converges the standard JSON;XML;SQLite and additional compact/bundle formats into common relational `OCEL` and in tested connectivity examples has preserved the component count of the three reference formats identically, so it is relatively well suited to memory. However, the absence of the default schema validation·loss report confirms the absence of a disconnected event/object permitted by the standard, so PM4Py cannot be determined to be in full compliance. PIX takes the explicit relation model of PM4Py as its starting point, separating schema validation and semantic validation and specifying the disconnected record, source identity, multi-qualifier relation and all normalization/loss evidence in the canonical import contract.**

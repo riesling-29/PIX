@@ -12,6 +12,9 @@ PUBLIC_OWNER_MODULES = (
     "pix.intelligence",
     "pix.ocel",
     "pix.projection",
+    "pix.results",
+    "pix.models",
+    "pix.viewer",
 )
 
 STRUCTURAL_MODULES = (
@@ -48,11 +51,28 @@ STRUCTURAL_MODULES = (
     "pix.ocel.report",
     "pix.ocel.validate",
     "pix.projection.process_state",
+    "pix.contracts.analysis",
+    "pix.contracts.conformance",
+    "pix.contracts.discovery",
+    "pix.contracts.execution",
+    "pix.contracts.graph",
+    "pix.contracts.models",
+    "pix.contracts.replay",
+    "pix.compute.context",
+    "pix.compute.dfg",
+    "pix.compute.ocdfg",
+    "pix.compute.executions",
+    "pix.compute.variants",
+    "pix.compute.discovery",
+    "pix.compute.model_semantics",
+    "pix.compute.conformance",
+    "pix.compute.replay",
+    "pix.ocel.export",
 )
 
 
 def test_package_import_and_version() -> None:
-    assert pix.__version__ == "0.2.0"
+    assert pix.__version__ == "0.4.0"
 
 
 def test_public_owner_modules_import() -> None:

@@ -12,6 +12,8 @@ from pix.ocel.ingest.contract import Transformation
 from pix.ocel.ingest.formats.common import (
     ValueEncoding,
     map_document,
+    mapping_failure,
+    schema_failure,
     syntax_failure,
 )
 
@@ -24,6 +26,8 @@ def load(path: Path) -> tuple[BuildResult, tuple[Transformation, ...]]:
             document = json.load(
                 stream,
                 parse_constant=_reject_nonfinite_number,
+                parse_int=_parse_integer,
+                object_pairs_hook=_unique_members,
             )
     except UnicodeDecodeError as exc:
         raise syntax_failure(
@@ -53,6 +57,31 @@ def _reject_nonfinite_number(value: str) -> object:
         "nonfinite_json_number",
         f"JSON numeric constant '{value}' is not permitted.",
     )
+
+
+def _unique_members(pairs: list[tuple[str, object]]) -> dict[str, object]:
+    """Reject even equal duplicate members before any record can be overwritten."""
+
+    result: dict[str, object] = {}
+    for key, value in pairs:
+        if key in result:
+            raise schema_failure(
+                "duplicate_json_member",
+                f"Repeated JSON member '{key}'.",
+                (key,),
+            )
+        result[key] = value
+    return result
+
+
+def _parse_integer(value: str) -> int:
+    try:
+        return int(value)
+    except ValueError as exc:
+        raise mapping_failure(
+            "integer_out_of_range",
+            "JSON integer exceeds the supported interpreter conversion limit.",
+        ) from exc
 
 
 __all__ = ["load"]

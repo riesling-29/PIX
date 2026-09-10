@@ -9,6 +9,7 @@ from pix.ocel.canonical import (
     canonical_bytes,
     canonical_digest,
 )
+from pix.ocel.export import ExportError, ExportIssue, ExportResult, export_ocel
 from pix.ocel.ingest import (
     ImportFormat,
     ImportIssue,
@@ -27,7 +28,6 @@ from pix.ocel.model import (
     E2O,
     O2O,
     OCEL,
-    OCELInfo,
     OCEL_EPOCH,
     Attribute,
     Event,
@@ -36,6 +36,7 @@ from pix.ocel.model import (
     Object,
     ObjectAttr,
     ObjectType,
+    OCELInfo,
     Value,
     ValueType,
 )
@@ -53,6 +54,9 @@ __all__ = [
     "Event",
     "EventAttr",
     "EventType",
+    "ExportError",
+    "ExportIssue",
+    "ExportResult",
     "ImportFormat",
     "ImportIssue",
     "ImportResult",
@@ -80,6 +84,7 @@ __all__ = [
     "build",
     "canonical_bytes",
     "canonical_digest",
+    "export_ocel",
     "import_ocel",
     "read_ocel",
     "validate",

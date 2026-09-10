@@ -136,14 +136,20 @@ def map_document(
         context,
     )
 
-    result = build(
-        event_types=event_types,
-        object_types=object_types,
-        events=events,
-        objects=objects,
-        e2o=e2o,
-        o2o=o2o,
-    )
+    try:
+        result = build(
+            event_types=event_types,
+            object_types=object_types,
+            events=events,
+            objects=objects,
+            e2o=e2o,
+            o2o=o2o,
+        )
+    except OverflowError as exc:
+        raise mapping_failure(
+            "normalization_overflow",
+            "Mapped values cannot be represented during canonical normalization.",
+        ) from exc
     transformations: list[Transformation] = []
     if context.timezone_normalization_count:
         transformations.append(
@@ -213,9 +219,7 @@ def _map_types(
                 allowed={"name", "type"},
                 at=attr_at,
             )
-            attr_name = _require_nonblank_text(
-                attribute["name"], attr_at + ("name",)
-            )
+            attr_name = _require_nonblank_text(attribute["name"], attr_at + ("name",))
             if attr_name in schema:
                 raise schema_failure(
                     "duplicate_attribute_declaration",
@@ -431,7 +435,7 @@ def _map_untyped_value(
     if isinstance(value, float) and math.isfinite(value):
         return value
     if isinstance(value, str):
-        return value
+        return _require_text(value, at)
     raise mapping_failure(
         "unsupported_untyped_value",
         "Undeclared attributes must contain a primitive non-null value.",
@@ -446,17 +450,116 @@ def _map_time(
 ) -> datetime:
     text = _require_text(value, at)
     normalized = text[:-1] + "+00:00" if text.endswith("Z") else text
+    normalized = _normalize_iso_fractions(normalized, at)
     try:
         result = datetime.fromisoformat(normalized)
     except ValueError:
         result = _map_legacy_offset_time(text, at)
         context.legacy_timestamp_count += 1
+    else:
+        _require_microsecond_precision(text, at)
+        # CPython discards a fractional offset when its integral part is zero.
+        # Reconstruct explicit fractional offsets to preserve the actual instant.
+        match = _FRACTIONAL_OFFSET.search(normalized)
+        if match is not None and result.tzinfo is not None:
+            offset = timedelta(
+                hours=int(match["hour"]),
+                minutes=int(match["minute"] or "0"),
+                seconds=int(match["second"] or "0"),
+                microseconds=int(match["fraction"][:6].ljust(6, "0")),
+            )
+            if match["sign"] == "-":
+                offset = -offset
+            result = result.replace(tzinfo=timezone(offset))
     if result.tzinfo is None or result.utcoffset() is None:
         result = result.replace(tzinfo=timezone.utc)
         context.assumed_utc_count += 1
     if result.utcoffset() != timedelta(0):
         context.timezone_normalization_count += 1
+    try:
+        return result.astimezone(timezone.utc)
+    except OverflowError as exc:
+        raise mapping_failure(
+            "timestamp_out_of_range",
+            "Timestamp falls outside the supported datetime range in UTC.",
+            at,
+        ) from exc
+
+
+_FRACTIONAL_OFFSET = re.compile(
+    r"(?P<sign>[+-])(?P<hour>[0-9]{2})"
+    r"(?::?(?P<minute>[0-9]{2}))?(?::?(?P<second>[0-9]{2}))?"
+    r"[.,](?P<fraction>[0-9]+)$"
+)
+
+
+_ISO_CLOCK = r"(?:[0-9]{2}:[0-9]{2}(?::[0-9]{2})?|[0-9]{2}(?:[0-9]{2}){0,2})"
+_ISO_CALENDAR_DATE = r"(?:[0-9]{4}-[0-9]{2}-[0-9]{2}|[0-9]{8})"
+_ISO_CALENDAR_TIME = re.compile(
+    rf"(?P<date>{_ISO_CALENDAR_DATE})(?P<separator>.)"
+    rf"(?P<clock>{_ISO_CLOCK})(?:[.,](?P<clock_fraction>[0-9]+))?"
+    rf"(?:(?P<sign>[+-])(?P<offset>{_ISO_CLOCK})"
+    r"(?:[.,](?P<offset_fraction>[0-9]+))?)?",
+    re.DOTALL,
+)
+_ISO_CALENDAR_PREFIX = re.compile(rf"{_ISO_CALENDAR_DATE}.", re.DOTALL)
+
+
+def _normalize_iso_fractions(text: str, at: tuple[str, ...]) -> str:
+    """Present exact clock/offset fractions consistently to Python 3.10+.
+
+    Validate the complete calendar datetime shape before changing punctuation
+    or width. CPython 3.10 accepts a narrower fractional syntax than 3.11.
+    Calendar/time ranges remain datetime.fromisoformat's responsibility.
+    """
+
+    match = _ISO_CALENDAR_TIME.fullmatch(text)
+    if match is None:
+        prefix = _ISO_CALENDAR_PREFIX.match(text)
+        if prefix is not None and any(c in text[prefix.end() :] for c in ".,"):
+            raise mapping_failure(
+                "invalid_timestamp", "Timestamp has malformed fractional syntax.", at
+            )
+        return text
+
+    def clock_value(clock: str, fraction: str | None) -> str:
+        parts = (
+            clock.split(":")
+            if ":" in clock
+            else [clock[index : index + 2] for index in range(0, len(clock), 2)]
+        )
+        result = ":".join(parts + ["00"] * (3 - len(parts)))
+        if fraction is not None:
+            if any(digit != "0" for digit in fraction[6:]):
+                raise mapping_failure(
+                    "timestamp_precision_loss",
+                    "Canonical V1 cannot preserve sub-microsecond timestamp precision.",
+                    at,
+                )
+            result += "." + fraction[:6].ljust(6, "0")
+        return result
+
+    date = match["date"]
+    if len(date) == 8:
+        date = f"{date[:4]}-{date[4:6]}-{date[6:]}"
+    result = (
+        date + match["separator"] + clock_value(match["clock"], match["clock_fraction"])
+    )
+    if match["offset"] is not None:
+        result += match["sign"] + clock_value(match["offset"], match["offset_fraction"])
     return result
+
+
+def _require_microsecond_precision(text: str, at: tuple[str, ...]) -> None:
+    """Check both the clock and UTC-offset fractions after successful ISO parsing."""
+
+    for match in re.finditer(r"[.,]([0-9]+)", text):
+        if any(digit != "0" for digit in match[1][6:]):
+            raise mapping_failure(
+                "timestamp_precision_loss",
+                "Canonical V1 cannot preserve sub-microsecond timestamp precision.",
+                at,
+            )
 
 
 _LEGACY_OFFSET_TIME = re.compile(
@@ -549,7 +652,14 @@ def _map_integer(
         and isinstance(value, str)
         and _INTEGER.match(value)
     ):
-        return int(value)
+        try:
+            return int(value)
+        except ValueError as exc:
+            raise mapping_failure(
+                "integer_out_of_range",
+                "Integer exceeds the supported interpreter conversion limit.",
+                at,
+            ) from exc
     raise mapping_failure("integer_required", "Expected an integer value.", at)
 
 
@@ -561,7 +671,12 @@ def _map_float(
     if isinstance(value, bool):
         raise mapping_failure("float_required", "Expected a finite float value.", at)
     if isinstance(value, (int, float)):
-        result = float(value)
+        try:
+            result = float(value)
+        except OverflowError as exc:
+            raise mapping_failure(
+                "float_out_of_range", "Value cannot be represented as a float.", at
+            ) from exc
     elif encoding is not ValueEncoding.JSON and isinstance(value, str):
         try:
             result = float(value)
@@ -606,6 +721,12 @@ def _require_list(value: object, at: tuple[str, ...]) -> list[object]:
 def _require_text(value: object, at: tuple[str, ...]) -> str:
     if not isinstance(value, str):
         raise mapping_failure("string_required", "Expected a string value.", at)
+    try:
+        value.encode("utf-8")
+    except UnicodeEncodeError as exc:
+        raise mapping_failure(
+            "invalid_unicode", "Text contains an unpaired Unicode surrogate.", at
+        ) from exc
     return value
 
 

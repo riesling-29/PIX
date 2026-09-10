@@ -69,20 +69,38 @@ def _read_document(connection: sqlite3.Connection) -> dict[str, list[object]]:
     _require_dynamic_tables(tables, "event", event_maps)
     _require_dynamic_tables(tables, "object", object_maps)
 
+    event_types = _read_type_declarations(connection, kind="event", mappings=event_maps)
+    object_types = _read_type_declarations(
+        connection, kind="object", mappings=object_maps
+    )
+    e2o = _read_e2o(connection)
+    o2o = _read_o2o(connection)
+    events = _read_events(connection, event_maps, e2o)
+    objects = _read_objects(connection, object_maps, o2o)
+    _require_relation_sources(e2o, events, "event_object", "event")
+    _require_relation_sources(o2o, objects, "object_object", "object")
     return {
-        "eventTypes": _read_type_declarations(
-            connection, kind="event", mappings=event_maps
-        ),
-        "objectTypes": _read_type_declarations(
-            connection, kind="object", mappings=object_maps
-        ),
-        "events": _read_events(
-            connection, event_maps, _read_e2o(connection)
-        ),
-        "objects": _read_objects(
-            connection, object_maps, _read_o2o(connection)
-        ),
+        "eventTypes": event_types,
+        "objectTypes": object_types,
+        "events": events,
+        "objects": objects,
     }
+
+
+def _require_relation_sources(
+    relationships: dict[str, list[dict[str, object]]],
+    records: list[dict[str, object]],
+    table: str,
+    kind: str,
+) -> None:
+    sources = {record["id"] for record in records}
+    for source in relationships:
+        if source not in sources:
+            raise mapping_failure(
+                "missing_sqlite_relation_source",
+                f"Table '{table}' references absent {kind} source '{source}'.",
+                (table, str(source)),
+            )
 
 
 def _read_type_map(
@@ -97,11 +115,7 @@ def _read_type_map(
             (table,),
         )
     mapped_column = next(
-        (
-            name
-            for name in ("ocel_type_map", "ocel_type_corr")
-            if name in columns
-        ),
+        (name for name in ("ocel_type_map", "ocel_type_corr") if name in columns),
         None,
     )
     if mapped_column is None:
@@ -113,8 +127,7 @@ def _read_type_map(
 
     result: dict[str, str] = {}
     query = (
-        f"SELECT {_quote('ocel_type')}, {_quote(mapped_column)} "
-        f"FROM {_quote(table)}"
+        f"SELECT {_quote('ocel_type')}, {_quote(mapped_column)} FROM {_quote(table)}"
     )
     for row in connection.execute(query):
         logical = row["ocel_type"]
@@ -169,8 +182,16 @@ def _read_type_declarations(
     declarations: list[dict[str, object]] = []
     for logical, physical in mappings.items():
         table = f"{kind}_{physical}"
+        columns = _columns(connection, table)
+        missing = sorted(fixed.difference(columns))
+        if missing:
+            raise schema_failure(
+                "missing_sqlite_column",
+                f"Table '{table}' is missing column(s): {', '.join(missing)}.",
+                (table,),
+            )
         attributes = []
-        for name, declared_type in _columns(connection, table).items():
+        for name, declared_type in columns.items():
             if name in fixed:
                 continue
             attributes.append(

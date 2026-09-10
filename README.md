@@ -5,13 +5,24 @@ interpretation engine.
 
 ## Status
 
-PIX `0.2.0` provides evidence-preserving OCEL 2.0 JSON, XML, and SQLite
-readers, an immutable in-memory OCEL model, deterministic dataset construction
-and semantic validation, a versioned canonical byte serializer, SHA-256 dataset
-identity, and evidence-preserving import results.
+PIX `0.4.0` provides native analysis and offline graph viewing over the immutable OCEL
+foundation. It provides strict JSON/XML/SQLite import profiles, verified atomic
+exports (including JSON/XML gzip), object traces, DFG/OCDFG, observed temporal
+measures, explicit execution extraction, and bounded exact incidence variants.
+Native model functionality includes explicit log-based IM and conservative cut
+profiles, process-tree conversion, observational OCPN discovery with a checked
+accepting witness, Petri net/OCPN firing and bounded binding enumeration, classical
+and joint object-centric alignment, token replay, prefix precision, object-context
+fitness/precision and declarative rules. Results and models have separate versioned,
+evidence-bearing JSON formats. The SVG viewer bundles ELK for offline layout.
 
-PIX does not yet provide external file writers, OCEL 2.0 interchange
-serializers, process-intelligence operators, or a production-ready public API.
+The supported miners are explicit `pix.inductive_cut.v1` and `pix.im.v1` profiles;
+IMf/IMd and other algorithm families are not implied. OCPN discovery's observed-log
+acceptance witness does not certify joint soundness or normative cardinalities.
+Joint alignment consumes shared events once and preserves per-object partial
+orders. Precision and context have named population/termination definitions,
+and open observations retain pending rules. Search limits and zero denominators
+are explicit. Normalized classical fitness and predictive analysis remain future work.
 PM4Py and OCPA remain reference implementations and are not PIX runtime
 dependencies.
 
@@ -37,6 +48,10 @@ file format. Its byte-level rules are documented in
 Start with the
 [OCEL reading user guide](docs/user-guide/OCEL_READING_GUIDE.md) for supported
 inputs, timestamp behavior, object inspection, and failure diagnostics.
+For the implemented analysis pipeline, output contracts, and reproducible viewer,
+see the [native analysis guide](docs/user-guide/NATIVE_ANALYSIS_GUIDE.md),
+[model evaluation structure](docs/user-guide/NATIVE_MODEL_EVALUATION_GUIDE.md) and
+[current implementation evidence](docs/version/v0.4.0_MODEL_EVALUATION_IMPLEMENTATION.md).
 
 ## Public OCEL API
 
@@ -87,9 +102,12 @@ OCPA, or pandas. Python `>=3.10` is required.
 ```text
 docs/                  Architecture, specifications, version baselines, and references
 docs/user-guide/       Task-oriented public API user guides
-src/pix/ocel/          OCEL readers, model, validation, and canonical identity
-src/pix/               Remaining layer-owner modules
-tests/ocel/            OCEL behavior tests and canonical golden vectors
+src/pix/ocel/          OCEL readers, writers, model, validation, canonical identity
+src/pix/contracts/     Immutable analysis and model contracts
+src/pix/compute/       Native analysis and model execution
+src/pix/viewer/        Offline SVG viewer and bundled ELK layout
+examples/             Executable end-to-end native pipeline
+tests/                Stage-specific, integration, and optional browser tests
 tests/fixtures/        Local sample event logs; excluded from release commits by default
 ```
 
@@ -108,6 +126,11 @@ PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -p no:cacheprovider
 python -m ruff check .
 python -m ruff format --check .
 ```
+
+The optional browser suite uses `pip install -e ".[dev,browser]"`,
+`python -m playwright install chromium`, and `PIX_RUN_BROWSER=1` before running
+`python -m pytest tests/browser -q`. JavaScript geometry tests run with
+`node --test tests/viewer/test_layout.cjs` (see the viewer README for all tests).
 
 On PowerShell:
 

@@ -1,3 +1,5 @@
+<!-- 한국어 버전 -->
+
 # PIX OCEL 2.0 Canonical Dataset 및 OCPA·PM4Py 상호운용 초안
 
 **문서 유형:** Architecture decision proposal / canonical data contract draft
@@ -192,7 +194,7 @@ target_adaptation_conformance
 
 ---
 
-## 4. Canonical object model
+## 4. Canonical data model
 
 아래 코드는 구현 확정본이 아니라 field와 불변식을 검토하기 위한 Python-like contract다.
 
@@ -1069,7 +1071,7 @@ Date: 2026-07-18
 
 참조 분석:
 
-- [OCPA와 PM4Py의 OCEL 객체 이해 방식 비교](../reference-analysis/comparison/0_OCPA_PM4PY_OCEL_OBJECT_MODEL_COMPARISON.md)
+- [OCPA와 PM4Py의 OCEL 데이터 모델 비교](../reference-analysis/comparison/0_OCPA_PM4PY_OCEL_DATA_MODEL_COMPARISON.md)
 - [OCPA와 PM4Py의 파일별 OCEL 생성 과정 및 OCEL 2.0 준수 비교](../reference-analysis/comparison/1_OCPA_PM4PY_OCEL_FILE_IMPORT_AND_OCEL20_COMPLIANCE_COMPARISON.md)
 - [OCEL 2.0 Specification](https://www.ocel-standard.org/2.0/ocel20_specification.pdf)
 
@@ -1098,3 +1100,1108 @@ Date: 2026-07-18
 ## 17. 제안 결론
 
 **PIX는 `Ocel20Dataset`을 OCEL 2.0 Definition 2에만 기반한 immutable canonical core로 두고, 기존 `ProcessDataset`이 이를 포함하도록 하는 계층형 합집합을 우선 초안으로 채택한다. PM4Py와 OCPA 객체는 canonical source가 아니라 검증·손실 보고가 수반되는 disposable adapter view로 만들며, PM4Py의 E2E는 namespaced auxiliary fact로, OCPA의 EventGraph·process execution·variant는 versioned derived computation으로 격리한다. 이 구조는 두 library 중 한쪽의 표현 한계가 다른 쪽과 PIX의 표준 의미를 손상시키지 않게 하며, 실제 채택 여부는 disconnected record, multi-qualifier, dynamic object attribute, ID drift 및 cross-format digest acceptance test를 통과한 뒤 확정한다.**
+
+---
+
+<!-- English version -->
+
+# PIX OCEL 2.0 Canonical Dataset and OCPA·PM4Py Drafting of the interaction
+
+**Document type:** Architecture decision proposal / canonical data contract draft
+
+**Target project:** PIX
+
+**Secondary version: **0.1
+
+**Date:** 2026-07-25
+
+**Status:** Review before draft. Or an approved architecture baseline.
+
+---
+
+## 0. The problem of deciding.
+
+PIX needs to accept the next entry as a single neutral data contract.
+
+1. OCEL 2.0 JSON, XML and SQLite are also included.
+2. PM4Py in the memory of `OCEL`
+3. OCPA in the memory of `OCEL`
+4. Legacy or extended file formats supported by two libraries
+
+At the same time, the same PIX dataset should be able to create objects for PM4Py or OCPA depending on the need and use the algorithms of each library.
+
+Here the conjugate conjugate does not imply that all fields in two libraries are copied horizontally into one mutable object. In this sketch, the conjugate is the combination of the following three layers.
+
+```text
+OCEL 2.0 standard canonical facts
+    +
+명시적으로 격리된 upstream extension facts
+    +
+버전과 입력 근거를 가진 derived computations
+```
+
+The canonical is only the first layer. The second and third layers cannot change the meaning of canonical.
+
+---
+
+## 1. The first thing to distinguish between facts and judgments
+
+### 1.1 Confirmed facts
+
+Definition 2 of OCEL 2.0 Specification Version 2.0 defines OCEL as the following tuple.
+
+```text
+L = (
+    E, O, EA, OA,
+    evtype, time, objtype,
+    eatype, oatype,
+    eaval, oaval,
+    E2O, O2O
+)
+```
+
+The basic meaning is:
+
+- Every event has an event type and a timestamp.
+- Every object has an object type.
+- The event attribute belongs to the event type.
+- The object attribute belongs to the object type and its value can change over time.
+- E2O is the set of `(event, qualifier, object)`.
+- O2O is the set of `(source object, qualifier, target object)`.
+- An event or object can exist without being connected to E2O.
+- E2E, EventGraph, process execution and variant are not components of Definition 2.
+
+### 1.2 Confirmed upstream difference
+
+- PM4Py represents event, object, E2O, O2O and object change as an independent DataFrame.
+- PM4Py has E2E DataFrame, but E2E is not a standard component of OCEL 2.0 Definition 2.
+- PM4Py's checked import path can spread relation filtering and remove disconnected event and object.
+- OCPA combines `Table`, entity dictionary, `EventGraph`, and selective `ObjectGraph` with the change table.
+- The examined paths of OCPA have the possibility of reducing the multiple qualifier of representation-specific ID differences, object losses and similar endpoints.
+- Neither library provides structured import-loss reports as a basic contract.
+
+### 1.3 Design judgement of this draft
+
+PIX canonical must be an immutable `Ocel20Dataset`, not a OCPA or PM4Py object.
+
+The basis is as follows:
+
+- If an object of one library is canonical, information that is not represented by another library may be lost at the canonical stage.
+- OCPA's analytical graph/cache and PM4Py's denormalized relation metadata differ from the OCEL 2.0 source fact and life cycle.
+- PIX's existing architecture requires deterministic process facts, evidence lineage and explicit unavailable state.
+
+This judgment shall be revoked or amended under the following conditions:
+
+- An upstream library provides a canonical contract that together guarantees the full definition 2, source identity, immutable semantics and structured loss report.
+- PIX no longer requires source identity and deterministic replay.
+- In the actual vertical slice, the resistance is accumulated that no canonical dataset increases adapter complexity alone without significant defect prevention.
+
+---
+
+## 2. The proposed architecture
+
+```text
+Source artifact / upstream OCEL object
+                │
+                ▼
+        Source-specific extractor
+                │
+                ▼
+         ParsedOcelRecords
+                │
+        syntax + semantic validation
+                │
+                ▼
+         DatasetImportResult
+                │
+        valid dataset만 승격
+                ▼
+       Ocel20Dataset  ← PIX canonical source of truth
+          │       │
+          │       ├───────────────┐
+          ▼                       ▼
+ PM4Py disposable view      OCPA disposable view
+          │                       │
+          └──────────┬────────────┘
+                     ▼
+          versioned computation result
+```
+
+The results calculated in Library view should cite the input dataset identity, operator, version, parameter and used adapter report. View itself does not merge back into the canonical dataset. If a merger is needed, it will be processed as a new import transaction.
+
+---
+
+## 3. The Principle of Standard Suitability
+
+### 3.1 Canonical core follows the definition of 20,000.
+
+`Ocel20Dataset` is only allowed to mean the following:
+
+```text
+Event
+Object
+EventType
+ObjectType
+EventAttributeDefinition
+ObjectAttributeDefinition
+EventAttributeValue
+ObjectAttributeValue
+EventObjectRelation
+ObjectObjectRelation
+```
+
+Next, we don't put it in the canonical core.
+
+```text
+E2E relation
+EventGraph
+ObjectGraph cache
+Process execution
+Variant
+Flattened trace
+PM4Py relation의 denormalized activity/timestamp/object-type column
+OCPA Table의 object-type별 convenience column
+Library parameter 또는 mutable cache
+```
+
+### 3.2 Stronger than standard PIX profile
+
+OCEL 2.0 metamodel compatibility and PIX computational reproducibility are not the same concept. Thus PIX adds the following reinforcement rule without changing the standard.
+
+- The dataset and record are treated as immutable values.
+- Defines deterministic ordering for canonical serialization and content digest.
+- If the timestamp cannot be interpreted as a comparable instant, the canonical rise is stopped until the family is specified.
+- It leaves the source identifier and the canonical identifier mapping.
+- It leaves normalization, coercion, inference, rejection and omission as a structured record.
+- Invalid, unsupported, unavailable and empty-valid are maintained as different Status.
+
+This rule does not claim to be a requirement of the OCEL 2.0 standard itself. `PIX OCEL20 Profile 0.1` is an additional invariant.
+
+### 3.3 Standard appropriateness expression
+
+PIX internal judgment is separated as follows.
+
+```text
+syntax_conformance
+    특정 JSON Schema, XML XSD 또는 SQLite profile에 대한 구문 판정
+
+metamodel_conformance
+    Definition 2 의미 및 invariant에 대한 판정
+
+pix_profile_conformance
+    immutability, deterministic time, identity와 evidence 규칙에 대한 판정
+
+target_adaptation_conformance
+    특정 OCPA/PM4Py view로 요구 의미를 보존할 수 있는지에 대한 판정
+```
+
+`parser가 읽음`, `schema-valid`, `OCEL 2.0 의미 보존` and `특정 library에서 lossless` are not combined into the same status.
+
+---
+
+## 4. Canonical data model
+
+The code below is a Python-like contract for reviewing fields and invariants, not implementations canonical.
+
+### 4.1 Identifier and primitive value
+
+```python
+from dataclasses import dataclass
+from datetime import datetime
+from enum import Enum
+from typing import Generic, TypeVar
+
+
+@dataclass(frozen=True, order=True)
+class EventId:
+    value: str
+
+
+@dataclass(frozen=True, order=True)
+class ObjectId:
+    value: str
+
+
+@dataclass(frozen=True, order=True)
+class EventTypeId:
+    value: str
+
+
+@dataclass(frozen=True, order=True)
+class ObjectTypeId:
+    value: str
+
+
+@dataclass(frozen=True, order=True)
+class AttributeId:
+    value: str
+
+
+class OcelValueType(str, Enum):
+    STRING = "string"
+    TIME = "time"
+    INTEGER = "integer"
+    FLOAT = "float"
+    BOOLEAN = "boolean"
+
+
+OcelValue = str | datetime | int | float | bool
+```
+
+`EventId("x")` and `ObjectId("x")` have the same lexical value but belong to different tagged universes. It is a device for preserving the event/object universe separation of Definition 1 at the code level.
+
+`None`, arbitrary Python object, DataFrame, list and dict are not allowed as canonical attribute values. Null or complex source values can be left in the parsing record, but cannot be canonical values without explicit conversion or rejection.
+
+### 4.2 Time
+
+```python
+@dataclass(frozen=True)
+class OcelTime:
+    initial: bool
+    instant: datetime | None
+```
+
+The inverse is as follows:
+
+- `OcelTime(initial=True)` represents the `0` of the Definition 2 and `instant` is the `None`.
+- If `initial=False` is true, then `instant` must exist.
+- Instant is a timezone-aware value comparable in the PIX profile.
+- Initial time is ahead of every instant.
+- Without a timezone on the Source timestamp, the importer does not quietly assign any timezone.
+- It converts and leaves an assumption record only if the explicit import policy supplies the timezone.
+
+### 4.3 Type and attribute definition
+
+```python
+@dataclass(frozen=True)
+class EventAttributeDefinition:
+    attribute_id: AttributeId
+    event_type_id: EventTypeId
+    value_type: OcelValueType
+
+
+@dataclass(frozen=True)
+class ObjectAttributeDefinition:
+    attribute_id: AttributeId
+    object_type_id: ObjectTypeId
+    value_type: OcelValueType
+
+
+@dataclass(frozen=True)
+class EventType:
+    event_type_id: EventTypeId
+    attributes: tuple[EventAttributeDefinition, ...]
+
+
+@dataclass(frozen=True)
+class ObjectType:
+    object_type_id: ObjectTypeId
+    attributes: tuple[ObjectAttributeDefinition, ...]
+```
+
+It does not declare the same `AttributeId` to be duplicated into multiple event/object types. It also does not allow duplication between event type and object type. If Source reuses the same attribute name in multiple types and conflicts with the attribute-set conditions of Definition 2, strict import fails. Changing a name to an automatic namespace is a meaning change, so recovery policy cannot be performed without explicit selection and mapping.
+
+### 4.4 Event and object
+
+```python
+@dataclass(frozen=True)
+class OcelEvent:
+    event_id: EventId
+    event_type_id: EventTypeId
+    timestamp: OcelTime
+
+
+@dataclass(frozen=True)
+class OcelObject:
+    object_id: ObjectId
+    object_type_id: ObjectTypeId
+
+
+@dataclass(frozen=True)
+class EventAttributeValue:
+    event_id: EventId
+    attribute_id: AttributeId
+    value: OcelValue
+```
+
+Event attribute values are allowed only for attributes declared to the type of the event. `(event_id, attribute_id)` is unique within the canonical dataset. Event and object records do not include mutable mapping, and the object values are both represented as separate records with time significance.
+
+### 4.5 Object attribute history
+
+```python
+@dataclass(frozen=True)
+class ObjectAttributeValue:
+    object_id: ObjectId
+    attribute_id: AttributeId
+    effective_at: OcelTime
+    value: OcelValue
+```
+
+`(object_id, attribute_id, effective_at)` is unique within the canonical dataset. `oaval` in Definition 2 is a partial function so it does not allow two different values for the same key.
+
+Static value without timestamp is represented as `initial=True`. It does not replace Unix epoch, minimum Python datetime or first event time.
+
+### 4.6 Qualified relation
+
+```python
+@dataclass(frozen=True, order=True)
+class Qualifier:
+    value: str
+
+
+@dataclass(frozen=True)
+class EventObjectRelation:
+    event_id: EventId
+    qualifier: Qualifier
+    object_id: ObjectId
+
+
+@dataclass(frozen=True)
+class ObjectObjectRelation:
+    source_object_id: ObjectId
+    qualifier: Qualifier
+    target_object_id: ObjectId
+```
+
+The inverse is as follows:
+
+- Qualifier is not optional.
+- E2O identity is `(event_id, qualifier, object_id)`.
+- O2O identity is `(source_object_id, qualifier, target_object_id)`.
+- If there are multiple qualifiers at the same endpoint, they are all stored as a star relation.
+- It preserves the direction of O2O.
+- All endpoints have to be inside the dataset.
+- Exact duplicate triple cannot enter the canonical set twice.
+- An event or object is not removed unless it participates in any E2O.
+
+If there is no qualifier to the legacy source, strict import will stop the canonical escalation. In recovery mode, you can synthesize a real qualifier like `pix:unspecified`, but this is synthetic semantics that fills standard fields, so the caller's explicit policy and `InferredField` record are required.
+
+### 4.7 Dataset
+
+```python
+@dataclass(frozen=True)
+class Ocel20Dataset:
+    contract_version: str
+    event_types: tuple[EventType, ...]
+    object_types: tuple[ObjectType, ...]
+    events: tuple[OcelEvent, ...]
+    objects: tuple[OcelObject, ...]
+    event_attribute_values: tuple[EventAttributeValue, ...]
+    object_attribute_values: tuple[ObjectAttributeValue, ...]
+    event_object_relations: tuple[EventObjectRelation, ...]
+    object_object_relations: tuple[ObjectObjectRelation, ...]
+    content_digest: str
+```
+
+`contract_version` is the PIX contract version and does not replace the OCEL standard version. The first candidate is:
+
+```text
+pix.ocel20.dataset/0.1
+```
+
+`content_digest` calculates by canonical semantic content rather than provenance and source file path. If JSON, XML and SQLite of the same meaning are canonicalized equally, they must have the same digest. This equivalence is goal invariant until verified with a cross-format fixture after implementation and is not verified as an implementation.
+
+---
+
+## 5. Dataset invariant
+
+Canonical inspects at least all of the following prior to the ascension.
+
+### 5.1 Identity
+
+- Event ID is unique in the event universe.
+- Object ID is unique in the object universe.
+- Event and object refer to the type that exists respectively.
+- Source ID mapping is reversible within the source namespace.
+- When merging different source datasets, lexical ID conflicts are not silently overridden. Prove identical entity or use namespace-based canonical ID and mapping.
+
+### 5.2 Attribute
+
+- Attribute definition has exactly one authorized owner type.
+- The owner type of the event attribute value matches the declared type.
+- The owner type of the object attribute value matches the declared type.
+- The value runtime type matches the `OcelValueType` of the definition.
+- Null, unknown primitive and identical object-attribute-time transcripts are not in the canonical core.
+
+In Python, `bool` is a subtype of `int`, so the type validator must check the exact semantic type so as not to accept `True` as an integer.
+
+### 5.3 Time
+
+- All event timestamps are deterministically comparable.
+- Object attribute history has an initial or actual timestamp.
+- Values on the same object-attribute can calculate multiple time ordering.
+
+### 5.4 Relation
+
+- All E2O/O2O endpoints exist.
+- Every relation has a qualifier.
+- There is no exact duplicate triple.
+- Do not invalidate or remove disconnected event/object.
+
+### 5.5 Deterministic canonical order
+
+Tuple's storage sequence uses the following criteria separately from the set of meanings.
+
+```text
+event types:             event_type_id
+object types:            object_type_id
+events:                  timestamp, event_id
+objects:                 object_type_id, object_id
+event attribute values:  event_id, attribute_id
+object attribute values: object_id, attribute_id, effective_at
+E2O:                     event_id, qualifier, object_id
+O2O:                     source_object_id, qualifier, target_object_id
+```
+
+The event sequence of the same timestamp is stabilized by the event ID, but this is not interpreted as the actual sequence of events.
+
+---
+
+## 6. Import transaction and evidence contract
+
+### 6.1 Parsing and canonical ascent separates
+
+```text
+SourceArtifact
+    ↓ format-specific parsing
+ParsedOcelRecords
+    ↓ syntax validation
+    ↓ OCEL 2.0 semantic validation
+    ↓ explicit normalization/recovery policy
+Ocel20Dataset 또는 no dataset
+```
+
+Parser does not return an incomplete dataset as a success result simply because it has read some records.
+
+### 6.2 Import result
+
+```python
+T = TypeVar("T")
+
+
+class ImportStatus(str, Enum):
+    VALID = "valid"
+    RECOVERED = "recovered"
+    INVALID = "invalid"
+    UNSUPPORTED = "unsupported"
+
+
+@dataclass(frozen=True)
+class ValidationIssue:
+    code: str
+    severity: str
+    statement: str
+    source_reference: str | None
+    affected_ids: tuple[str, ...]
+    withdrawal_condition: str | None
+
+
+@dataclass(frozen=True)
+class IdentifierMapping:
+    source_namespace: str
+    entity_kind: str
+    source_id: str
+    canonical_id: str
+
+
+@dataclass(frozen=True)
+class TransformationRecord:
+    kind: str
+    field: str
+    source_value: object
+    canonical_value: object
+    reason: str
+    assumption: str | None
+
+
+@dataclass(frozen=True)
+class DatasetImportResult:
+    status: ImportStatus
+    source_format: str
+    source_format_version: str | None
+    syntax_profile: str | None
+    dataset: Ocel20Dataset | None
+    identifier_mappings: tuple[IdentifierMapping, ...]
+    validation_issues: tuple[ValidationIssue, ...]
+    transformations: tuple[TransformationRecord, ...]
+    rejected_records: tuple[object, ...]
+    omitted_components: tuple[str, ...]
+    source_references: tuple[str, ...]
+    assumptions: tuple[str, ...]
+```
+
+### 6.3 Default import policy
+
+The base value is `strict`.
+
+```text
+strict
+    추론이나 의미 변경 없이 표준 canonical dataset을 만들 수 있을 때만 VALID
+
+recover
+    caller가 허용한 변환만 수행하고 모든 변환을 기록
+
+inspect
+    parsing과 issue 수집만 수행하며 canonical dataset을 만들지 않음
+```
+
+The dataset of `recover` results must also satisfy both the canonical invariant of verses 4 and 5. If you're not satisfied, not `RECOVERED`, but `INVALID`.
+
+---
+
+## 7. Source adapter rules
+
+### OCEL 2.0 JSON, XML and SQLite
+
+Each reference serialization converges into the same pipeline.
+
+```text
+format syntax validation
+    ↓
+role별 parsed record
+    ↓
+Definition 2 semantic validation
+    ↓
+Ocel20Dataset
+```
+
+The phrase validator and parser are separated. XML distinguishes the following Status because of the inconsistency of the relationship child expression in the Specification artifact examined.
+
+- The actual XSD used is valid.
+- Compatibility parser read, but XSD results invalid or unknown
+- Metamodel has the ability to climb.
+
+Compatibility parse is not reported as XSD conformance.
+
+### 7.2 PM4Py from `OCEL` to import
+
+Primary facts are read in the following table.
+
+```text
+events
+objects
+relations
+o2o
+object_changes
+```
+
+The rules are:
+
+- `relations`'s event ID, object ID and qualifier are used as an E2O source.
+- `relations`'s denormalized activity, timestamp, and object type are used only as a consistency check, not a primary fact.
+- `e2e` does not bring it to the canonical core.
+- Disconnected event/object is not removed by relation propagation.
+- `propagate_relations_filtering` does not invoke such destructive normalization before canonicalization.
+- The caller reads the PM4Py object as a snapshot without mutating it.
+- Both `object_changes` and the object base attribute are converted to the temporal object value of Definition 2.
+- If there is no basis for determining the temporal ordering of the base value and change value, leave the issue and stop the strict lift.
+
+PM4Py `e2e` can be stored as a namespaced auxiliary fact of paragraph 9 if necessary.
+
+### 7.3 OCPA Imported from `OCEL`
+
+OCPA object uses the following principle so that multiple representations can duplicate a logical log.
+
+```text
+Source file을 다시 읽을 수 있음
+    → source artifact adapter를 우선
+
+OCPA object만 있음
+    → representation consistency audit
+    → 합의되는 facts만 canonical 후보로 사용
+    → 충돌은 기본적으로 INVALID
+```
+
+The test subjects are as follows:
+
+- `Table` and entity view event ID, type, timestamp and E2O endpoint
+- `EventGraph` node ID and event universe
+- `ObjectGraph`'s O2O endpoint and qualifier
+- Change the object ID, attribute and timestamp of the table
+- Which representation is the same-endpoint multi-qualifier shortened from?
+
+If OCPA entity ID and Table ID are different, you don't choose one side silently. Source mapping must prove the identity or the caller must specify the authority policy.
+
+If the E2O qualifier cannot be restored from the OCPA representation, strict import fails. The fact that only the endpoint matches is not the basis for qualifier identification.
+
+### 7.4 Legacy and library-specific files
+
+CSV, classic JSON, classic XML, compact CSV, bundle or Parquet source are not automatically classified as — OCEL 2.0 filesets. Instead, treat it like this.
+
+```text
+legacy/extension syntax
+    ↓ source-specific parsed records
+    ↓ 필요한 type, qualifier, timestamp policy
+    ↓ OCEL 2.0 semantic validation
+    ↓ canonical 승격 여부 판정
+```
+
+Therefore, even if the source format is non-standard, the resulting dataset can fit the OCEL 2.0 metamodel. Conversely, the fact that the parser has read `.jsonocel` does not mean that the results are automatically OCEL 2.0 conformant.
+
+---
+
+## 8. Adapter that sends to PM4Py and OCPA
+
+### 8.1 Common adaptation result
+
+```python
+class Fidelity(str, Enum):
+    LOSSLESS = "lossless"
+    LOSSY = "lossy"
+    UNSUPPORTED = "unsupported"
+
+
+@dataclass(frozen=True)
+class CapabilityRequirement:
+    component: str
+    required: bool
+
+
+@dataclass(frozen=True)
+class AdaptationResult(Generic[T]):
+    value: T | None
+    fidelity: Fidelity
+    source_dataset_digest: str
+    target_name: str
+    target_version: str
+    preserved_components: tuple[str, ...]
+    omitted_components: tuple[str, ...]
+    synthesized_fields: tuple[str, ...]
+    identifier_mappings: tuple[IdentifierMapping, ...]
+    validation_issues: tuple[ValidationIssue, ...]
+```
+
+The caller must be able to declare the component required by the algorithm. If the target does not preserve the essential component, the default is `UNSUPPORTED` return, not lossy view creation.
+
+### 8.2 PM4Py view
+
+The PM4Py view generating candidate rules are as follows:
+
+- DataFrame is created directly from Canonical event, object, E2O, O2O and object history.
+- The denormalized activity, timestamp, and object type of the relation are generated by a canonical table join.
+- Keep the disconnected event/object.
+- After creating View, the primary table and denormalized relation metadata are cross-checked.
+- PM4Py's consistency/filtering function only exceeds disposable copy so that it does not change the caller dataset.
+- The PM4Py algorithm compares row/component digest before and after execution and reports unexpected mutation.
+
+In the tested model range, PM4Py represents Definition 2 more directly than OCPA. However, this does not extend to the strict compliance guarantee of PM4Py as a whole.
+
+### 8.3 OCPA view
+
+OCPA view selects the capability profile for analysis purposes first.
+
+```text
+event_table_projection
+event_graph_projection
+object_graph_projection
+object_change_projection
+```
+
+The generating rules are as follows:
+
+- It provides star mapping to maintain Canonical ID.
+- The object type name is encoded with a reversible safe column key without directly relying on raw DataFrame attribute/column access.
+- Entity, Table and graph are created respectively and verify the ID and component count invariant.
+- EventGraph is derived from canonical E2O and timestamp.
+- O2O is derived from the directed qualified triple.
+- `LOSSY` or `UNSUPPORTED` if the target structure cannot preserve the multiple qualifier of the same endpoint.
+- Although the OCPA entity view does not represent the disconnected object, it is maintained in the canonical dataset.
+- Process execution and variant are not reused as a canonical field of the OCPA object, but are returned as a computation result.
+
+If the OCPA algorithm proves that it does not use a qualifier, disconnected object or exact source identity, a limited lossy view may be allowed. It is not assumed to be usable unless the conditions are proven.
+
+### 8.4 Capability matrix drawing
+
+| The Meaning Factor | PIX canonical | PM4Py view Candidate | OCPA view Candidate |
+| --- | --- | --- | --- |
+| Event / event type / time | Standard canonical | It's a direct expression. | Vengeance representation, need verification. |
+| Object / object type | Standard canonical | It's a direct expression. | Disconnected object needed to prevent leakage |
+| Typed event attribute | Standard canonical | It's a direct expression. | Type and representation verification required |
+| Temporal object attribute | Standard canonical | It's baseline + changes. | Change table projection, need verification. |
+| Qualified E2O triple | Standard canonical | Independent relation row | Endpoint/qualifier can be shortened |
+| Qualified directed O2O triple | Standard canonical | Independent relation row | The graph edge can be shortened. |
+| Disconnected event/object | Preservation | Saved from custom view | It's impossible to express in some view. |
+| E2E | Or the standard canonical | It can be auxiliary. | No verified core field. |
+| EventGraph | derived computation | Calculate when needed. | materialize in view |
+| Process execution / variant | derived computation | algorithm result | algorithm result/cache |
+
+The tailgate of a table represents the design possibilities before the implementation verification. If the actual round-trip acceptance test fails, the capability is adjusted downwards.
+
+---
+
+## 9. Upstream extension and derived result
+
+### 9.1 Auxiliary fact outside the canonical core
+
+The next sidecar can be placed so as not to abandon the source fact outside the standard.
+
+```python
+@dataclass(frozen=True)
+class AuxiliaryFact:
+    namespace: str
+    fact_type: str
+    payload: object
+    source_references: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class OcelInteropBundle:
+    canonical: Ocel20Dataset
+    auxiliary_facts: tuple[AuxiliaryFact, ...]
+```
+
+Yes, it is.
+
+```text
+pm4py:e2e
+source:global-metadata
+source:unparsed-attribute
+```
+
+Auxiliary fact has the following limitation.
+
+- `Ocel20Dataset` does not cover the standard meaning.
+- Standard exporter does not by default export auxiliary fact.
+- Without namespace and serialization policy, it's only treated as opaque evidence.
+- The PIX operator does not use auxiliary fact as a calculation input unless explicitly requested.
+
+### 9.2 Derived computation
+
+Useful in OCPA are EventGraph, process execution and variant, as follows:
+
+```python
+@dataclass(frozen=True)
+class DerivedComputation:
+    computation_id: str
+    source_dataset_digest: str
+    operator_name: str
+    operator_version: str
+    parameters: tuple[tuple[str, object], ...]
+    status: str
+    value: object | None
+    source_event_ids: tuple[EventId, ...]
+    source_object_ids: tuple[ObjectId, ...]
+    adapter_report_ref: str | None
+    assumptions: tuple[str, ...]
+```
+
+Even if the same dataset has a different projection rule, leading object type or graph construction parameter, it is a different computation. Therefore, it does not cache a process execution or variant to a canonical dataset field.
+
+---
+
+## 10. Public API drawing
+
+```python
+result = pix.ocel.import_file(
+    source,
+    format="ocel20-json",
+    mode="strict",
+)
+dataset = result.require_valid_dataset()
+
+pm4py_view = pix.interop.pm4py.to_ocel(
+    dataset,
+    require_fidelity="lossless",
+)
+
+ocpa_view = pix.interop.ocpa.to_ocel(
+    dataset,
+    capabilities=[
+        "event_graph_projection",
+        "object_change_projection",
+    ],
+)
+
+variant_result = pix.compute(
+    dataset=dataset,
+    operator="ocpa_graph_variant",
+    adapter=ocpa_view,
+)
+```
+
+In-memory upstream object import has no entry point.
+
+```python
+pm_result = pix.interop.pm4py.from_ocel(pm4py_ocel, mode="strict")
+
+ocpa_result = pix.interop.ocpa.from_ocel(
+    ocpa_ocel,
+    mode="strict",
+    representation_policy="fail_on_drift",
+)
+```
+
+`from_ocel()` is an import transaction that creates a new `Ocel20Dataset` by verifying snapshots rather than registering upstream objects as canonical.
+
+---
+
+## 11. Relationship with the existing `ProcessDataset`
+
+The `ProcessDataset` of the existing architecture baseline is an early neutral contract with the following fields:
+
+```text
+events
+objects
+event_object_relations
+object_object_relations
+```
+
+However, the current form does not sufficiently fix the meaning of OCEL 2.0.
+
+- Event/object type by attribute definition
+- Attribute primitive type
+- Temporal object attribute history
+- `0` static object value of the time
+- Required qualifier
+- Source identity mapping
+- Import validation and loss evidence
+
+So there are two alternatives.
+
+### Alternative A - `ProcessDataset` is replaced by `Ocel20Dataset`
+
+Advantages:
+
+- OCEL 2.0 canonical name appears in the API name.
+- It's easy to remove the non-standard status of existing designs like `qualifier: None`.
+
+Costs:
+
+- PIX needs no top abstraction to get a process dataset other than OCEL in the future.
+
+### Alternative B - `ProcessDataset` includes `Ocel20Dataset`
+
+```python
+@dataclass(frozen=True)
+class ProcessDataset:
+    ocel: Ocel20Dataset
+```
+
+Advantages:
+
+- It maintains the existing PIX public terminology.
+- There is room for expansion when other canonical source families are needed in the future.
+
+Costs:
+
+- One-step names and wrappers are added to the current requirement.
+
+### Reviewing priorities
+
+At the moment, alternative B is a priority. Because while maintaining the existing PIX architecture and API, it can clarify the compatibility boundaries of OCEL 2.0.
+
+This preference is withdrawn under the following conditions:
+
+- If every operator in PIX v0.1 only gets 20 million OCEL and the wrapper repeats itself without any real meaning
+- If the versioning of `ProcessDataset` and `Ocel20Dataset` is unnecessarily leaked
+- If the wrapper in the implementation contract test makes an error status or provenance ownership ambiguous
+
+There are alternatives that don't make any changes. However, if the existing `ProcessDataset` is maintained, the temporal object value and required qualifier cannot be represented, so there is no reason to judge that the current goal, OCEL 2.0, meets the requirement that the standard be canonical.
+
+---
+
+## 12. Implementation order suggestions
+
+We don't build a package scaffold or production adapter until this document is approved. I recommend the following minimum order after approval.
+
+### Phase 1 - Contract and validator
+
+1. Standard core dataclass or equivalent value type
+2. Definition 2 semantic validator
+3. Deterministic canonical serializer and digest
+4. Import/adaptation result and issue taxonomy
+
+### Phase 2 - One reference format
+
+OCEL 2.0 JSON implemented only one format first.
+
+Fixture to check:
+
+- Standard running example
+- Disconnected event and object
+- Same endpoint, different qualifier
+- Dynamic object attribute
+- Same object-attribute-time conflict
+- Dangling E2O/O2O
+- Missing qualifier
+- Naive timestamp
+- Duplicate triple
+
+### Phase 3 - PM4Py interop
+
+1. PM4Py object snapshot import
+2. Create a PM4Py view from the canonical dataset
+3. Disconnected component preservation
+4. Semantic round trip of the JSON fixture
+5. Caller detects object mutation
+
+### Phase 4 - OCPA interop
+
+1. OCPA representation consistency audit
+2. Source/canonical ID mapping
+3. EventGraph projection
+4. O2O/object-change projection
+5. Multi-qualifier and unsafe object-type counterexample
+6. Capability-based refusal
+
+### Stage 5 - XML and SQLite
+
+Reference serialization adds syntax validation, but all formats use the same metamodel validator and canonical digest.
+
+---
+
+## 13. Acceptance criteria
+
+### 13.1 Standard core
+
+- All canonical components of Definition 2 exist in contract.
+- E2E, graph, execution and variant are not in the canonical core.
+- Qualifier is not optional.
+- Disconnected event/object is saved.
+- Distinguish between Dynamic object attribute and initial value.
+- The same endpoint's multiple qualifier is preserved.
+- The O2O direction is preserved.
+
+### 13.2 Evidence
+
+- All ID changes have mapping.
+- All type coercion and inferred value are in the transformation record.
+- Rejected/omitted records do not disappear.
+- Invalid source does not become an empty-success dataset.
+- Import and adaptation status are distinguished.
+
+### 13.3 Determinism
+
+- Even if the input record order changes, the same meaning makes the same canonical digest.
+- JSON/XML/SQLite running example checks to see if it makes the same semantic digest.
+- The stable order of the same timestamp event is not used as an invoice claim.
+
+### 13.4 PM4Py
+
+- The disconnected fixture is preserved after PM4Py view is created.
+- Denormalized relation metadata is consistent with canonical primary facts.
+- View mutation does not change the canonical dataset.
+- PM4Py When you re-import an object, the canonical component must be equal without loss report. `LOSSLESS`All of them.
+
+### 13.5 OCPA
+
+- Table, entity and graph ID are linked by mapping.
+- Even if the object type name has space or identifier-unsafe characters, the object is not missing.
+- If you can't preserve multiple qualifiers for the same endpoint then `LOSSY` or `UNSUPPORTED`.
+- Even if the disconnected object is missing from OCPA view, it is specified in the adaptation report.
+- Process execution and variant are returned as versioned results that do not mutate the source dataset.
+
+---
+
+## 14. The remaining judgments.
+
+The current basis is unknown.
+
+- The memory cost of an immutable tuple/value-object structure in a large dataset
+- Pandas/Arrow-based internal storage has a marginal size advantage over the dataclass tuple
+- The frequency at which a qualifier or disconnected object loss results by OCPA algorithm
+- PM4Py algorithm by input mutation range
+- All the byte-level round-trip of the JSON/XML/SQLite primitive value
+- XML final interpretation of the formal errata for the expression of the relationship between the example and the XSD
+- How often do real source systems generate the same-time object attribute update?
+
+This figure and frequency are set to — unknown — before the benchmark and corpus test.
+
+---
+
+## 15. Risk and control.
+
+### Risk 1 - Re-mixing the standard core and extension
+
+The controls:
+
+- `Ocel20Dataset` only has a Definition 2 component.
+- Auxiliary namespace and derived computation are separate modules/packages.
+- The standard serializer prevents the auxiliary field from being implicitly included.
+
+### Risk 2 - Being the lowest common denominator with the denominator that supports both libraries
+
+The controls:
+
+- The target library does not represent it, but it preserves it in the canonical core.
+- The adapter records the omission and rejects it according to the capability requirement.
+
+### Risk 3 - Recovery mode becomes a silent data manipulation route
+
+The controls:
+
+- Keep Strict by default.
+- Restricting recovery transformation to allow-list.
+- Synthetic qualifiers, time zones and IDs leave source and assumption.
+
+### Risk 4 - The canonical digest hides the provenance difference
+
+The controls:
+
+- Semantic content digest and import transaction/evidence digest are separated.
+- Even the same semantic dataset is separately identified by the provenance bundle.
+
+### Risk 5 - Upstream resulting from standard facts
+
+The controls:
+
+- All library computation quotes the operator/version/parameter and adapter report.
+- EventGraph edge or variant is not reversed as source OCEL relation.
+
+---
+
+## 16. Reasons, duration and conditions for review
+
+### 16.1 basis baseline
+
+This draft is based on the following criteria:
+
+```text
+OCEL 2.0 Specification
+Version 2.0
+Document date: 2023-10-16
+
+OCPA
+Version: 1.3.3
+Commit: de056e0203a3fa4a9bbc19a95e001eada323074a
+
+PM4Py
+Version: 2.7.23.3
+Commit: 3329bbcbadce8764f7df660fd88636c30793fbd0
+
+PIX architecture baseline
+Context Baseline v0.1
+Date: 2026-07-18
+```
+
+Reference analytics:
+
+- [OCPA and PM4Py OCEL data model comparison](../reference-analysis/comparison/0_OCPA_PM4PY_OCEL_DATA_MODEL_COMPARISON.md)
+- [OCPA and PM4Py's file-by-file OCEL creation process and OCEL 2.0 compliance comparison]../reference-analysis/comparison/1_OCPA_PM4PY_OCEL_FILE_IMPORT_AND_OCEL20_COMPLIANCE_COMPARISON.md)
+- [OCEL 2.0 Specification](https://www.ocel-standard.org/2.0/ocel20_specification.pdf)
+
+### 16.2 Validity
+
+This proposal is an architecture draft based on the above Specification version and pinned upstream commits. It doesn't automatically expire on a calendar date, but it will be reviewed at a later date.
+
+- PIX just before the implementation of the canonical contract
+- OCPA or PM4Py target version when changed
+- OCEL standard errata or later version when adopted
+- The first cross-format and cross-library round-trip results were obtained when
+
+### 16.3 Judgment withdrawal conditions
+
+If the next objection is confirmed, the relevant judgment shall be revoked or amended.
+
+- OCEL 2.0 Definition 2 announces a formal specification that includes E2E, graph or execution as a canonical component.
+- PM4Py provides a basic preservation of disconnected records and an immutable, loss-reported canonical contract.
+- OCPA enforces representation identity and multi-qualified relation losslessly.
+- In the cross-library test, the way one upstream object is canonical rather than a separate canonical model provides the same preservation of meaning and clearer evidence.
+- `ProcessDataset` wrappers do not make a meaningful difference in the actual operator contract.
+- Canonical digest cannot identify the same meaning between reference formats.
+
+---
+
+## 17. Suggested conclusions
+
+**PIX puts `Ocel20Dataset` as an immutable canonical core based solely on OCEL 2.0 Definition 2, and adopts as a priority draft a hierarchical composite to allow existing `ProcessDataset` to include it. PM4Py and OCPA objects make it a disposable adapter view where verification and loss reporting relies instead of a canonical source, while PM4Py's E2E is a namespaced auxiliary fact and OCPA's EventGraph·process execution·variant is isolated by versioned derived computation. This structure does not compromise the representation limits of one of the two libraries on the other and PIX's standard meaning, and determines whether actual adoption is disconnected record, multi-qualifier, dynamic object attribute, ID drift, and cross-format digest acceptance test.**

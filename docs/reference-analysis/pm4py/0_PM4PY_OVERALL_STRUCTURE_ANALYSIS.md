@@ -1,3 +1,5 @@
+<!-- 한국어 버전 -->
+
 # PM4Py 전체 구조 분석
 
 **문서 유형:** Upstream 참조 분석 / 전체 구조 기준선
@@ -902,3 +904,898 @@ Covered statements:     64,403 / 71,387
 ## 16. 최종 평가
 
 **PM4Py는 `public facade → algorithm dispatcher → variant implementation`을 주요 확장 패턴으로 사용하는 광범위한 feature-oriented modular monolith다. Algorithm 구성, conversion mechanism, 객체 중심 처리는 PIX에 유용한 참조지만, mutable data container, open parameter dictionary, 이질적인 result, 암묵적 normalization, 엄격하지 않은 dependency boundary는 상당한 재설계 없이 PIX가 제안하는 evidence-first computation 및 intelligence contract를 충족하지 못한다.**
+
+---
+
+<!-- English version -->
+
+# PM4Py overall structure analysis
+
+**Document type:** Upstream reference analysis / whole structure baseline
+
+**Target project:** PIX
+
+**Reference library:** PM4Py
+
+**Reference repository:** `https://github.com/process-intelligence-solutions/pm4py.git`
+
+**Analysis branch:** `release`
+
+**Analysis commit:** `3329bbcbadce8764f7df660fd88636c30793fbd0`
+
+**PM4Py Version:** `2.7.23.3`
+
+**Analysis date:** 2026-07-19
+
+**Status:** source-structure analysis baseline
+
+---
+
+## 0. Purpose and scope
+
+This document PIXYou go. PM4PyBefore deciding what to inherit, modify, or not use PM4PyIt records the entire source structure.
+
+The scope of analysis is as follows:
+
+1. Storage and packaging structure
+2. Public API configuration
+3. Core algorithm dispatch patterns
+4. Main data and process model objects
+5. Representative runway
+6. Object-centered function
+7. Dependence boundaries and consequence contracts
+8. Testing structure
+9. Preliminary checkpoint for the PIX
+
+This document does not evaluate all PM4Py algorithms. Nor do I judge that PM4Py code can be copied to PIX. The execution performance, algorithmic accuracy for all inputs, and license compatibility with the future PIX distribution model are beyond the scope verified by this analysis.
+
+---
+
+## 1. Analysis baseline
+
+### 1.1 Confirmed repository state
+
+The analysis was performed on the basis of the following local checkout.
+
+```text
+Repository: process-intelligence-solutions/pm4py
+Remote:     https://github.com/process-intelligence-solutions/pm4py.git
+Branch:     release
+Commit:     3329bbcbadce8764f7df660fd88636c30793fbd0
+Version:    2.7.23.3
+```
+
+At the time of inspection there were no changes to the local Git upstream checkout.
+
+### 1.2 Number of verified source files
+
+Below the local tree's `pm4py` package were 1,657 Python files.
+
+| The realm | Python number of files | Key Responsibilities |
+| --- | ---: | --- |
+| `pm4py/algo` | 881 | Discovery, compliance, filtering, transformation, evaluation, and simulation algorithms |
+| `pm4py/objects` | 359 | Event log, OCEL, Petri net, process tree, BPMN, DFG and related models |
+| `pm4py/statistics` | 156 | Frequency, time, variant, activity and object-centered statistics |
+| `pm4py/visualization` | 142 | Graphviz and other models; result visualization |
+| `pm4py/streaming` | 58 | Streaming import, conversion and online algorithms |
+| `pm4py/util` | 40 | Continuous, parameter processing, date parsing, compression and common utility |
+| The highest `pm4py/*.py` | 21 | User-targeted facade modules and package metadata |
+
+This number represents only the physical source structure and is not a measure of code quality, complexity or functional importance.
+
+### 1.3 Compatibility with unresolved license facts
+
+The verified repository declares the license of the open-source edition as **GNU Affero General Public License version 3(AGPL-3.0)**. It also provides a separate commercial license.
+
+Although PM4Py includes the source code in PIX, it is currently **unknown** that PIX's intended license or distribution model does not change. Because the analyzed data does not specify PIX's final licensing and distribution conditions. Therefore, architectural research and reuse of source code should be treated as separate decisions.
+
+---
+
+## 2. Top of the line storage.
+
+PM4Py repository consists of the following:
+
+```text
+pm4py-upstream/
+├── .github/                 # GitHub 자동화 및 저장소 metadata
+├── docs/                    # 문서 소스
+├── examples/                # 실행 가능한 사용 예제
+├── files/                   # 프로젝트 지원 파일
+├── notebooks/               # Notebook 기반 예제와 분석
+├── pm4py/                   # 설치 가능한 Python 패키지
+├── safety_checks/           # 추가 검사
+├── tests/                   # Test runner, fixture, test module
+├── third_party/             # Third-party 라이선스 정보
+├── README.md
+├── CHANGELOG.md
+├── COVERAGE.md
+├── requirements*.txt
+└── setup.py
+```
+
+Packaging entrance is `setup.py`. Read version and package metadata from `pm4py/meta.py`, find a package whose name starts with `pm4py`, and install `requirements.txt` dependency.
+
+Major runtime dependencies include NumPy, Pandas, NetworkX, Graphviz, SciPy, lxml, Matplotlib, pytz, tqdm. Several other integrations are optional.
+
+---
+
+## 3. Installable package architecture
+
+The main package has two different surfaces.
+
+1. The top user target facade module
+2. It's a large internal implementation package.
+
+```text
+pm4py/
+├── __init__.py
+├── read.py
+├── write.py
+├── discovery.py
+├── conformance.py
+├── filtering.py
+├── convert.py
+├── analysis.py
+├── stats.py
+├── ocel.py
+├── org.py
+├── sim.py
+├── vis.py
+├── connectors.py
+├── llm.py
+├── ml.py
+├── privacy.py
+├── utils.py
+│
+├── algo/
+├── objects/
+├── statistics/
+├── visualization/
+├── streaming/
+└── util/
+```
+
+### 3.1 The top facade module
+
+The top-level module provides a simplified domain center function.
+
+| Facade module | Representative responsibilities |
+| --- | --- |
+| `read.py` | XES, PNML, BPMN, DFG, PTML, OCEL are read in the formats |
+| `write.py` | Exporting the event log and process model |
+| `discovery.py` | DFG, process tree, Petri net, BPMN, Declare and so on were found. |
+| `conformance.py` | Token replay, alignment, fitness, precision and special conformance |
+| `filtering.py` | Case, event, path, temporal, variant, OCEL filtering |
+| `convert.py` | Conversion of log-process model between support representation |
+| `analysis.py` | Soundness and structural analysis |
+| `stats.py` | User-targeted statistics query |
+| `ocel.py` | Object-centered summary, discovery, filtering, enrichment |
+| `vis.py` | User-targeted visualization function |
+
+`pm4py/__init__.py` imports these modules and directly re-exports many functions. The intended use is as follows:
+
+```python
+import pm4py
+
+log = pm4py.read_xes("event-log.xes")
+tree = pm4py.discover_process_tree_inductive(log)
+net, initial_marking, final_marking = pm4py.convert_to_petri_net(tree)
+```
+
+Facade does more than just forwarding. Depending on the function, we can do the following:
+
+- Verification of the DataFrame column required
+- Internal parameter dictionary configuration
+- Algorithm variant selection
+- Routing by type of input and number of arguments
+- Convert input or output representation
+- Multiprocessing action selection
+- Compatibility or deprecation warning output
+
+### 3.2 Facade size
+
+Some of the facade modules themselves are quite large.
+
+| Module | Maximum number of functions | Give us an approximate number. |
+| --- | ---: | ---: |
+| `discovery.py` | 27 | 1,462 |
+| `conformance.py` | 21 | 1,285 |
+| `filtering.py` | 41 | 1,852 |
+| `stats.py` | 25 | 1,193 |
+| `ocel.py` | 27 | 870 |
+| `vis.py` | 47 | 1,820 |
+
+The facade is therefore an important architectural layer, but not always thin.
+
+---
+
+## 4. The main internal package.
+
+### 4.1 `pm4py.algo`
+
+`algo` is the largest package and the centerpiece of the PM4Py feature.
+
+```text
+algo/
+├── analysis/
+├── anonymization/
+├── clustering/
+├── comparison/
+├── concept_drift/
+├── conformance/
+├── connectors/
+├── decision_mining/
+├── discovery/
+├── evaluation/
+├── filtering/
+├── label_splitting/
+├── merging/
+├── organizational_mining/
+├── querying/
+├── reduction/
+├── simulation/
+└── transformation/
+```
+
+The main discovery array is as follows:
+
+```text
+discovery/
+├── alpha/
+├── declare/
+├── dfg/
+├── footprints/
+├── genetic/
+├── heuristics/
+├── ilp/
+├── inductive/
+├── log_skeleton/
+├── ocel/
+├── powl/
+├── split_miner/
+├── temporal_profile/
+└── transition_system/
+```
+
+The main conformance arrays are:
+
+```text
+conformance/
+├── alignments/
+├── antialignments/
+├── declare/
+├── footprints/
+├── log_skeleton/
+├── multialignments/
+├── ocel/
+├── temporal_profile/
+└── tokenreplay/
+```
+
+### 4.2 `pm4py.objects`
+
+`objects` includes in-memory representation, model semantics, importer, exporter, and conversion.
+
+```text
+objects/
+├── log/
+├── ocel/
+├── petri_net/
+├── process_tree/
+├── bpmn/
+├── dfg/
+├── heuristics_net/
+├── transition_system/
+├── trie/
+├── powl/
+├── ocpn/
+├── oc_causal_net/
+├── stochastic_petri/
+├── random_variables/
+└── conversion/
+```
+
+This package doesn't just contain a passive data contract. Some sub-packages also include semantics, retrieval, filtering, conversion, importer, exporter operations.
+
+### 4.3 `pm4py.statistics`
+
+The Statistics package calculates reusable process facts.
+
+- Activity and attribute frequency
+- Start and finish activity
+- variant
+- directly/eventually-following behavior
+- Service time and sojourn time
+- overlap, concurrency, rework, passed time
+- Trace and process-cube statistics
+- Object-centered statistics
+
+Conceptually, some of this area is close to the future PIX Compute Layer. However, physically the PM4Py algorithm also directly imports and combines these statistical functions.
+
+### 4.4 `pm4py.visualization`
+
+Visualization is organized by process model or result type such as Petri net, BPMN, DFG, process tree, OCEL, transition system, performance spectrum, alignment table etc.
+
+The most common rendering means are Graphviz, and in other routes Matplotlib and NetworkX are also used.
+
+### 4.5 `pm4py.streaming`
+
+The streaming package provides a separate import, conversion, connector, stream, and algorithm for online event processing. It's more of a parallel capability than being the building block of an entire library.
+
+### 4.6 `pm4py.util`
+
+Utility packages centralize the following:
+
+- Default values controlled by environmental variables
+- Standard XES OCEL parameter key
+- Extract the common parameter
+- Algorithm variant interpretation
+- Parsing date and time
+- DataFrame utility
+- Compression and low-level helper
+
+---
+
+## 5. Repeated patterns of algorithmic configuration.
+
+PM4Py's most characteristic implementation pattern is as follows:
+
+```text
+사용자 대상 함수
+    ↓
+family-level algorithm.py
+    ↓
+Variants(Enum)
+    ↓
+variants/<implementation>.py
+    ↓
+apply(..., parameters=dict)
+```
+
+The tree I analyzed had the following:
+
+- 106 files with the name `algorithm.py`.
+- 164 directories with the name `variants`
+
+The typical dispatcher form is as follows:
+
+```python
+class Variants(Enum):
+    CLASSIC = classic
+    ALTERNATIVE = alternative
+
+
+def apply(data, variant=Variants.CLASSIC, parameters=None):
+    return exec_utils.get_variant(variant).apply(data, parameters)
+```
+
+`pm4py.util.exec_utils` supports both `Enum` key and raw string key. Accordingly, it maintains compatibility of typed enumeration with past dictionary-based parameter usage.
+
+### 5.1 The advantages of this pattern
+
+- You can add a new implementation without changing all the callers.
+- One algorithm family can provide multiple backends.
+- The caller can choose performance or semantic variant.
+- The implementation module is kept smaller than the public facade.
+- You can only load selection dependencies when you use specific routes.
+
+### 5.2 Structural cost of this pattern.
+
+- The name `apply()` alone doesn't know the meaning of the operator.
+- `parameters: dict` weakens static verification.
+- The variant option is not represented as a consistent typed contract.
+- Each algorithm family has a different result type.
+- The results do not include operator identity and version.
+- Unsupported, unavailable, invalid-input status is not standardized.
+
+This cost is an observation based on the suitability of PIX architecture, and is not proof that PM4Py was wrongly designed as a science library.
+
+---
+
+## 6. Representative runway
+
+### 6.1 XES import
+
+The public call is as follows:
+
+```python
+log = pm4py.read_xes("event-log.xes")
+```
+
+It's roughly the following route.
+
+```text
+pm4py.read_xes
+→ local path 또는 remote URL 해석
+→ parser/backend 선택
+→ pm4py.objects.log.importer.xes.importer.apply
+→ 선택된 Variants member
+→ variants/<parser>.apply
+→ EventLog, Pandas DataFrame 또는 선택적 lazy representation
+→ 선택적 normalization/conversion
+```
+
+The variants supported by the tested source include:
+
+- chunk-regex parsing
+- XML iterparse
+- XES 2.0 iterparse
+- memory-compressed iterparse
+- line-by-line parsing
+- Optional rust-based parsing
+
+The basic direction of API is deviating from the legacy `EventLog` representation. `EventLog`, `Trace`, and `EventStream` have a runtime deprecation warning that recommends central use of DataFrame.
+
+### 6.2 Inductive Miner
+
+The Process Tree path is as follows:
+
+```text
+DataFrame / EventLog / DFG
+→ facade 검증 및 property 추출
+→ pm4py.algo.discovery.inductive.algorithm.apply
+→ trace를 univariate variant log로 normalize 또는 compress
+→ IM, IMf, IMd 선택
+→ base-case, cut, fall-through 재귀 처리
+→ 생성된 ProcessTree fold 및 sort
+→ ProcessTree
+```
+
+`discover_petri_net_inductive()` does not independently implement Petri-net discovery. It first discovers the Process Tree and then converts it into the Petri net, including initial/final marking.
+
+```text
+log
+→ discover_process_tree_inductive
+→ ProcessTree
+→ convert_to_petri_net
+→ PetriNet + initial marking + final marking
+```
+
+This is an example of PM4Py combining capability with conversion pathways.
+
+### 6.3 Alignment conformance
+
+`conformance_diagnostics_alignments()` selects the operation according to the runtime argument form.
+
+```text
+PetriNet + markings → Petri-net alignments
+DFG + boundaries   → DFG alignments
+ProcessTree        → Process-tree alignments
+EventLog/DataFrame → edit-distance log-to-log alignments
+기타 model          → Petri net 변환 시도 후 align
+```
+
+Facade also determines whether to use multiprocessing and whether to return native list/dictionary diagnostics or DataFrame.
+
+Although it provides a convenient polymorphic API, it is difficult to understand both the signature and failure actions allowed by a single static return contract alone.
+
+### 6.4 Model conversion
+
+Model conversion is primarily determined by type.
+
+```text
+ProcessTree ─┐
+BPMN        ─┤
+Heuristics  ─┼→ convert_to_petri_net → PetriNet + markings
+POWL        ─┤
+DFG         ─┘
+```
+
+Conversion is an important internal integration tool. Some facade operations attempt automatic transformation without direct implementation.
+
+---
+
+## 7. Data and model objects
+
+### 7.1 Traditional event-log model
+
+The legacy object model is as follows:
+
+```text
+Event       # event attribute의 mapping
+Trace       # Event sequence와 trace attribute
+EventStream # event sequence와 stream/log metadata
+EventLog    # Trace collection인 EventStream 파생형
+```
+
+These objects are mutable and provide list-like change operations such as `append`, `insert`, and item assignment.
+
+Currently, public API mainly targets DataFrame, but also maintains legacy objects for existing algorithms and consumer compatibility.
+
+### 7.2 Process-model objects
+
+PM4Py defines native object for the following model family.
+
+- Petri net and marking
+- process tree
+- BPMN graph
+- directly-follows graph
+- heuristics net
+- transition system
+- trie
+- POWL
+- stochastic Petri net
+- object-centric Petri net
+- object-centric causal net
+
+These objects are supported by model-specific conversion, semantics, importer, exporter, analysis, visualization modules.
+
+### 7.3 Object-Centric Event Log model
+
+The `OCEL` object of PM4Py is a mutable container containing several Pandas DataFrame.
+
+```text
+OCEL
+├── events
+├── objects
+├── relations          # event-to-object relation
+├── o2o                # object-to-object relation
+├── e2e                # event-to-event relation
+├── object_changes
+├── globals
+└── parameters
+```
+
+The object keeps the column name set for next use.
+
+- event identifier
+- event activity
+- event timestamp
+- object identifier
+- object type
+- relation qualifier
+- changed field
+
+`relations` DataFrame has been denormalized for calculation convenience. It may include not only an event/object identifier, but also an event activity, event timestamp, object type.
+
+### 7.4 OCEL complexity treatment
+
+The `ocel_consistency.apply()` examined performs the following:
+
+- Convert the identifier, activity, type column to string
+- Remove the null row in the required column of the treated object.
+- Remove the row with the empty string in the column.
+- Reverse event or object identifier warning
+- Replace the missing relation qualifier with an empty string.
+- `OCEL` Change the DataFrame of the object
+- The same logical OCEL container returned after normalization
+
+This function does not return structured integrity results, including status, problematic relation identifier, evidence reference, and assumption. The Filtering propagation utility can remove events, objects, relations that are no longer reachable from the relevant DataFrame.
+
+Thus PM4Py consistency processing is close to operational normalization for further analysis. It is not the same as the evidence-preserving integrity computation proposed by PIX.
+
+---
+
+## 8. Distribution of object-centered functions
+
+The object-centered function is not assembled into a single independent internal engine and is distributed throughout PM4Py.
+
+```text
+pm4py/ocel.py
+    사용자 대상 OCEL facade
+
+pm4py/objects/ocel/
+    OCEL object, import/export, validation, consistency, filtering utility
+
+pm4py/algo/discovery/ocel/
+    OC-DFG, OCPN, OTG, ETOT, interleaving 및 관련 discovery
+
+pm4py/algo/conformance/ocel/
+    OC-DFG, OTG, ETOT 비교 기반 conformance
+
+pm4py/algo/transformation/ocel/
+    Feature extraction, graph conversion, OLAP, splitting
+
+pm4py/statistics/ocel/
+    Object graph, event-to-object statistics, interleaving
+
+pm4py/visualization/ocel/
+    OC-DFG와 OCPN 시각화
+```
+
+### 8.1 OCEL flattening
+
+`ocel_flattening(ocel, object_type)` projects the object-centered log to a traditional case-centered DataFrame.
+
+```text
+선택된 object type
+→ 해당 type의 object가 case identifier가 됨
+→ event-object relation이 case와 event를 연결
+→ event attribute merge
+→ 표준 XES activity, timestamp, case column 생성
+```
+
+This operation is a projection directly related to PIX trace reconstruction. At the same time, it shows the limits. From a case perspective, you have to select one object type so some of the original multi-object context is lost.
+
+### 8.2 OC-DFG discovery
+
+Open OC-DFG routes are as follows:
+
+```text
+pm4py.discover_ocdfg
+→ column 및 performance parameter 구성
+→ pm4py.algo.discovery.ocel.ocdfg.algorithm.apply
+→ Variants.CLASSIC
+→ variants.classic.apply
+→ dictionary result
+```
+
+The result dictionary includes activity, object type, object type edge, start activity, end activity and selective performance measurement.
+
+### 8.3 Object summary
+
+The top OCEL facade also performs the following direct Pandas calculations:
+
+- Lifecycle activity sequence by object
+- Lifecycle start and finish timestamp
+- lifecycle duration
+- interacting-object graph
+- Activity by object type
+- The number of related objects per event
+
+This shows that PM4Py does not impose a universal boundary between low-level computation and user-target orchestration.
+
+---
+
+## 9. Dependence boundaries
+
+The direction of the surface dependence is roughly as follows:
+
+```text
+facade
+   ↓
+algo
+   ↓
+objects / statistics / util
+```
+
+Real imports are not strictly one-way.
+
+Static testing confirmed the following cases.
+
+- The module under `objects` is to import the `algo`
+- Several `algo` modules imported the `statistics`
+- At least one `algo` path to import the visualization action
+- The facade modules directly import conversion and algorithm implementation
+- Conformance function fallback to model conversion
+
+Thus PM4Py is not a structure that enforces clean layer or ports-and-adapters dependence rules. It's close to a feature-oriented package structure connected to a common object type, dictionary, conversion utility, and dispatcher convention.
+
+This explanation itself is not criticism. A general-purpose science library may prioritize algorithmic availability and combination possibilities over strict architectural isolation.
+
+---
+
+## 10. Input and outcome contract
+
+### 10.1 Input
+
+PM4Py algorithms typically receive one or more of the following:
+
+- Pandas DataFrame
+- legacy `EventLog` or `Trace`
+- `OCEL`
+- native process-model object
+- model and the tuple of the initial/final state
+- Graph or configuration dictionary
+- Selective `parameters` dictionary
+
+The column meaning is usually conveyed by the following standard string key:
+
+```text
+concept:name
+case:concept:name
+time:timestamp
+ocel:eid
+ocel:oid
+ocel:type
+```
+
+### 10.2 output
+
+There is no single result envelope shared by all algorithms. The return type includes:
+
+- `pandas.DataFrame`
+- `EventLog`
+- `OCEL`
+- `ProcessTree`
+- `PetriNet` and marking
+- dictionary
+- dictionary list
+- numeric value
+- tuple and set
+
+The following field is not universally enforced.
+
+- computation identifier
+- Operator name and version
+- `computed`, `unavailable`, `invalid_input` such as the explicit status
+- Source event and object identifier
+- assumption
+- deterministic normalization identity
+- evidence reference
+- withdrawal condition
+
+This is substantially different from the proposed PIX `ComputationResult`, `ProcessFinding` contract.
+
+### 10.3 Failure and unknown Status
+
+Failure signaling varies by function. PM4Py can operate as follows depending on the path:
+
+- Generic exception occurring
+- Warning output
+- Automatic conversion attempts
+- Remove the row of inconsistencies
+- Returns the empty structure
+- Returns the diagnostic dictionary with the algorithm-specific schema
+
+Since there is no universal result status, PM4Py's empty result cannot be assumed to have the same meaning in all cases.
+
+---
+
+## 11. Tests and examples
+
+### 11.1 Confirmed physical structure
+
+In the repository we checked, there were:
+
+- There are 102 Python test files.
+- Python example files 206
+- Enter fixture and format test data
+- custom test runner
+- Coverage centered test module
+- documentation and simplified-interface test
+
+Test is placed in a relatively flat `tests/` directory rather than reflecting the entire package path.
+
+### 11.2 measurements reported by the storage
+
+`COVERAGE.md` of the 2026-07-17A repository reports the following:
+
+```text
+Tests discovered:       929
+Passed:                 926
+Skipped:                3
+Failed:                 0
+Statement coverage:     90.22%
+Covered statements:     64,403 / 71,387
+```
+
+This is upstream. It did not reproduce independently in this structural analysis. Therefore, the actual test result and coverage in the current PIX development environment is **unknown**.
+
+---
+
+## 12. Architectural characteristics
+
+### 12.1 Confirmed structural facts
+
+- PM4Py offers a wide range of functional facades through `pm4py/*.py` and `pm4py/__init__.py`.
+- Most of the source files are algorithm implementations.
+- The algorithm family repeatedly uses `algorithm.py`, `Variants(Enum)`, variant module, and `apply()` dispatch.
+- The current preferred representation of the traditional event-log operation is DataFrame.
+- Native mutable model object is still central to the process model and OCEL.
+- Conversion path combines algorithm and model representation.
+- Object-centered functions include objects, discovery, conformance, transformation, statistics, and visualization package.
+- Result shapes differ from each other and are not covered by a universal computation contract.
+- Internal package dependence does not follow a strict one-way layer boundary.
+
+### 12.2 Data-based interpretation
+
+The observed structure is most accurately defined as a feature-oriented modular monolith for a scientific process-mining algorithm.
+
+The basis for this interpretation is as follows:
+
+1. A single installation package includes a very wide range of functions.
+2. The algorithm family is internally modularized.
+3. A common object and converter connect these modules.
+4. The Facade function routes dynamically between multiple implementations.
+5. Package boundary does not impose strict dependency directions.
+6. An independent compute-result or intelligence-result protocol does not control the system.
+
+This interpretation should be withdrawn if a forced boundary or runtime plugin contract is identified that does not appear in the current verification path in the subsequent full dependency analysis.
+
+---
+
+## 13. Preliminary checkpoint for the PIX successor
+
+### 13.1 Patterns worth seeing
+
+1. **Public facade and implementation package separation** Consumer does not need to know the internal algorithm location.
+
+2. **Algorithm-family configuration** related implementations are gathered under a stable meaning unit.
+
+3. **Transitive possible variant** can place multiple implementations behind a single conceptual operation.
+
+4. **Explanatory converter and projection** can convert process representation without embedding any representation into any algorithm.
+
+5. **DataFrame Central computing path** After two stable contracts, tabular computation is efficient and interoperable.
+
+6. **Fixture and example coverage** The algorithm provides real files, negative path, format test, and executable example together.
+
+### 13.2 Current patterns colliding with the PIX baseline
+
+1. **Mutable canonical OCEL container** PIX requires predictable neutral contract and reproducible computation input.
+
+2. **Untyped `parameters` dictionary used as operator contract** PIX operators require explicit semantics, assumption, versioning.
+
+3. PIX requires computation status, source reference, and unavailable-state preservation.
+
+4. **Automatic normalization to remove invalid row** PIX must preserve and report integrity defect without quietly disappearing.
+
+5. **Silent conversion and fallback** PIX should visualise semantic projection and assumption.
+
+6. PIX Compute Layer must be able to test independently of Intelligence Layer.
+
+7. PM4Py's discovery, visualization, machine learning, and scale mining scope extends beyond PIX v0.1.
+
+8. The legal compatibility of code reuse is not established by the direct learning of the source inheritance architecture prior to the license decision.
+
+### 13.3 Preliminary adaptation mapping
+
+| PM4Py concept | The possible interpretation of PIX | The reinforcement needed in PIX |
+| --- | --- | --- |
+| facade function | PIX operator/API is released | `compute → interpret → project` Preservation |
+| `algorithm.py` | operator dispatcher | Explained operator identity and version |
+| `Variants(Enum)` | Operator Implementation Selection | Typed configuration and deterministic selection |
+| `parameters: dict` | operator configuration | A validated contract is not an open dictionary. |
+| DataFrame/EventLog/OCEL | Input representation | Normalize to neutral `ProcessDataset` |
+| algorithm return value | computation output | Wrapping with `ComputationResult` |
+| diagnostics dictionary | Enter process finding | evidence-linked `ProcessFinding` |
+| OCEL flattening | object projection | Context preservation of projection assumption and loss |
+| OCEL consistency utility | relation-integrity computation | Reporting invalid reference quietly without repair |
+| conversion fallback | Explained projection/conversion | Conversion path and semantic assumption record |
+
+This mapping is preliminary judgment. It identifies an architectural relationship, but it doesn't mean an approved implementation decision.
+
+---
+
+## 14. Uncertainties that need further analysis
+
+Only a completed structural examination can confirm the following:
+
+- Runtime performance of the PM4Py operator
+- Schumpeter memory behavior in the OCEL data
+- The deterministic behavior of all operators
+- thread and multiprocessing reproducibility
+- The exact meaning difference between the algorithm variant
+- PM4Py stability within API between release
+- Processing of malformed or dangling OCEL relation in all import formats
+- PM4Py OCEL projection is suitable for Schumpeter mission data
+- PIX v0.1 real reuse value of a specific algorithm
+- The legal compatibility of the AGPL PM4Py source reuse and future PIX license
+- Independently verified current test pass rate and coverage
+
+These figures and judgments are **unknown** until targeted analysis or experiment.
+
+---
+
+## 15. Validity and Withdrawal Conditions
+
+### 15.1 Validity
+
+This analysis is valid for the following PM4Py commit.
+
+```text
+3329bbcbadce8764f7df660fd88636c30793fbd0
+```
+
+We shouldn't assume that upstream releases are the same without comparison.
+
+### 15.2 Withdrawal conditions
+
+In the following cases, the relevant judgments shall be reviewed or withdrawn.
+
+- If the main package layout of PM4Py is changed
+- If the facade and algorithm dispatch mechanism are replaced,
+- If a consistent typed computation-result contract is introduced,
+- OCEL is immutable or provides an evidence-preserving integrity result.
+- If dependency enforcement reveals strict boundaries that are not visible in this investigation,
+- The call path tracked by the runtime execution and other cases
+- If PIX expands from a narrow audit engine to a universal process-mining suite,
+- In the PIX license and distribution model, PM4Py directly integrates if the compatibility or non-compliance is clear.
+- If a deeper algorithm-level analysis contradicts the current preliminary adaptation judgments
+
+---
+
+## 16. The final evaluation
+
+**PM4Py is an extensive feature-oriented modular monolith that uses `public facade → algorithm dispatcher → variant implementation` as its main expansion pattern. Algorithm configuration, conversion mechanism, and object-centered processing are useful references to PIX, but the mutable data container, open parameter dictionary, asexual result, implicit normalization, and non-strict dependency boundary cannot satisfy the evidence-first computation and intelligence contract offered by PIX without substantial redesigns.**
