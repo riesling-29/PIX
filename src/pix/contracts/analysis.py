@@ -102,9 +102,15 @@ class E2OEvidence:
 
 @dataclass(frozen=True, slots=True)
 class TraceEvent:
+    """One ordered observation; native case logs may lack a timestamp.
+
+    OCEL projections always have time. None never denotes an invented epoch and
+    must not be used as a duration or as evidence of temporal ordering.
+    """
+
     event_id: str
     activity: str
-    time: datetime
+    time: datetime | None
     relations: tuple[E2OEvidence, ...]
 
 

@@ -502,7 +502,6 @@ _ISO_CALENDAR_TIME = re.compile(
     r"(?:[.,](?P<offset_fraction>[0-9]+))?)?",
     re.DOTALL,
 )
-_ISO_CALENDAR_PREFIX = re.compile(rf"{_ISO_CALENDAR_DATE}.", re.DOTALL)
 
 
 def _normalize_iso_fractions(text: str, at: tuple[str, ...]) -> str:
@@ -515,12 +514,13 @@ def _normalize_iso_fractions(text: str, at: tuple[str, ...]) -> str:
 
     match = _ISO_CALENDAR_TIME.fullmatch(text)
     if match is None:
-        prefix = _ISO_CALENDAR_PREFIX.match(text)
-        if prefix is not None and any(c in text[prefix.end() :] for c in ".,"):
-            raise mapping_failure(
-                "invalid_timestamp", "Timestamp has malformed fractional syntax.", at
-            )
-        return text
+        if _LEGACY_OFFSET_TIME.fullmatch(text) is not None:
+            return text
+        raise mapping_failure(
+            "invalid_timestamp",
+            "Timestamp requires a calendar date and an explicit clock value.",
+            at,
+        )
 
     def clock_value(clock: str, fraction: str | None) -> str:
         parts = (
@@ -528,8 +528,18 @@ def _normalize_iso_fractions(text: str, at: tuple[str, ...]) -> str:
             if ":" in clock
             else [clock[index : index + 2] for index in range(0, len(clock), 2)]
         )
+        if int(parts[0]) >= 24 or any(int(part) >= 60 for part in parts[1:]):
+            raise mapping_failure(
+                "invalid_timestamp", "Timestamp clock or offset is out of range.", at
+            )
         result = ":".join(parts + ["00"] * (3 - len(parts)))
         if fraction is not None:
+            if len(parts) != 3:
+                raise mapping_failure(
+                    "invalid_timestamp",
+                    "Fractional hours or minutes are unsupported; include seconds.",
+                    at,
+                )
             if any(digit != "0" for digit in fraction[6:]):
                 raise mapping_failure(
                     "timestamp_precision_loss",
@@ -602,6 +612,10 @@ def _map_legacy_offset_time(text: str, at: tuple[str, ...]) -> datetime:
             at,
         )
     groups = match.groupdict()
+    if int(groups["offset_hour"]) >= 24 or int(groups["offset_minute"]) >= 60:
+        raise mapping_failure(
+            "invalid_timestamp", "Legacy timestamp offset is out of range.", at
+        )
     direction = 1 if groups["sign"] == "+" else -1
     try:
         offset = timezone(

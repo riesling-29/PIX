@@ -5,6 +5,9 @@ using the public PIX API.
 
 ## Guides
 
+- [Native Case-Centric and Object-Centric mining](NATIVE_MINING_GUIDE.md)
+- [Native visualization and model diagnostics](VISUALIZATION_GUIDE.md)
+- [Importing OCEL, XES/MXML and mapped business tables](../design/2026-09-12-import-v050.md)
 - [Reading and Inspecting OCEL 2.0 Logs](OCEL_READING_GUIDE.md)
 
 ## Maintenance rule

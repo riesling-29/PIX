@@ -5,6 +5,8 @@ import importlib
 import pix
 
 PUBLIC_OWNER_MODULES = (
+    "pix.case_centric",
+    "pix.object_centric",
     "pix.api",
     "pix.contracts",
     "pix.compute",
@@ -72,7 +74,7 @@ STRUCTURAL_MODULES = (
 
 
 def test_package_import_and_version() -> None:
-    assert pix.__version__ == "0.4.0"
+    assert pix.__version__ == "0.5.0"
 
 
 def test_public_owner_modules_import() -> None:

@@ -38,7 +38,16 @@
     if (!container || !root.PIXLayout) throw new Error("Viewer container and PIX layout utilities are required");
     const L = root.PIXLayout;
     const instanceId = nextInstanceId++;
-    const layout = options.layout || L.createElkLayout(new root.ELK());
+    const layout = options.layout || (() => {
+      const engine = options.layoutEngine || root.PIXViewerLayoutEngine || "graphviz";
+      if (engine === "elk") {
+        if (typeof root.ELK !== "function") throw new Error("The selected ELK layout engine is not available");
+        return L.createElkLayout(new root.ELK());
+      }
+      if (engine !== "graphviz") throw new RangeError(`Unknown layout engine: ${engine}`);
+      if (!root.PIXLegacyGraphviz || !root.PIXGraphvizGeometry) throw new Error("The default Graphviz layout engine is not available");
+      return root.PIXLegacyGraphviz.createGraphvizLayout(root.PIXGraphvizGeometry);
+    })();
     const hidden = new Set();
     const source = structuredClone(graph);
     const isModel = source.kind === "petri_net" || source.kind === "ocpn";
@@ -321,7 +330,11 @@
         group.append(svgEl("title", {}, edgeDescription));
         if (isModel) { group.setAttribute("data-variable", String(edge.variable)); group.setAttribute("aria-label", displayText(edgeDescription)); }
         const path = L.sectionPath(route);
-        group.append(svgEl("path", {class: "pix-edge-hit", d: path}), svgEl("path", {class: "pix-edge-line", d: path, stroke: color, "marker-end": `url(#${markerId})`}));
+        group.append(svgEl("path", {class: "pix-edge-hit", d: path}), svgEl("path", {class: "pix-edge-line", d: path, stroke: color,
+          ...((route.arrowhead || []).length ? {} : {"marker-end": `url(#${markerId})`})}));
+        for (const polygon of [route.arrowhead || [], route.arrowtail || []]) {
+          if (polygon.length) group.append(svgEl("polygon", {class: "pix-edge-arrow", points: polygon.map(point => `${point.x},${point.y}`).join(" "), fill: color}));
+        }
         const label = (route.labels || [])[0];
         if (label) {
           const text = svgEl("text", {class: "pix-edge-label", x: label.x + label.width / 2, y: label.y + 11, "text-anchor": "middle", fill: color});

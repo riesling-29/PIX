@@ -17,6 +17,15 @@ class ImportFormat(str, Enum):
     OCEL20_JSON = "ocel20-json"
     OCEL20_XML = "ocel20-xml"
     OCEL20_SQLITE = "ocel20-sqlite"
+    OCEL10_JSON = "ocel10-json"
+    OCEL10_XML = "ocel10-xml"
+    OCEL10_SQLITE = "ocel10-sqlite"
+    OCEL21_CSV = "ocel21-csv"
+    OCEL21_BUNDLE = "ocel21-bundle"
+    TABLE_CSV = "table-csv"
+    TABLE_TSV = "table-tsv"
+    TABLE_XLSX = "table-xlsx"
+    TABLE_RECORDS = "table-records"
 
 
 class ImportStatus(str, Enum):
@@ -187,9 +196,7 @@ class ImportResult:
             raise TypeError(f"{field} must be a tuple")
 
         if not all(isinstance(item, item_type) for item in value):
-            raise TypeError(
-                f"every item in {field} must be {item_type.__name__}"
-            )
+            raise TypeError(f"every item in {field} must be {item_type.__name__}")
 
     def _validate_status_invariants(self) -> None:
         error_issues = tuple(
@@ -226,15 +233,10 @@ class ImportResult:
             return
 
         if self.candidate is not None:
-            raise ValueError(
-                "pre-semantic import failures "
-                "cannot have candidate"
-            )
+            raise ValueError("pre-semantic import failures cannot have candidate")
 
         if self.semantic_report is not None:
-            raise ValueError(
-                "import without candidate cannot have semantic report"
-            )
+            raise ValueError("import without candidate cannot have semantic report")
 
         if not error_issues:
             raise ValueError("non-semantic import failure requires error issue")

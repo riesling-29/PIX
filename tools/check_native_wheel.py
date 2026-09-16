@@ -323,12 +323,43 @@ def check_native_pipeline(output: Path) -> dict[str, object]:
         {name: build_model_graph(artifact) for name, artifact in artifacts.items()}
     )
     html_artifacts = {}
+    viewer_assets = importlib.resources.files("pix.viewer").joinpath("assets")
+    graphviz_script = viewer_assets.joinpath("vendor", "viz-global.js").read_text(
+        encoding="utf-8"
+    )
+    elk_script = viewer_assets.joinpath("vendor", "elk.bundled.js").read_text(
+        encoding="utf-8"
+    )
+    graphviz_provenance = json.loads(
+        viewer_assets.joinpath("vendor", "graphviz-provenance.json").read_text(
+            encoding="utf-8"
+        )
+    )
     for name, graph in graphs.items():
         path = export_html(graph, output / (name + ".html"), overwrite=True)
         html_bytes = path.read_bytes()
         html_text = html_bytes.decode("utf-8")
         require("pixViewerReady" in html_text, "Missing viewer runtime")
         require("pix-viewer-license" in html_text, "Missing bundled license")
+        require(
+            'window.PIXViewerLayoutEngine = "graphviz"' in html_text,
+            "Legacy/model default HTML must select Graphviz",
+        )
+        require(
+            graphviz_script in html_text and elk_script not in html_text,
+            "Default HTML must embed the Graphviz WASM bundle without ELK",
+        )
+        license_match = re.search(
+            r'<script id="pix-viewer-license" type="application/json">(.*?)</script>',
+            html_text,
+            re.S,
+        )
+        require(license_match is not None, "Graphviz license payload missing")
+        license_data = json.loads(license_match.group(1))
+        require(
+            license_data["provenance"] == graphviz_provenance,
+            "Default HTML Graphviz provenance changed",
+        )
         require(
             re.search(r"<(?:script|link)\b[^>]*(?:src|href)\s*=", html_text, re.I)
             is None,
@@ -338,6 +369,8 @@ def check_native_pipeline(output: Path) -> dict[str, object]:
             "path": str(path),
             "bytes": len(html_bytes),
             "sha256": digest(html_bytes),
+            "layout_engine": "graphviz",
+            "graphviz_license_payload_verified": True,
         }
     return {
         "ocel_roundtrips": ocel_roundtrips,
@@ -389,7 +422,7 @@ def main() -> None:
         "Source-tree import path unexpectedly present",
     )
     distribution = importlib.metadata.distribution("pix")
-    require(distribution.version == "0.4.0", "Unexpected installed PIX version")
+    require(distribution.version == "0.5.0", "Unexpected installed PIX version")
     require(
         pix.__version__ == distribution.version, "Package version differs from metadata"
     )
@@ -410,6 +443,16 @@ def main() -> None:
         "layout.js",
         "viewer.css",
         "model.css",
+        "native_geometry.js",
+        "graphviz_geometry.js",
+        "legacy_graphviz.js",
+        "visualization.js",
+        "visualization.css",
+        "vendor/viz-global.js",
+        "vendor/graphviz-provenance.json",
+        "vendor/GRAPHVIZ-LICENSE.txt",
+        "vendor/VIZ-LICENSE.txt",
+        "vendor/EXPAT-LICENSE.txt",
         "vendor/elk.bundled.js",
         "vendor/ELK-LICENSE.md",
         "vendor/provenance.json",
@@ -440,6 +483,23 @@ def main() -> None:
         require(
             recorded == {"bytes": entry["bytes"], "sha256": entry["sha256"]},
             "Vendor provenance does not match bundled asset",
+        )
+    graphviz_provenance = json.loads(
+        importlib.resources.files("pix.viewer")
+        .joinpath("assets", "vendor", "graphviz-provenance.json")
+        .read_text(encoding="utf-8")
+    )
+    require(
+        graphviz_provenance["package"]["name"] == "@viz-js/viz"
+        and graphviz_provenance["package"]["version"] == "3.30.0"
+        and graphviz_provenance["graphviz"]["version"] == "16.0.0",
+        "Unexpected bundled Graphviz/Viz.js versions",
+    )
+    for entry in graphviz_provenance["files"]:
+        recorded = assets["vendor/" + entry["name"]]
+        require(
+            recorded == {"bytes": entry["bytes"], "sha256": entry["sha256"]},
+            "Graphviz vendor provenance does not match bundled asset",
         )
 
     source_files = {
@@ -510,9 +570,16 @@ def main() -> None:
             "excluded_source_documentation": excluded_source_documentation,
         },
         "viewer_vendor": {
+            "role": "explicit_legacy_elk_alternative",
             "package": vendor_provenance["package"],
             "version": vendor_provenance["version"],
             "selected_license": vendor_provenance["selected_license"],
+            "recorded_hashes_match": True,
+        },
+        "default_layout_engine": "graphviz",
+        "graphviz_vendor": {
+            "package": graphviz_provenance["package"],
+            "graphviz": graphviz_provenance["graphviz"],
             "recorded_hashes_match": True,
         },
         "native_pipeline": native_pipeline,

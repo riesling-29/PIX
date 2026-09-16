@@ -7,8 +7,10 @@ from pathlib import Path
 from typing import Any
 
 from pix.ocel.build import BuildResult
-from pix.ocel.ingest.contract import Transformation
+from pix.ocel.ingest.contract import ImportStage, ImportStatus, Transformation
+from pix.ocel.ingest.formats._sqlite_source import standalone_database_issue
 from pix.ocel.ingest.formats.common import (
+    AdapterFailure,
     ValueEncoding,
     map_document,
     mapping_failure,
@@ -31,12 +33,22 @@ _OBJECT_FIXED_COLUMNS = {"ocel_id", "ocel_time", "ocel_changed_field"}
 def load(path: Path) -> tuple[BuildResult, tuple[Transformation, ...]]:
     """Read and map an OCEL 2.0 SQLite database in read-only mode."""
 
+    issue = standalone_database_issue(path)
+    if issue is not None:
+        raise AdapterFailure(
+            status=ImportStatus.UNSUPPORTED,
+            stage=ImportStage.SOURCE,
+            code="unsupported_sqlite_journal",
+            message=issue,
+        )
     connection: sqlite3.Connection | None = None
     try:
         uri = f"{path.resolve().as_uri()}?mode=ro"
         connection = sqlite3.connect(uri, uri=True)
         connection.row_factory = sqlite3.Row
         connection.execute("PRAGMA query_only = ON")
+        connection.execute("PRAGMA trusted_schema = OFF")
+        connection.execute("BEGIN")
         document = _read_document(connection)
     except sqlite3.DatabaseError as exc:
         raise syntax_failure(

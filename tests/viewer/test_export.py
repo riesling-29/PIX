@@ -34,8 +34,9 @@ def extract_payload(html, id="pix-graph-data"):
     )
 
 
-def test_offline_export_includes_original_evidence_and_no_remote_assets():
-    html = render_html(sample_graph())
+@pytest.mark.parametrize("engine", ["graphviz", "elk"])
+def test_offline_export_includes_original_evidence_and_no_remote_assets(engine):
+    html = render_html(sample_graph(), layout_engine=engine)
     payload = extract_payload(html)
     assert payload["schema"] == "pix.process-graph"
     assert payload["edges"][0]["counts"] == {
@@ -48,8 +49,13 @@ def test_offline_export_includes_original_evidence_and_no_remote_assets():
     tags.feed(html)
     assert not any("src" in attrs or tag == "link" for tag, attrs in tags.tags)
     provenance = extract_payload(html, "pix-viewer-license")
-    assert provenance["provenance"]["version"] == "0.12.0"
+    if engine == "graphviz":
+        assert provenance["provenance"]["package"]["name"] == "@viz-js/viz"
+        assert "MIT License" in provenance["viz_license"]
+    else:
+        assert provenance["provenance"]["version"] == "0.12.0"
     assert "Eclipse Public License" in provenance["license"]
+    assert f'window.PIXViewerLayoutEngine = "{engine}"' in html
 
 
 def test_html_breakout_and_unicode_preserve_data_without_creating_tags():
@@ -63,7 +69,24 @@ def test_html_breakout_and_unicode_preserve_data_without_creating_tags():
     tags = Tags()
     tags.feed(html)
     assert not any(tag == "img" for tag, _ in tags.tags)
-    assert len([tag for tag, _ in tags.tags if tag == "script"]) == 5
+    original = Tags()
+    original.feed(render_html(sample_graph()))
+    assert [tag for tag, _ in tags.tags if tag == "script"] == [
+        tag for tag, _ in original.tags if tag == "script"
+    ]
+
+
+def test_default_graphviz_keeps_the_existing_graph_ui_and_selectors():
+    html = render_html(sample_graph())
+    assert 'window.PIXViewerLayoutEngine = "graphviz"' in html
+    assert 'id="pix-graph-data"' in html
+    assert 'id="pix-visualization-data"' not in html
+    assert "PIXLegacyGraphviz" in html
+    assert "elk.bundled" not in html
+    assert extract_payload(html)["object_types"] == ["Order"]
+    assert html.index("root.PIXLayout = api") < html.index(
+        "root.PIXLegacyGraphviz = factory(root.PIXLayout)"
+    )
 
 
 def test_export_no_clobber_and_explicit_replace(tmp_path):
@@ -108,6 +131,75 @@ def test_type_errors_do_not_create_artifacts(tmp_path):
         export_html({}, path)
     with pytest.raises(TypeError):
         export_html(sample_graph(), path, overwrite="yes")
+    assert not list(tmp_path.iterdir())
+
+
+@pytest.mark.parametrize(
+    "engine,error",
+    [
+        (None, TypeError),
+        (True, TypeError),
+        ([], TypeError),
+        ("", ValueError),
+        ("dot", ValueError),
+        ('graphviz";alert(1)', ValueError),
+        ("native", ValueError),
+    ],
+)
+def test_invalid_legacy_engine_rejects_before_publication(tmp_path, engine, error):
+    with pytest.raises(error, match="layout_engine"):
+        export_html(sample_graph(), tmp_path / "graph.html", layout_engine=engine)
+    assert not list(tmp_path.iterdir())
+
+
+@pytest.mark.parametrize("exporter", [export_html, export_html_report])
+def test_publication_wrapper_honors_explicit_elk(tmp_path, exporter):
+    path = tmp_path / "elk.html"
+    exporter(sample_graph(), path, layout_engine="elk")
+    html = path.read_text(encoding="utf-8")
+    assert 'window.PIXViewerLayoutEngine = "elk"' in html
+    assert extract_payload(html, "pix-viewer-license")["provenance"]["package"] == (
+        "elkjs"
+    )
+
+
+def test_missing_graphviz_asset_does_not_fall_back_or_replace_file(
+    tmp_path, monkeypatch
+):
+    import pix.viewer.export as module
+
+    target = tmp_path / "graph.html"
+    target.write_text("existing report", encoding="utf-8")
+    original_asset = module._asset
+
+    def missing(name):
+        if name == "vendor/viz-global.js":
+            raise FileNotFoundError("Graphviz bundle unavailable")
+        return original_asset(name)
+
+    monkeypatch.setattr(module, "_asset", missing)
+    with pytest.raises(FileNotFoundError, match="Graphviz bundle unavailable"):
+        export_html(sample_graph(), target, overwrite=True)
+    assert target.read_text(encoding="utf-8") == "existing report"
+    assert list(tmp_path.iterdir()) == [target]
+
+
+@pytest.mark.parametrize("asset", ["graphviz_geometry.js", "viewer.css"])
+def test_packaged_raw_text_terminator_rejects_before_publication(
+    tmp_path, monkeypatch, asset
+):
+    import pix.viewer.export as module
+
+    original_asset = module._asset
+
+    def unsafe(name):
+        if name == asset:
+            return "</style><script>bad()</script>"
+        return original_asset(name)
+
+    monkeypatch.setattr(module, "_asset", unsafe)
+    with pytest.raises(ValueError, match="unsafe terminator"):
+        export_html(sample_graph(), tmp_path / "graph.html")
     assert not list(tmp_path.iterdir())
 
 

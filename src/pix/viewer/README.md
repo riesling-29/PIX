@@ -43,7 +43,8 @@ atomically and refuses to replace an existing path unless `overwrite=True` is
 specified. Its no-clobber publication uses filesystem hard links: a filesystem
 without that facility fails without replacing the destination. The output
 includes all graph evidence, including objects hidden later by a view filter;
-visibility is not redaction. The HTML carries the ELK license and provenance.
+visibility is not redaction. The HTML carries the selected engine's license and
+provenance.
 `export_html_report` returns the file hash, byte count and any temporary-file
 cleanup issues separately from publication success. The Path-returning
 `export_html` convenience API intentionally returns only the path; use
@@ -79,10 +80,26 @@ JSON retain arbitrary-size integers exactly.
 
 ## Layout boundary
 
-The shipped engine is ELK.js **0.12.0**, pinned and vendored under `assets/vendor`.
-It requires no CDN, Node installation, Graphviz process, or Python dependency at
-runtime. `assets/layout.js` isolates the layered layout and tests its routes,
-ports, self loops and parallel edges. Browser rendering lives in `viewer.js`.
+**Graphviz is the default for every graph view**, including `GraphDocument`,
+`ModelGraphDocument` and graph panels in `VisualizationDocument`. Graphviz
+**16.0.0** is pinned through **`@viz-js/viz` 3.30.0** and vendored with inline
+WebAssembly under `assets/vendor`. It requires no CDN, Node installation,
+system `dot` process or Python `graphviz` package at runtime. Graphviz computes
+node positions, splines and edge-label positions; PIX retains semantic IDs,
+evidence, SVG rendering and interactions. This does not delegate mining to PM4Py
+or OCPA. The default change follows the
+[2026-09-16 requirements](../../../docs/requirements/2026-09-16_GRAPHVIZ_AND_OC_VARIANT_VISUALIZATION.md).
+
+`render_html`, `export_html` and `export_html_report` accept
+`layout_engine="graphviz"` by default. `layout_engine="native"` explicitly selects
+experimental PIX geometry for `VisualizationDocument` only; `layout_engine="elk"`
+selects pinned ELK.js **0.12.0** for legacy graph documents only. Unsupported
+combinations are rejected. A layout failure is visible and does not silently
+select another engine. Existing type filters, count selectors and evidence
+inspection remain available on legacy graphs.
+
+`assets/layout.js` retains the legacy ELK geometry adapter; browser rendering lives
+in `viewer.js`. The new document renderer lives in `visualization.js`.
 
 For an embedding, `PIXViewer.mount(element, graph, {layout})` accepts an async
 layout function. Its input is a graph copy; its output follows the ELK JSON
@@ -90,6 +107,22 @@ geometry shape and preserves the label/shape metadata produced by
 `PIXLayout.toElkGraph`. `PIXLayout.createElkLayout(engine)` supplies the checked adapter
 for compatible engines and verifies preservation of nodes and edges. A custom
 renderer may instead consume `GraphDocument` directly.
+
+## Object-centric variant chevrons
+
+`build_variant_visualization(execution_result, variant_result, title=...)` combines
+matching native execution and variant results with checked parent provenance.
+It draws a representative execution per classified variant, preserving frequency,
+population and member evidence. PIX's exact qualified-incidence variant definition
+does not change to OCPA's default approximate variant definition.
+
+`build_execution_chevrons(execution, title=..., panel_id=...)` provides a lower-level
+`ChevronPanel` for one execution. Every lane is an object instance, colored by
+object type. A shared event has one semantic ID and one inclusive `[start, end]`
+slot interval, displayed on each participating lane. The start is its longest-path
+precedence level; its end is one slot before its earliest successor, or its own
+start when it is a sink. Width is not duration. The dedicated chevron renderer
+uses these domain slots independently of Graphviz.
 
 The auto-export exposes `window.pixViewerReady` and, after it resolves,
 `window.pixViewer`. The controller provides `getViewState()`, `getGraph()` (a
@@ -101,13 +134,17 @@ latency guarantee is claimed.
 
 ```text
 python -m pytest tests/viewer
-node --test tests/viewer/test_layout.cjs
+node --test tests/viewer/test_layout.cjs tests/viewer/test_graphviz_geometry.cjs tests/viewer/test_legacy_graphviz.cjs tests/viewer/test_visualization_ui.cjs
 cd tools/viewer_vendor
 npm ci --ignore-scripts
 npm run check
 ```
 
 The vendor folder records the exact registry archive, source revision, license,
-SHA256 and byte count. `npm run vendor` copies the pinned distribution into the
-Python package; no npm dependencies are loaded by the Python engine. Changing
-the layout engine requires rerunning layout tests and actual-browser inspection.
+SHA256 and byte count. Graphviz metadata is in
+`assets/vendor/graphviz-provenance.json`; Viz.js, Graphviz and Expat license files
+are included separately. Source-build reproducibility is not claimed. The
+`tools/viewer_vendor` npm commands above currently verify and reproduce the
+explicit legacy ELK option only. No npm dependencies are loaded by the Python
+calculation engine. Changing either layout engine requires rerunning geometry
+tests, packaged-file checks and actual-browser inspection.

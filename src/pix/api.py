@@ -28,6 +28,7 @@ from pix.compute.temporal import measure_temporal
 from pix.compute.trace import reconstruct_traces
 from pix.compute.variants import discover_variants
 from pix.contracts.analysis import OCDFGSpec, TemporalSpec, TraceSpec
+from pix.contracts.case_log import CaseTraceSpec
 from pix.contracts.conformance import AlignmentSpec
 from pix.contracts.constraint import (
     ConstraintSpec,
@@ -54,6 +55,15 @@ from pix.engine import (
     VariantRequest,
     compute,
 )
+from pix.event_log import (
+    CaseImportResult,
+    CaseLog,
+    CaseOCELMapping,
+    case_log_digest,
+    case_traces,
+    to_ocel,
+)
+from pix.io import import_log, read_log
 from pix.models import (
     ModelArtifact,
     model_document,
@@ -70,8 +80,27 @@ from pix.results import (
     result_json_bytes,
     write_result,
 )
+from pix.tabular import (
+    AttributeColumn,
+    CaseTableMapping,
+    ObjectColumn,
+    OCELTableMapping,
+)
 
 __all__ = [
+    "AttributeColumn",
+    "CaseImportResult",
+    "CaseLog",
+    "CaseOCELMapping",
+    "CaseTableMapping",
+    "CaseTraceSpec",
+    "ObjectColumn",
+    "OCELTableMapping",
+    "case_log_digest",
+    "case_traces",
+    "import_log",
+    "read_log",
+    "to_ocel",
     "ConstraintSpec",
     "CountRule",
     "NotCoexistenceRule",

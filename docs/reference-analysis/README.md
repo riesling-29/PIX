@@ -2,6 +2,12 @@
 
 # 참조 분석
 
+현재 읽기 순서는 [2026-09-12 구조 재조사](comparison/2_PM4PY_OCPA_STRUCTURE_REFRESH_2026-09-12.md),
+[PM4Py 기존 구조](pm4py/0_PM4PY_OVERALL_STRUCTURE_ANALYSIS.md),
+[OCPA 기존 구조](ocpa/0_OCPA_OVERALL_STRUCTURE_ANALYSIS.md)입니다.
+재조사 문서에서 기존 I/O·데이터 모델 비교와 9월 설계·구현 기록으로 연결됩니다.
+판본과 이번 검증 한계는 [참조 스냅샷](REFERENCE_SNAPSHOTS.md)에 기록합니다.
+
 참고 분석은 이 작업 흐름을 따르고 있습니다.
 
 ```text

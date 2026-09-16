@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pix"
-version = "0.4.0"
+version = "0.5.0"
 description = "Deterministic Process Intelligence computation and interpretation engine"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -16,6 +16,9 @@ dev = [
     "ruff",
 ]
 browser = ["playwright"]
+excel = ["openpyxl>=3.1"]
+parquet = ["pyarrow>=14"]
+imports = ["openpyxl>=3.1", "pyarrow>=14"]
 
 [tool.setuptools]
 package-dir = {"" = "src"}

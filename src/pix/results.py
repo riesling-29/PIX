@@ -21,6 +21,7 @@ from typing import Literal, Union, get_args, get_origin, get_type_hints
 from pix._publication import FilePublication, publish_bytes
 from pix.contracts import (
     analysis,
+    case_log,
     conformance,
     constraint,
     discovery,
@@ -35,14 +36,19 @@ from pix.contracts import (
 from pix.contracts.result import ComputationResult, ComputeIssue, ComputeStatus
 
 RESULT_FORMAT = "pix.analysis-result"
-RESULT_VERSION = "1.1.0"
-_READABLE_VERSIONS = ("1.0.0", RESULT_VERSION)
+RESULT_VERSION = "1.2.0"
+_READABLE_VERSIONS = ("1.0.0", "1.1.0", RESULT_VERSION)
 _INTEGER_TAG = "$pix.integer.hex"
 
 
 def _schemas() -> dict[str, tuple[str, type, type]]:
     # Import only known modules in code, never module names from persisted data.
     schemas = {
+        "pix.case_traces": (
+            "case-traces",
+            case_log.CaseTraceSpec,
+            analysis.TraceSet,
+        ),
         "pix.reconstruct_traces": (
             "object-traces",
             analysis.TraceSpec,
@@ -106,6 +112,12 @@ def _schemas() -> dict[str, tuple[str, type, type]]:
             constraint.ConstraintEvaluation,
         ),
     }
+    from pix._mining_registry import mining_schemas
+
+    for operator, schema in mining_schemas().items():
+        if operator in schemas:
+            raise RuntimeError(f"duplicate analytical result operator: {operator}")
+        schemas[operator] = schema
     return schemas
 
 
@@ -174,9 +186,29 @@ def _check_identity(result: ComputationResult) -> None:
 
 def _check_envelope(result: ComputationResult) -> None:
     """Check redundant request/payload facts, without repeating the computation."""
+    if result.operator_id == "pix.case_centric.discover_interleavings":
+        from pix.case_centric.interleavings import validate_interleaving_result
+
+        validate_interleaving_result(result)
+    if result.operator_id == "pix.case_centric.retrieve_embedding_neighbors":
+        from pix.case_centric.embedding_retrieval import (
+            validate_embedding_retrieval_result,
+        )
+
+        validate_embedding_retrieval_result(result)
     value, spec = result.value, result.spec
     if value is None:
         return
+    if isinstance(value, analysis.TraceSet):
+        if value.object_type != spec.object_type:
+            raise ValueError("trace payload and selected type disagree")
+        for trace in value.traces:
+            if trace.object_type != value.object_type:
+                raise ValueError("trace member type differs from its trace set")
+            if result.operator_id != "pix.case_traces" and any(
+                event.time is None for event in trace.events
+            ):
+                raise ValueError("OCEL trace events require observed timestamps")
     if hasattr(spec, "model_digest") and hasattr(value, "model_digest"):
         if spec.model_digest != value.model_digest:
             raise ValueError("request and payload model digests disagree")
@@ -376,6 +408,26 @@ def _decode(
         if set(value) != names:
             raise ValueError(f"unexpected or missing fields in {expected.__name__}")
         hints = get_type_hints(expected)
+        # XES values have an explicit type discriminator. An ISO-looking string
+        # must remain a string; a declared date must decode as datetime even
+        # though the general CaseValue union lists str first.
+        from pix.event_log.model import CaseAttribute
+
+        if expected is CaseAttribute:
+            attribute_types = {
+                "string": str,
+                "id": str,
+                "date": datetime,
+                "int": int,
+                "float": float,
+                "boolean": bool,
+                "list": type(None),
+                "container": type(None),
+                "null": type(None),
+            }
+            if type(value["type"]) is not str or value["type"] not in attribute_types:
+                raise ValueError("unsupported case attribute type")
+            hints["value"] = attribute_types[value["type"]]
         return expected(
             **{
                 name: _decode(
@@ -421,9 +473,11 @@ def result_from_json(data: str | bytes) -> ComputationResult:
         raise ValueError("unsupported operator result schema") from exc
     if document["payload_kind"] != kind:
         raise ValueError("payload kind does not match its operator")
+    if record["operator_id"] == "pix.case_traces" and document["version"] != "1.2.0":
+        raise ValueError("case trace results require format version 1.2.0")
 
     def decode(value: object, expected: object) -> object:
-        return _decode(value, expected, large_integers=document["version"] == "1.1.0")
+        return _decode(value, expected, large_integers=document["version"] != "1.0.0")
 
     result = ComputationResult(
         operator_id=decode(record["operator_id"], str),

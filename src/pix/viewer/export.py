@@ -12,6 +12,9 @@ from pathlib import Path
 from pix._publication import FilePublication, publish_bytes
 from pix.contracts.graph import GraphDocument, ModelGraphDocument
 
+from .visual_contracts import VisualizationDocument
+from .visual_serialization import visual_to_dict
+
 
 def _asset(name: str) -> str:
     return (
@@ -47,14 +50,107 @@ def _check_browser_integers(value: object) -> None:
             _check_browser_integers(item)
 
 
-def render_html(graph: GraphDocument | ModelGraphDocument) -> str:
+_GRAPHVIZ_SCRIPTS = ("vendor/viz-global.js", "graphviz_geometry.js")
+
+
+def _script_elements(names: tuple[str, ...]) -> str:
+    scripts = []
+    for name in names:
+        source = _asset(name)
+        if "</script" in source.lower():
+            raise ValueError(f"packaged script contains an unsafe terminator: {name}")
+        scripts.append("<script>\n" + source + "\n</script>")
+    return "".join(scripts)
+
+
+def _license_element(layout_engine: str) -> str:
+    if layout_engine == "native":
+        return ""
+    if layout_engine == "graphviz":
+        data = {
+            "provenance": json.loads(_asset("vendor/graphviz-provenance.json")),
+            "license": _asset("vendor/GRAPHVIZ-LICENSE.txt"),
+            "viz_license": _asset("vendor/VIZ-LICENSE.txt"),
+            "expat_license": _asset("vendor/EXPAT-LICENSE.txt"),
+        }
+    else:
+        data = {
+            "provenance": json.loads(_asset("vendor/provenance.json")),
+            "license": _asset("vendor/ELK-LICENSE.md"),
+        }
+    payload = _script_safe(json.dumps(data, ensure_ascii=False))
+    return (
+        '<script id="pix-viewer-license" type="application/json">'
+        + payload
+        + "</script>"
+    )
+
+
+def _render_visualization_html(
+    document: VisualizationDocument, *, layout_engine: str
+) -> str:
+    """Panel views use Graphviz by default and PIX's SVG interactions."""
+    data = visual_to_dict(document)
+    _check_browser_integers(data)
+    payload = _script_safe(json.dumps(data, ensure_ascii=False, allow_nan=False))
+    names = ("native_geometry.js",)
+    if layout_engine == "graphviz":
+        names += _GRAPHVIZ_SCRIPTS
+    scripts = _script_elements((*names, "visualization.js"))
+    license_data = _license_element(layout_engine)
+    css = _asset("visualization.css")
+    if "</style" in css.lower():
+        raise ValueError("packaged stylesheet contains an unsafe terminator")
+    title = html.escape(document.title, quote=True)
+    return f"""<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{title}</title><style>{css}</style></head>
+<body><main id="pix-viewer"></main>
+<noscript>Enable JavaScript to explore this offline visualization.</noscript>
+<script id="pix-visualization-data" type="application/json">{payload}</script>
+{license_data}
+{scripts}
+<script>
+window.pixVisualization = PIXVisualization.mount(
+  document.getElementById("pix-viewer"),
+  JSON.parse(document.getElementById("pix-visualization-data").textContent),
+  {{layoutEngine: "{layout_engine}"}}
+);
+window.pixViewerReady = window.pixVisualization.ready;
+</script>
+</body></html>
+"""
+
+
+def render_html(
+    graph: GraphDocument | ModelGraphDocument | VisualizationDocument,
+    *,
+    layout_engine: str = "graphviz",
+) -> str:
     """Render graph evidence into an offline, self-contained HTML document.
 
     The full graph evidence is included in the file, including hidden types.
     Browser visibility is presentation only and does not redact this artifact.
+    Graphviz is bundled as WebAssembly: neither a system ``dot`` installation
+    nor a network connection is required. Select ``native`` explicitly for the
+    experimental VisualizationDocument layout, or ``elk`` for legacy graph
+    documents. A layout failure is shown without silently changing engines.
     """
+    if type(layout_engine) is not str:
+        raise TypeError("layout_engine must be a string")
+    if layout_engine not in ("graphviz", "native", "elk"):
+        raise ValueError("layout_engine must be 'graphviz', 'native' or 'elk'")
+    if isinstance(graph, VisualizationDocument):
+        if layout_engine == "elk":
+            raise ValueError("layout_engine='elk' requires a legacy graph document")
+        return _render_visualization_html(graph, layout_engine=layout_engine)
     if not isinstance(graph, (GraphDocument, ModelGraphDocument)):
-        raise TypeError("graph must be GraphDocument or ModelGraphDocument")
+        raise TypeError(
+            "graph must be GraphDocument, ModelGraphDocument or VisualizationDocument"
+        )
+    if layout_engine == "native":
+        raise ValueError("layout_engine='native' requires VisualizationDocument")
     data = asdict(graph)
     is_model = isinstance(graph, ModelGraphDocument)
     data["schema"] = "pix.model-graph" if is_model else "pix.process-graph"
@@ -65,23 +161,21 @@ def render_html(graph: GraphDocument | ModelGraphDocument) -> str:
             node["object_count"] = len(node["object_ids"])
     _check_browser_integers(data)
     payload = _script_safe(json.dumps(data, ensure_ascii=False, allow_nan=False))
-    license_data = _script_safe(
-        json.dumps(
-            {
-                "provenance": json.loads(_asset("vendor/provenance.json")),
-                "license": _asset("vendor/ELK-LICENSE.md"),
-            },
-            ensure_ascii=False,
-        )
-    )
+    license_data = _license_element(layout_engine)
     css = _asset("viewer.css") + "\n" + _asset("model.css")
-    scripts = []
-    for name in ("vendor/elk.bundled.js", "layout.js", "viewer.js"):
-        source = _asset(name)
-        # Packaged code is trusted, but cannot terminate an HTML script element.
-        if "</script" in source.lower():
-            raise ValueError(f"packaged script contains an unsafe terminator: {name}")
-        scripts.append("<script>\n" + source + "\n</script>")
+    if "</style" in css.lower():
+        raise ValueError("packaged stylesheet contains an unsafe terminator")
+    names = (
+        (
+            "native_geometry.js",
+            *_GRAPHVIZ_SCRIPTS,
+            "layout.js",
+            "legacy_graphviz.js",
+        )
+        if layout_engine == "graphviz"
+        else ("vendor/elk.bundled.js", "layout.js")
+    )
+    scripts = _script_elements((*names, "viewer.js"))
     title = html.escape(graph.title, quote=True)
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
@@ -90,30 +184,33 @@ def render_html(graph: GraphDocument | ModelGraphDocument) -> str:
 <body><div id="pix-viewer"></div>
 <noscript>This graph needs JavaScript for its local layout and interactions.</noscript>
 <script id="pix-graph-data" type="application/json">{payload}</script>
-<script id="pix-viewer-license" type="application/json">{license_data}</script>
-{"".join(scripts)}
+{license_data}
+<script>window.PIXViewerLayoutEngine = "{layout_engine}";</script>
+{scripts}
 </body></html>
 """
 
 
 def export_html_report(
-    graph: GraphDocument | ModelGraphDocument,
+    graph: GraphDocument | ModelGraphDocument | VisualizationDocument,
     path: str | os.PathLike[str],
     *,
     overwrite: bool = False,
+    layout_engine: str = "graphviz",
 ) -> FilePublication:
     """Publish HTML and return its identity and any post-commit cleanup issues."""
     if type(overwrite) is not bool:
         raise TypeError("overwrite must be bool")
-    rendered = render_html(graph).encode("utf-8")
+    rendered = render_html(graph, layout_engine=layout_engine).encode("utf-8")
     return publish_bytes(rendered, path, overwrite=overwrite, prefix=".pix-viewer-")
 
 
 def export_html(
-    graph: GraphDocument | ModelGraphDocument,
+    graph: GraphDocument | ModelGraphDocument | VisualizationDocument,
     path: str | os.PathLike[str],
     *,
     overwrite: bool = False,
+    layout_engine: str = "graphviz",
 ) -> Path:
     """Publish atomically, preserving the Path-returning convenience API.
 
@@ -122,7 +219,7 @@ def export_html(
     Cleanup failure after commit does not raise, even with warnings-as-errors.
     Publication failures preserve the primary exception and its cleanup_issues.
     """
-    export_html_report(graph, path, overwrite=overwrite)
+    export_html_report(graph, path, overwrite=overwrite, layout_engine=layout_engine)
     return Path(path)
 
 

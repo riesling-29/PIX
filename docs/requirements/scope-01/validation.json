@@ -1,0 +1,49 @@
+{
+  "checked_at": "2026-09-14T12:49:41.094036+00:00",
+  "passed": true,
+  "method": "Static source identifiers/hashes and document traceability; no upstream imports or algorithm execution",
+  "rows": 334,
+  "implementation_counts": {
+    "partial": 64,
+    "absent": 251,
+    "implemented": 19
+  },
+  "plan_task_ids": 79,
+  "reference_coverage": [
+    {
+      "package": "pm4py",
+      "python_files": 1658,
+      "public_facade_definitions": 315,
+      "public_entry_module_definitions": 179,
+      "selector_registries": 150,
+      "selector_members": 294,
+      "dynamic_variant_assignments": 2,
+      "unmapped_functions": 0,
+      "unmapped_selector_members": 0,
+      "unmapped_dynamic_variants": 0
+    },
+    {
+      "package": "ocpa",
+      "python_files": 203,
+      "public_facade_definitions": 0,
+      "public_entry_module_definitions": 62,
+      "selector_registries": 22,
+      "selector_members": 52,
+      "dynamic_variant_assignments": 0,
+      "unmapped_functions": 0,
+      "unmapped_selector_members": 0,
+      "unmapped_dynamic_variants": 0
+    }
+  ],
+  "reference_source_hashes_rechecked": 1861,
+  "reference_source_hash_check_requested": true,
+  "pix_runtime_hashes_matched": 106,
+  "pix_runtime_hashes_total": 106,
+  "local_document_links_checked": 619,
+  "registry_sha256": "2c5b17fe1686927469483994018c54e22c5f65c316d9498bc60293a358b4ccbd",
+  "reference_catalog_sha256": "30286c5b6a6e333e0638dee74613eb4242ce7c71b93ba23d14462d870aa8eed7",
+  "upstream_algorithms_executed": false,
+  "new_product_algorithm_tests_run": false,
+  "scope_limitation": "Coverage closes the enumerated facade/algorithm-factory-evaluator and selector surfaces; arbitrary helpers, dynamic runtime APIs and semantic equivalence are not exhaustively certified.",
+  "errors": []
+}

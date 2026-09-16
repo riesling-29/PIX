@@ -1,4 +1,4 @@
-/* PIX view geometry. ELK owns placement; this module owns display contracts. */
+/* PIX view geometry. Layout engines own placement; this module owns display contracts. */
 (function (root, factory) {
   "use strict";
   const api = factory();
@@ -280,6 +280,21 @@
     return edge.sections.map(section => {
       if (!section || (section.bendPoints !== undefined && !Array.isArray(section.bendPoints))) {
         throw new TypeError("Invalid edge section");
+      }
+      if (section.cubicBezier !== undefined) {
+        if (!Array.isArray(section.cubicBezier) || !section.cubicBezier.length || section.bendPoints !== undefined) {
+          throw new TypeError("Cubic edge sections require nonempty curves and no polyline bends");
+        }
+        const start = pointText(section.startPoint);
+        const end = pointText(section.endPoint);
+        const curves = section.cubicBezier.map(curve => {
+          if (!curve) throw new TypeError("Invalid cubic edge curve");
+          return ` C${pointText(curve.controlPoint1)} ${pointText(curve.controlPoint2)} ${pointText(curve.endPoint)}`;
+        });
+        if (pointText(section.cubicBezier.at(-1).endPoint) !== end) {
+          throw new TypeError("Cubic edge section endpoint must match its final curve");
+        }
+        return `M${start}` + curves.join("");
       }
       return `M${pointText(section.startPoint)}` + [...(section.bendPoints || []), section.endPoint].map(point => ` L${pointText(point)}`).join("");
     }).join(" ");
