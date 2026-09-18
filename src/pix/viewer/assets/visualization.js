@@ -73,11 +73,17 @@
   }
   const SVG_STYLE = `text{font-family:Inter,Segoe UI,Arial,sans-serif;fill:#293b47;font-size:12px}.pv-node-shape{fill:var(--pv-tint,#fff);stroke:var(--pv-color,#66838b);stroke-width:1.4}.pv-silent{fill:#304750;stroke:#304750}.pv-node-label{font-size:12px;font-weight:600}.pv-node-metric{font-size:10px;fill:#61747d}.pv-edge-line{fill:none;stroke:var(--pv-color,#879ba3);stroke-width:1.6;stroke-linejoin:round}.pv-edge-hit{fill:none;stroke:transparent;stroke-width:14}.pv-edge-label{font-size:10px;paint-order:stroke;stroke:#f8fafb;stroke-width:5px;stroke-linejoin:round}.pv-grid{stroke:#e4eaee;stroke-width:1}.pv-axis{stroke:#9aabb4;stroke-width:1}.pv-tick{font-size:11px;fill:#657781}.pv-axis-label{font-size:12px;font-weight:600}.pv-mark{cursor:pointer;outline:none}.pv-mark.is-selected .pv-node-shape,.pv-mark:focus-visible .pv-node-shape{stroke:#163f51;stroke-width:3}.pv-mark.is-selected .pv-edge-line,.pv-mark:focus-visible .pv-edge-line{stroke-width:4}.pv-mark.is-match{filter:drop-shadow(0 0 3px #d49524)}.pv-mark.is-selected{filter:drop-shadow(0 1px 3px #49687580)}.pv-unknown{fill:#e9edf0;stroke:#b9c6cd;stroke-dasharray:3 3}.pv-cell-label{font-size:11px}.pv-series-line{fill:none;stroke-width:2}.pv-timeline-label{fill:#fff;font-size:11px;font-weight:600}.pv-empty-svg{font-size:16px;fill:#71838c}`;
 
+  const CHEVRON_SVG_STYLE = `.pv-chevron-label{font-size:12px;font-weight:600;fill:#253b49}.pv-chevron-shape{stroke-linejoin:round}.pv-mark.is-selected .pv-chevron-shape,.pv-mark:focus-visible .pv-chevron-shape{stroke:#163f51;stroke-width:3}.pv-chevron-lane-label{font-size:12px;font-weight:600}.pv-chevron-neutral-view text{fill:var(--pc-ink,#303844)}.pv-chevron-neutral-view .pv-chevron-label{font-size:13px;font-weight:500}.pv-chevron-neutral-view .pv-chevron-shape,.pv-chevron-neutral-view .pv-mark.is-selected .pv-chevron-shape,.pv-chevron-neutral-view .pv-mark:focus-visible .pv-chevron-shape{fill:transparent;stroke:transparent;stroke-width:0}.pv-chevron-neutral-view .pv-grid{stroke:var(--pc-rule,#edf0f3)}.pv-chevron-neutral-view .pv-tick,.pv-chevron-neutral-view .pv-chevron-type{font-size:11px;fill:var(--pc-muted,#68727e);font-weight:400}.pv-chevron-neutral-view .pv-chevron-lane-label{font-size:13px;font-weight:500}.pv-chevron-neutral-view .pv-chevron-span{fill:none;stroke:var(--pc-span,#a7b0ba);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}.pv-chevron-neutral-view .pv-chevron-glyph{fill:var(--pc-glyph,#687584)}.pv-chevron-neutral-view .pv-chevron-halo{fill:var(--pc-halo,#e8edf2);opacity:0}.pv-chevron-neutral-view .pv-chevron-shared-link{fill:none;stroke:var(--pc-glyph,#687584);stroke-width:1;stroke-dasharray:3 4;opacity:0}.pv-chevron-neutral-view .pv-mark.is-selected,.pv-chevron-neutral-view .pv-mark:focus-visible{filter:none}.pv-chevron-neutral-view .pv-mark.is-selected .pv-chevron-halo,.pv-chevron-neutral-view .pv-mark:focus-visible .pv-chevron-halo,.pv-chevron-neutral-view .pv-mark.is-selected .pv-chevron-shared-link{opacity:1}.pv-chevron-neutral-view .pv-mark.is-selected .pv-chevron-span,.pv-chevron-neutral-view .pv-mark:focus-visible .pv-chevron-span{stroke:var(--pc-ink,#303844);stroke-width:2.2}.pv-chevron-neutral-view .pv-mark.is-selected .pv-chevron-glyph{fill:var(--pc-ink,#303844)}`;
+
   function mount(container, sourceDocument, options = {}) {
     if (!container || typeof container.replaceChildren !== "function") throw new Error("A DOM container is required.");
     if (!sourceDocument || sourceDocument.schema !== "pix.visualization.v1" || !Array.isArray(sourceDocument.panels)) throw new Error("Expected a pix.visualization.v1 document.");
     const layoutEngine = options.layoutEngine === undefined ? "graphviz" : options.layoutEngine;
     if (!["graphviz", "native"].includes(layoutEngine)) throw new Error("Choose graphviz or explicit experimental native layout.");
+    const chevronOrientation = options.chevronOrientation === undefined ? "horizontal" : options.chevronOrientation;
+    const chevronStyle = options.chevronStyle === undefined ? "neutral" : options.chevronStyle;
+    if (!["horizontal", "vertical", "auto"].includes(chevronOrientation)) throw new Error("chevronOrientation must be horizontal, vertical or auto.");
+    if (!["classic", "neutral"].includes(chevronStyle)) throw new Error("chevronStyle must be classic or neutral.");
     const pending = [sourceDocument];
     while (pending.length) {
       const value = pending.pop();
@@ -96,7 +102,7 @@
     const instance = ++nextId;
     let disposed = false, generation = 0, current = null, currentSVG = null, marks = [], selected = null;
     let bounds = {x: 0, y: 0, width: 900, height: 550}, view = {...bounds}, pointer = null, moved = false;
-    let tableQuery = null, currentNotes = [], renderPromise;
+    let tableQuery = null, currentNotes = [], renderPromise, chevronObserver = null, lastChevronWidth = 0;
     const app = html("div", {class: "pv-app"});
     const header = html("header", {class: "pv-header"});
     const brand = html("div", {class: "pv-brand", "aria-label": "PIX"}, "PIX");
@@ -159,12 +165,16 @@
         const panelIds = item.panel_ids || [];
         return panelIds.length ? panelIds.includes(current.id) : !(item.input_path || []).length;
       });
-      if (provenance.length) inspector.append(html("h3", {}, "Calculation provenance"));
+      let provenanceHost = inspector;
+      if (current?.kind === "chevron" && chevronStyle === "neutral" && provenance.length) {
+        provenanceHost = html("details", {class: "pv-provenance-disclosure"});
+        provenanceHost.append(html("summary", {}, "Calculation provenance")); inspector.append(provenanceHost);
+      } else if (provenance.length) inspector.append(html("h3", {}, "Calculation provenance"));
       for (const item of provenance) {
         const block = html("section", {class: "pv-provenance"});
         fields(block, ["operator_id", "calculation_id", "source_digest", "model_digest", "status"].filter(key => item[key] !== null && item[key] !== undefined).map(key => ({name: key.replace(/_/g, " "), value: item[key]})));
         fields(block, [{name: "Input path", value: item.input_path || []}, {name: "Associated panel IDs", value: (item.panel_ids || []).length ? item.panel_ids : (item.input_path || []).length ? "No associated panels" : "All panels"}]);
-        fields(block, item.details); inspector.append(block);
+        fields(block, item.details); provenanceHost.append(block);
       }
       inspector.append(html("p", {class: "pv-note"}, "Unknown values remain unknown. Display rounding does not alter stored values. Full labels are available in these details."));
     }
@@ -175,7 +185,11 @@
       inspector.replaceChildren(html("p", {class: "pv-eyebrow"}, "SELECTED ITEM"), html("h2", {}, record.title || "Details"), button("Clear selection", () => { if (selected) selected.classList.remove("is-selected"); selected = null; overview(); }));
       fields(inspector, [{name: "Label", value: record.title || "Details"}, ...(record.fields || [])]);
       if (record.metrics && record.metrics.length) { inspector.append(html("h3", {}, "Metrics")); fields(inspector, record.metrics); }
-      if (record.details && record.details.length) { inspector.append(html("h3", {}, "Evidence and attributes")); fields(inspector, record.details); }
+      if (record.details && record.details.length) {
+        if (current?.kind === "chevron" && chevronStyle === "neutral") {
+          const evidence = html("details", {class: "pv-provenance-disclosure"}); evidence.append(html("summary", {}, "Evidence and attributes")); fields(evidence, record.details); inspector.append(evidence);
+        } else { inspector.append(html("h3", {}, "Evidence and attributes")); fields(inspector, record.details); }
+      }
     }
     function selectable(node, record, title) {
       node.classList.add("pv-mark"); node.setAttribute("tabindex", "0"); if (node.tagName.toLowerCase() !== "tr") node.setAttribute("role", "button"); node.setAttribute("aria-label", display(title || record.title));
@@ -533,32 +547,49 @@
         appearances += event.lane_ids.length; slots = Math.max(slots, event.end + 1);
       }
       if (appearances > limits.chevronAppearances || panel.lanes.length > limits.chevronAppearances || slots > limits.chevronAppearances) { limitMessage(`This chevron view exceeds the ${limits.chevronAppearances} appearance, lane or slot display limit.`); return; }
-      const left = 190, top = 66, slotWidth = 154, laneHeight = 72;
-      const width = Math.max(700, left + slots * slotWidth + 35), height = Math.max(180, top + panel.lanes.length * laneHeight + 45);
+      if (!root.PIXChevronGeometry?.layout) throw new Error("PIX chevron geometry is unavailable.");
+      const availableWidth = canvas.getBoundingClientRect().width;
+      lastChevronWidth = availableWidth;
+      const geometry = root.PIXChevronGeometry.layout(panel, {orientation: chevronOrientation, style: chevronStyle, availableWidth, appearanceLimit: limits.chevronAppearances});
+      const {width, height} = geometry, horizontal = geometry.orientation === "horizontal", neutral = chevronStyle === "neutral";
+      if (neutral) app.style.setProperty("--pc-canvas-height", `${Math.max(420, Math.min(760, height + 24))}px`);
       const svg = makeSVG(width, height, panel.title);
+      svg.setAttribute("data-chevron-orientation", geometry.orientation);
+      svg.setAttribute("data-chevron-orientation-requested", chevronOrientation);
+      svg.setAttribute("data-chevron-style", chevronStyle);
+      if (neutral) svg.classList.add("pv-chevron-neutral-view");
+      svg.append(svgNode("style", {}, CHEVRON_SVG_STYLE));
       const lanes = new Map(), typeCounts = new Map();
       const definitions = svgNode("defs"); svg.append(definitions);
-      svg.append(svgNode("text", {x: 20, y: 27, class: "pv-axis-label"}, "Object instances"), svgNode("text", {x: left, y: 27, class: "pv-axis-label"}, "Precedence slots · not elapsed time"));
-      for (let slot = 0; slot < slots; slot++) {
-        const x = left + slot * slotWidth;
-        svg.append(svgNode("line", {x1: x, x2: x, y1: top - 13, y2: height - 25, class: "pv-grid"}), svgNode("text", {x: x + slotWidth / 2, y: top - 22, "text-anchor": "middle", class: "pv-tick"}, slot));
+      const laneBackgrounds = svgNode("g", {class: "pv-chevron-lane-backgrounds"}); svg.append(laneBackgrounds);
+      svg.append(svgNode("text", {x: geometry.axis.laneTitleX, y: geometry.axis.laneTitleY, class: "pv-axis-label"}, "Object instances"), svgNode("text", {x: geometry.axis.titleX, y: geometry.axis.titleY, class: "pv-axis-label"}, "Precedence slots · not elapsed time"));
+      for (const tick of geometry.axis.ticks) {
+        svg.append(svgNode("line", {...tick.line, class: "pv-grid"}), svgNode("text", {x: tick.x, y: tick.y, "text-anchor": "middle", class: "pv-tick"}, tick.value));
       }
-      panel.lanes.forEach((lane, index) => {
+      geometry.lanes.forEach((box, index) => {
+        const lane = panel.lanes[index];
         const typeIndex = typeCounts.get(lane.object_type) || 0;
         typeCounts.set(lane.object_type, typeIndex + 1);
-        const y = top + index * laneHeight, tint = hashColor(lane.object_type, 88 - (typeIndex % 4) * 5), color = hashColor(lane.object_type, 36);
-        lanes.set(lane.id, {lane, index, y, tint, color});
-        svg.append(svgNode("rect", {x: 0, y, width, height: laneHeight, fill: hashColor(lane.object_type, 97 - (typeIndex % 2) * 2)}), svgNode("rect", {x: 15, y: y + 23, width: 8, height: 22, rx: 3, fill: color}));
-        const label = svgNode("text", {x: 34, y: y + 32, class: "pv-chevron-lane-label"}, shorten(lane.label, 21));
+        const tint = hashColor(lane.object_type, 88 - (typeIndex % 4) * 5), color = hashColor(lane.object_type, 36);
+        lanes.set(lane.id, {lane, index, ...box, tint, color});
+        if (!neutral) laneBackgrounds.append(svgNode("rect", {x: box.x, y: box.y, width: box.width, height: box.height, fill: hashColor(lane.object_type, 97 - (typeIndex % 2) * 2)}));
+        else if (index) svg.append(svgNode("line", horizontal ? {x1: 20, x2: width - 20, y1: box.y, y2: box.y, class: "pv-grid"} : {x1: box.x, x2: box.x, y1: box.y, y2: height - 20, class: "pv-grid"}));
+        if (!neutral && horizontal) svg.append(svgNode("rect", {x: 15, y: box.y + 23, width: 8, height: 22, rx: 3, fill: color}));
+        const maxChars = Math.max(6, Math.floor(box.labelMaxWidth / 7));
+        const laneLabel = neutral ? root.PIXChevronGeometry.wrapLabel(lane.object_id, box.labelMaxWidth, 1)[0] : shorten(lane.label, 21);
+        const laneSubtitle = neutral ? root.PIXChevronGeometry.wrapLabel(lane.object_type, box.labelMaxWidth, 1)[0] : shorten(lane.object_id, maxChars);
+        const label = svgNode("text", {x: box.labelX, y: box.labelY, "text-anchor": box.labelAnchor, class: "pv-chevron-lane-label"}, laneLabel);
         label.append(svgNode("title", {}, `${lane.label} · ${lane.object_type} · ${lane.object_id}`));
-        svg.append(label, svgNode("text", {x: 34, y: y + 49, class: "pv-node-metric"}, shorten(lane.object_id, 25)));
+        svg.append(label, svgNode("text", {x: box.labelX, y: box.labelY + 17, "text-anchor": box.labelAnchor, class: neutral ? "pv-chevron-type" : "pv-node-metric"}, laneSubtitle));
       });
+      const appearanceMap = new Map(panel.events.map(event => [event.id, []]));
+      for (const box of geometry.appearances) appearanceMap.get(box.eventId).push(box);
       for (const [eventIndex, event] of panel.events.entries()) {
-        const x = left + event.start * slotWidth + 5, eventWidth = (event.end - event.start + 1) * slotWidth - 10;
         const group = svgNode("g", {"data-event-id": event.id, class: "pv-chevron-event"});
+        const eventBoxes = appearanceMap.get(event.id);
         const eventTypes = [...new Set(event.lane_ids.map(id => lanes.get(id).lane.object_type))].sort();
         let sharedFill = null;
-        if (eventTypes.length > 1) {
+        if (!neutral && eventTypes.length > 1) {
           const id = `pv-chevron-${instance}-${generation}-${eventIndex}`, gradient = svgNode("linearGradient", {id, x1: "0%", x2: "100%", y1: "0%", y2: "0%"});
           eventTypes.forEach((type, index) => {
             const color = hashColor(type, 81);
@@ -566,33 +597,54 @@
           });
           definitions.append(gradient); sharedFill = `url(#${id})`;
         }
-        for (const laneId of event.lane_ids) {
-          const lane = lanes.get(laneId), y = lane.y + 10, h = 51, tip = 13;
-          const polygon = svgNode("polygon", {points: `${x},${y} ${x + eventWidth - tip},${y} ${x + eventWidth},${y + h / 2} ${x + eventWidth - tip},${y + h} ${x},${y + h} ${x + tip},${y + h / 2}`, fill: sharedFill || lane.tint, stroke: lane.color, "stroke-width": 1.4, class: "pv-chevron-shape", "data-event-id": event.id, "data-lane-id": laneId});
-          const textX = x + eventWidth / 2 + 2, maxChars = Math.max(8, Math.floor((eventWidth - 36) / 7));
-          const lines = root.PIXNativeGeometry?.wrapLabel(event.label, maxChars, 2) || [shorten(event.label, maxChars)];
+        if (neutral && eventBoxes.length > 1) {
+          const ordered = [...eventBoxes].sort((a, b) => a.laneIndex - b.laneIndex), first = ordered[0], last = ordered.at(-1);
+          if (horizontal) group.append(svgNode("line", {x1: first.x + 12, y1: first.y + 12, x2: first.x + 12, y2: last.y + 12, class: "pv-chevron-shared-link"}));
+          else {
+            const railY = first.y - 8;
+            const stems = ordered.map(box => `M ${box.x + 12} ${railY} V ${box.y + 12}`).join(" ");
+            group.append(svgNode("path", {d: `M ${first.x + 12} ${railY} H ${last.x + 12} ${stems}`, fill: "none", class: "pv-chevron-shared-link"}));
+          }
+        }
+        for (const box of eventBoxes) {
+          const {x, y, width: eventWidth, height: h, laneId} = box, lane = lanes.get(laneId);
+          const polygon = svgNode("polygon", {points: box.points, fill: neutral ? "transparent" : sharedFill || lane.tint, stroke: neutral ? "transparent" : lane.color, "stroke-width": neutral ? 0 : 1.4, class: "pv-chevron-shape", "data-event-id": event.id, "data-lane-id": laneId, "data-start": event.start, "data-end": event.end});
           group.append(polygon);
-          lines.forEach((line, index) => group.append(svgNode("text", {x: textX, y: y + 25 - (lines.length - 1) * 7 + index * 15, "text-anchor": "middle", class: "pv-chevron-label"}, line)));
+          if (neutral) {
+            const gx = x + 12, gy = y + 12;
+            group.append(svgNode("rect", {x: gx - 11, y: gy - 11, width: 22, height: 22, rx: 6, class: "pv-chevron-halo"}), svgNode("rect", {x: gx - 5, y: gy - 5, width: 10, height: 10, rx: 3, class: "pv-chevron-glyph"}));
+            const rail = horizontal ? `M ${x + 12} ${y + h - 8} H ${x + eventWidth - 6} M ${x + eventWidth - 11} ${y + h - 12} L ${x + eventWidth - 6} ${y + h - 8} L ${x + eventWidth - 11} ${y + h - 4}` : `M ${gx} ${y + 38} V ${y + h - 7} M ${gx - 4} ${y + h - 12} L ${gx} ${y + h - 7} L ${gx + 4} ${y + h - 12}`;
+            group.append(svgNode("path", {d: rail, class: "pv-chevron-span"}));
+            const lines = root.PIXChevronGeometry.wrapLabel(event.label, eventWidth - 40, 2);
+            lines.forEach((line, index) => group.append(svgNode("text", {x: x + 27, y: y + 16 + index * 16, class: "pv-chevron-label"}, line)));
+          } else box.labelLines.forEach((line, index) => group.append(svgNode("text", {x: box.labelX, y: box.labelY - (box.labelLines.length - 1) * 7 + index * 15, "text-anchor": "middle", class: "pv-chevron-label"}, line)));
         }
         selectable(group, {title: event.label, fields: [{name: "Event ID", value: event.id}, {name: "Start slot (inclusive)", value: event.start}, {name: "End slot (inclusive)", value: event.end}, {name: "Object lanes", value: event.lane_ids.map(id => ({lane: id, object_id: lanes.get(id).lane.object_id, object_type: lanes.get(id).lane.object_type}))}, {name: "Semantics", value: "One event; aligned appearances on each participating object lane. Slots do not measure duration."}], details: event.details}, `${event.label}. Shared event ${event.id}. ${event.lane_ids.length} object lanes.`);
         svg.append(group);
       }
-      if (!panel.events.length) svg.append(svgNode("text", {x: left + 35, y: Math.max(95, height / 2), class: "pv-empty-svg"}, "No chevrons in this execution"));
-      for (const type of typeCounts.keys()) legendItem(type, hashColor(type, 36));
-      legendItem("Shades", null, "Object instances of the same type");
-      legendItem("Chevron color segments", null, "All participating object types, identical across shared appearances");
+      if (!panel.events.length) svg.append(svgNode("text", {...geometry.emptyLabel, class: "pv-empty-svg"}, "No chevrons in this execution"));
+      for (const type of typeCounts.keys()) legendItem(type, neutral ? null : hashColor(type, 36));
+      if (!neutral) {
+        legendItem("Shades", null, "Object instances of the same type");
+        legendItem("Chevron color segments", null, "All participating object types, identical across shared appearances");
+      } else legendItem("Selection connector", null, "One shared event ID; not a process edge");
       legendItem("Aligned appearances", null, "Same event ID across participating objects");
-      legendItem("Width", null, "Inclusive precedence slots; not duration");
+      legendItem(horizontal ? "Width" : "Height", null, "Inclusive precedence slots; not duration");
       if (panel.frequency != null) legendItem("Variant frequency", null, `${panel.frequency} / ${panel.population} executions${panel.population ? ` (${number(panel.frequency / panel.population * 100)}%)` : ""}`);
-      setStatus(`${panel.events.length} distinct events · ${appearances} lane appearances · ${panel.lanes.length} object instances · OCPA-style chevrons`);
+      setStatus(`${panel.events.length} distinct events · ${appearances} lane appearances · ${panel.lanes.length} object instances · OCPA-style chevrons · ${geometry.orientation}${chevronOrientation === "auto" ? " (auto)" : " (fixed)"}`);
+      if (neutral) {
+        const rect = svg.getBoundingClientRect();
+        view = {x: Math.min(0, (width - rect.width) / 2), y: Math.min(0, (height - rect.height) / 2), width: Math.max(rect.width, 1), height: Math.max(rect.height, 1)}; updateView();
+      }
     }
     async function selectPanel(id) {
       if (disposed) throw new Error("This visualization has been disposed.");
       const panel = source.panels.find(item => item.id === id);
       if (!panel) throw new Error("Unknown visualization panel.");
       const token = ++generation; current = panel; currentSVG = null; marks = []; selected = null; tableQuery = null; currentNotes = []; moved = false; pointer = null;
+      app.classList.toggle("pv-chevron-neutral", panel.kind === "chevron" && chevronStyle === "neutral");
       search.value = ""; searchStatus.textContent = ""; canvas.replaceChildren(); legend.replaceChildren(); status.textContent = "";
-      description.textContent = panel.description || ""; panelTitle.replaceChildren(html("span", {class: "pv-panel-kind"}, KINDS[panel.kind] || panel.kind), html("strong", {}, panel.title));
+      description.textContent = panel.description || (panel.kind === "chevron" && chevronStyle === "neutral" ? "One lane per object instance. Shared event IDs keep their aligned appearances. Spans encode precedence slots, not elapsed time." : ""); panelTitle.replaceChildren(html("span", {class: "pv-panel-kind"}, KINDS[panel.kind] || panel.kind), html("strong", {}, panel.title));
       for (const [tabId, tab] of tabs) { tab.setAttribute("aria-selected", String(tabId === id)); tab.setAttribute("tabindex", tabId === id ? "0" : "-1"); }
       workspace.setAttribute("aria-labelledby", tabs.get(id).id); overview();
       [fitButton, readableButton, zoomOut, zoomIn, save].forEach(node => { node.disabled = true; });
@@ -626,7 +678,7 @@
       lines.push({text: "PIX · Panel data and calculation provenance are embedded in SVG metadata."});
       const footerHeight = 42 + lines.length * 18;
       clone.setAttribute("viewBox", `${bounds.x} ${bounds.y} ${width} ${bounds.height + footerHeight}`); clone.setAttribute("width", width); clone.setAttribute("height", bounds.height + footerHeight);
-      clone.prepend(svgNode("style", {}, SVG_STYLE + ".pv-chevron-label{font-size:12px;font-weight:600;fill:#253b49}.pv-chevron-shape{stroke-linejoin:round}.pv-mark.is-selected .pv-chevron-shape,.pv-mark:focus-visible .pv-chevron-shape{stroke:#163f51;stroke-width:3}.pv-chevron-lane-label{font-size:12px;font-weight:600}"));
+      clone.prepend(svgNode("style", {}, SVG_STYLE + CHEVRON_SVG_STYLE));
       clone.append(svgNode("metadata", {}, JSON.stringify({schema: source.schema, title: source.title, status: source.status, issues: source.issues, provenance: source.provenance, panel: current})), svgNode("rect", {x: 0, y: bounds.height, width, height: footerHeight, fill: "#fff"}));
       lines.forEach((line, index) => { const y = bounds.height + 26 + index * 18; if (line.color) clone.append(svgNode("rect", {x: 24, y: y - 9, width: 10, height: 10, rx: 2, fill: line.color, class: "pv-export-swatch"})); clone.append(svgNode("text", {x: line.color ? 42 : 24, y, class: "pv-export-note"}, line.text)); });
       for (const node of clone.querySelectorAll("[tabindex]")) node.removeAttribute("tabindex");
@@ -637,7 +689,21 @@
       const blob = new Blob([content], {type: "image/svg+xml;charset=utf-8"}), url = URL.createObjectURL(blob), link = html("a", {href: url, download: `${String(current.id).replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 100) || "pix-visualization"}.svg`});
       link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
-    const controller = {ready: null, selectPanel(id) { return (controller.ready = selectPanel(id)); }, fit, readable, exportSVG, dispose() { disposed = true; generation++; pointer = null; container.replaceChildren(); }};
+    const controller = {ready: null, selectPanel(id) { return (controller.ready = selectPanel(id)); }, fit, readable, exportSVG, dispose() { disposed = true; generation++; pointer = null; if (chevronObserver) chevronObserver.disconnect(); container.replaceChildren(); }};
+    if (chevronOrientation === "auto" && typeof root.ResizeObserver === "function") {
+      chevronObserver = new root.ResizeObserver(() => {
+        const width = canvas.getBoundingClientRect().width;
+        if (disposed || current?.kind !== "chevron" || !currentSVG || Math.abs(width - lastChevronWidth) < 1) return;
+        const eventId = selected?.getAttribute("data-event-id"), query = search.value;
+        controller.ready = selectPanel(current.id).then(() => {
+          if (disposed) return;
+          search.value = query; applySearch();
+          const match = marks.find(mark => mark.node.getAttribute("data-event-id") === eventId);
+          if (eventId && match) { moved = false; match.node.dispatchEvent(new Event("click")); }
+        });
+      });
+      chevronObserver.observe(canvas);
+    }
     if (source.panels.length) renderPromise = selectPanel(options.panelId || source.panels[0].id);
     else { overview(); limitMessage("This document contains no visualization panels."); status.textContent = "No panels supplied."; [fitButton, readableButton, zoomOut, zoomIn, save].forEach(node => { node.disabled = true; }); renderPromise = Promise.resolve(); }
     controller.ready = renderPromise;

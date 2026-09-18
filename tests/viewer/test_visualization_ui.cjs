@@ -44,6 +44,7 @@ global.document = {baseURI: 'file:///pix-tests/view.html', createElement: tag =>
 global.XMLSerializer = class { serializeToString(node) { return `<${node.tagName}${[...node.attributes].map(([key, value]) => ` ${key}="${escape(value)}"`).join('')}>${escape(node._text)}${node.children.map(child => this.serializeToString(child)).join('')}</${node.tagName}>`; } };
 global.PIXNativeGeometry = require('../../src/pix/viewer/assets/native_geometry.js');
 global.PIXGraphvizGeometry = require('../../src/pix/viewer/assets/graphviz_geometry.js');
+global.PIXChevronGeometry = require('../../src/pix/viewer/assets/chevron_geometry.js');
 const UI = require('../../src/pix/viewer/assets/visualization.js');
 const container = () => new Element('main');
 const documentFor = (...panels) => ({schema: 'pix.visualization.v1', title: 'PIX evidence', status: 'ok', issues: [], provenance: [], panels});
@@ -93,8 +94,8 @@ test('Graphviz supplied cubic controls, arrow polygons and label center are not 
   assert.equal(find(host,'.pv-edge-line').getAttribute('marker-end'),null);
 });
 
-test('chevrons share one selectable event across lanes and preserve inclusive width', async () => {
-  const host=container(), source=documentFor(chevron()), before=structuredClone(source), viewer=UI.mount(host,source); await viewer.ready;
+test('classic chevrons share one selectable event across lanes and preserve inclusive width', async () => {
+  const host=container(), source=documentFor(chevron()), before=structuredClone(source), viewer=UI.mount(host,source,{chevronStyle:'classic'}); await viewer.ready;
   assert.deepEqual(source,before); assert.equal(marks(host).length,2);
   assert.equal(host.querySelectorAll('.pv-chevron-shape').length,3);
   const shared=marks(host)[0], polygons=shared.querySelectorAll('.pv-chevron-shape');
@@ -110,10 +111,10 @@ test('chevrons share one selectable event across lanes and preserve inclusive wi
   assert.match(viewer.exportSVG(),/OCPA-style chevrons/); finiteSVG(host);
 });
 
-test('chevrons preserve separate instances, hostile labels, search and SVG evidence', async () => {
+test('classic chevrons preserve separate instances, hostile labels, search and SVG evidence', async () => {
   const panel=chevron({lanes:[{id:'o1',label:'Order_1',object_type:'Order',object_id:'first',details:[]},{id:'i1',label:'Order_2',object_type:'Order',object_id:'second',details:[]}]}), hostile='</script><img onerror="bad">';
   panel.events[0].label=hostile;
-  const host=container(), viewer=UI.mount(host,documentFor(panel)); await viewer.ready;
+  const host=container(), viewer=UI.mount(host,documentFor(panel),{chevronStyle:'classic'}); await viewer.ready;
   const polygons=host.querySelectorAll('.pv-chevron-shape'); assert.notEqual(polygons[0].getAttribute('fill'),polygons[1].getAttribute('fill'));
   marks(host)[0].click(); assert.ok(find(host,'.pv-inspector').textContent.includes(hostile));
   assert.equal(host.querySelectorAll('img').length,0);
@@ -126,6 +127,65 @@ test('chevrons refuse missing lane identities and expose limits without partial 
   const view=UI.mount(container(),documentFor(broken)); await assert.rejects(view.ready,/existing lanes/);
   const host=container(), limited=UI.mount(host,documentFor(chevron()),{limits:{chevronAppearances:2}}); await limited.ready;
   assert.equal(limited.exportSVG(),null); assert.match(host.textContent,/display limit/);
+});
+
+for (const orientation of ['horizontal', 'vertical']) test(`neutral ${orientation} preserves source, event identities, caveats and exported presentation`, async () => {
+  const panel = chevron({description: 'Domain caveat: the source is synthetic.'});
+  const source = documentFor(panel), before = structuredClone(source), host = container();
+  const viewer = UI.mount(host, source, {chevronOrientation: orientation, chevronStyle: 'neutral'});
+  await viewer.ready;
+  assert.deepEqual(source, before);
+  const svg = find(host, 'svg');
+  assert.equal(svg.getAttribute('data-chevron-orientation'), orientation);
+  assert.equal(svg.getAttribute('data-chevron-orientation-requested'), orientation);
+  assert.equal(svg.getAttribute('data-chevron-style'), 'neutral');
+  assert.equal(host.querySelectorAll('.pv-chevron-glyph').length, 3);
+  assert.equal(host.querySelectorAll('.pv-chevron-span').length, 3);
+  assert.equal(host.querySelectorAll('.pv-chevron-shared-link').length, 1);
+  assert.equal(find(host, '.pv-description').textContent, panel.description);
+  const shared = marks(host).find(mark => mark.getAttribute('data-event-id') === 'shared');
+  shared.click();
+  assert.equal(shared.querySelectorAll('.pv-chevron-shape').length, 2);
+  assert.match(find(host, '.pv-inspector').textContent, /order-raw/);
+  assert.match(find(host, '.pv-inspector').textContent, /item-raw/);
+  const output = viewer.exportSVG();
+  assert.match(output, new RegExp(`data-chevron-orientation="${orientation}"`));
+  assert.match(output, /pv-chevron-neutral-view/);
+  assert.match(output, /pv-chevron-span/);
+  assert.match(output, /Domain caveat: the source is synthetic/);
+  finiteSVG(host);
+});
+
+test('Chevron presentation rejects unknown options and defaults to neutral horizontal', async () => {
+  for (const options of [{chevronOrientation: 'diagonal'}, {chevronStyle: 'invented'}]) {
+    assert.throws(() => UI.mount(container(), documentFor(chevron()), options), /chevron/i);
+  }
+  const host = container(), viewer = UI.mount(host, documentFor(chevron()));
+  await viewer.ready;
+  assert.equal(find(host, 'svg').getAttribute('data-chevron-orientation'), 'horizontal');
+  assert.equal(find(host, 'svg').getAttribute('data-chevron-style'), 'neutral');
+  assert.equal(host.querySelectorAll('.pv-chevron-glyph').length, 3);
+  assert.equal(host.querySelectorAll('.pv-chevron-span').length, 3);
+});
+
+test('explicitly raised Chevron display limits reach the geometry engine', async () => {
+  const panel = chevron(); panel.events[1].end = 10000;
+  const host = container(), viewer = UI.mount(host, documentFor(panel), {limits: {chevronAppearances: 10001}});
+  await viewer.ready;
+  assert.equal(host.querySelectorAll('.pv-tick').length, 10001);
+  assert.equal(host.querySelectorAll('.pv-chevron-shape').length, 3);
+  assert.doesNotMatch(find(host, '.pv-status').textContent, /limit reached/);
+});
+
+test('neutral presentation only changes Chevron panels within a mixed document', async () => {
+  const table = {kind: 'table', id: 'table', title: 'Evidence', description: 'Original context', columns: ['Value'], rows: [[42]]};
+  const host = container(), viewer = UI.mount(host, documentFor(chevron(), table), {chevronStyle: 'neutral'});
+  await viewer.ready;
+  assert.equal(host.querySelectorAll('.pv-chevron-neutral').length, 1);
+  await viewer.selectPanel('table');
+  assert.equal(host.querySelectorAll('.pv-chevron-neutral').length, 0);
+  assert.equal(find(host, '.pv-description').textContent, 'Original context');
+  assert.match(find(host, '.pv-table').textContent, /42/);
 });
 
 test('hostile labels remain text through panel, inspector and exported SVG', async () => {

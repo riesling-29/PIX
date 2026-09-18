@@ -87,7 +87,11 @@ def _license_element(layout_engine: str) -> str:
 
 
 def _render_visualization_html(
-    document: VisualizationDocument, *, layout_engine: str
+    document: VisualizationDocument,
+    *,
+    layout_engine: str,
+    chevron_orientation: str,
+    chevron_style: str,
 ) -> str:
     """Panel views use Graphviz by default and PIX's SVG interactions."""
     data = visual_to_dict(document)
@@ -96,7 +100,7 @@ def _render_visualization_html(
     names = ("native_geometry.js",)
     if layout_engine == "graphviz":
         names += _GRAPHVIZ_SCRIPTS
-    scripts = _script_elements((*names, "visualization.js"))
+    scripts = _script_elements((*names, "chevron_geometry.js", "visualization.js"))
     license_data = _license_element(layout_engine)
     css = _asset("visualization.css")
     if "</style" in css.lower():
@@ -115,7 +119,7 @@ def _render_visualization_html(
 window.pixVisualization = PIXVisualization.mount(
   document.getElementById("pix-viewer"),
   JSON.parse(document.getElementById("pix-visualization-data").textContent),
-  {{layoutEngine: "{layout_engine}"}}
+  {{layoutEngine: "{layout_engine}", chevronOrientation: "{chevron_orientation}", chevronStyle: "{chevron_style}"}}
 );
 window.pixViewerReady = window.pixVisualization.ready;
 </script>
@@ -127,6 +131,8 @@ def render_html(
     graph: GraphDocument | ModelGraphDocument | VisualizationDocument,
     *,
     layout_engine: str = "graphviz",
+    chevron_orientation: str = "horizontal",
+    chevron_style: str = "neutral",
 ) -> str:
     """Render graph evidence into an offline, self-contained HTML document.
 
@@ -136,21 +142,46 @@ def render_html(
     nor a network connection is required. Select ``native`` explicitly for the
     experimental VisualizationDocument layout, or ``elk`` for legacy graph
     documents. A layout failure is shown without silently changing engines.
+    Chevron panels flow horizontally by default. Select ``vertical`` explicitly,
+    or ``auto`` to let the viewport determine their orientation. The default
+    ``neutral`` style uses a monochrome presentation; select ``classic`` for
+    object-type colors. Style applies only to Chevron panels and has no effect
+    on legacy graph documents. Nonhorizontal Chevron orientation requires a
+    VisualizationDocument. These options do not change domain data.
     """
     if type(layout_engine) is not str:
         raise TypeError("layout_engine must be a string")
     if layout_engine not in ("graphviz", "native", "elk"):
         raise ValueError("layout_engine must be 'graphviz', 'native' or 'elk'")
+    if type(chevron_orientation) is not str:
+        raise TypeError("chevron_orientation must be a string")
+    if chevron_orientation not in ("horizontal", "vertical", "auto"):
+        raise ValueError(
+            "chevron_orientation must be 'horizontal', 'vertical' or 'auto'"
+        )
+    if type(chevron_style) is not str:
+        raise TypeError("chevron_style must be a string")
+    if chevron_style not in ("classic", "neutral"):
+        raise ValueError("chevron_style must be 'classic' or 'neutral'")
     if isinstance(graph, VisualizationDocument):
         if layout_engine == "elk":
             raise ValueError("layout_engine='elk' requires a legacy graph document")
-        return _render_visualization_html(graph, layout_engine=layout_engine)
+        return _render_visualization_html(
+            graph,
+            layout_engine=layout_engine,
+            chevron_orientation=chevron_orientation,
+            chevron_style=chevron_style,
+        )
     if not isinstance(graph, (GraphDocument, ModelGraphDocument)):
         raise TypeError(
             "graph must be GraphDocument, ModelGraphDocument or VisualizationDocument"
         )
     if layout_engine == "native":
         raise ValueError("layout_engine='native' requires VisualizationDocument")
+    if chevron_orientation != "horizontal":
+        raise ValueError(
+            "nonhorizontal chevron_orientation requires VisualizationDocument"
+        )
     data = asdict(graph)
     is_model = isinstance(graph, ModelGraphDocument)
     data["schema"] = "pix.model-graph" if is_model else "pix.process-graph"
@@ -197,11 +228,18 @@ def export_html_report(
     *,
     overwrite: bool = False,
     layout_engine: str = "graphviz",
+    chevron_orientation: str = "horizontal",
+    chevron_style: str = "neutral",
 ) -> FilePublication:
     """Publish HTML and return its identity and any post-commit cleanup issues."""
     if type(overwrite) is not bool:
         raise TypeError("overwrite must be bool")
-    rendered = render_html(graph, layout_engine=layout_engine).encode("utf-8")
+    rendered = render_html(
+        graph,
+        layout_engine=layout_engine,
+        chevron_orientation=chevron_orientation,
+        chevron_style=chevron_style,
+    ).encode("utf-8")
     return publish_bytes(rendered, path, overwrite=overwrite, prefix=".pix-viewer-")
 
 
@@ -211,6 +249,8 @@ def export_html(
     *,
     overwrite: bool = False,
     layout_engine: str = "graphviz",
+    chevron_orientation: str = "horizontal",
+    chevron_style: str = "neutral",
 ) -> Path:
     """Publish atomically, preserving the Path-returning convenience API.
 
@@ -219,7 +259,14 @@ def export_html(
     Cleanup failure after commit does not raise, even with warnings-as-errors.
     Publication failures preserve the primary exception and its cleanup_issues.
     """
-    export_html_report(graph, path, overwrite=overwrite, layout_engine=layout_engine)
+    export_html_report(
+        graph,
+        path,
+        overwrite=overwrite,
+        layout_engine=layout_engine,
+        chevron_orientation=chevron_orientation,
+        chevron_style=chevron_style,
+    )
     return Path(path)
 
 

@@ -1,0 +1,1345 @@
+{
+  "schema_version": "1.0",
+  "recorded_date": "2026-09-17",
+  "finalized_date": "2026-09-18",
+  "state": "native_profiles_structurally_registered_semantic_acceptance_pending",
+  "evidence_kind": "structural_traceability_only",
+  "reference_replacement_verified": false,
+  "domain_review_status": "not_yet_reviewed",
+  "source_registry": "docs/requirements/scope-01/replacement_registry.json",
+  "historical_implementation_registry": "docs/requirements/union-2026-09-15/implementation_registry.json",
+  "development_plan": "docs/requirements/2026-09-13_PIX_DETAILED_DEVELOPMENT_PLAN.md",
+  "counting_unit": "Packets are bounded implementation/review units; source-row mappings overlap and are not distinct algorithm counts or completion percentages.",
+  "validity": "Applies to the recorded source/test snapshot and explicit native profiles. Re-run after changes. Later upstream releases and untested external corpora are not covered.",
+  "test_execution": "This registry does not assert test execution. Use the tracked implementation report for final aggregate validation results.",
+  "shared_integration_files": [
+    "src/pix/_mining_registry.py",
+    "src/pix/results.py",
+    "src/pix/models.py",
+    "src/pix/case_centric/__init__.py",
+    "src/pix/object_centric/__init__.py",
+    "examples/models_w4_review.py",
+    "tests/test_mining_serialization.py",
+    "tools/check_models_w4_registry.py",
+    "tests/test_models_w4_integration.py"
+  ],
+  "global_limits": [
+    "Full PM4Py/OCPA reference variant parity and user domain acceptance remain pending.",
+    "W5 reference/corpus/scale acceptance is not completed by structural API registration.",
+    "Performance, real-world predictive accuracy and arbitrary external-model interoperability rates are unknown.",
+    "No autonomous external action execution or Schumpeter controller is implemented by these calculation profiles."
+  ],
+  "packets": [
+    {
+      "id": "MW4-MODEL-CAPABILITIES",
+      "domain": "cross_model",
+      "title": "Explicit model capabilities and occurrence-level relabeling",
+      "implementation_status": "native_profile",
+      "delivery": "added_or_extended",
+      "reference_replacement_verified": false,
+      "domain_review_status": "not_yet_reviewed",
+      "source_scope_ids": [
+        "PM-MODEL-001",
+        "PM-MODEL-004",
+        "PM-MODEL-021",
+        "OC-MODEL-001"
+      ],
+      "plan_ids": [
+        "MODEL-01",
+        "MODEL-02"
+      ],
+      "exact_native_profile": "Immutable capability catalog and explicit label operations for P/T, OCPN, tree, POWL and restricted BPMN; colliding labels retain separate occurrences.",
+      "source_mapping_boundary": "Capability lookup is a declaration about a model family, not soundness or instance executability. Label support is a proper subset of persisted families.",
+      "code_files": [
+        "src/pix/model_capabilities.py",
+        "src/pix/case_centric/model_labels.py"
+      ],
+      "test_files": [
+        "tests/test_model_capabilities.py",
+        "tests/case_centric/test_model_labels.py"
+      ],
+      "entrypoints": [
+        {
+          "path": "src/pix/model_capabilities.py",
+          "symbol": "list_model_capabilities"
+        },
+        {
+          "path": "src/pix/model_capabilities.py",
+          "symbol": "model_capabilities"
+        },
+        {
+          "path": "src/pix/case_centric/model_labels.py",
+          "symbol": "activity_labels"
+        },
+        {
+          "path": "src/pix/case_centric/model_labels.py",
+          "symbol": "rename_activity_labels"
+        }
+      ],
+      "remaining_limits": [
+        "No generic field rewriting or label operations for every persisted model family.",
+        "No upstream object/API or NetworkX format parity."
+      ],
+      "withdrawal_condition": "Withdraw the relevant declaration if a published callable stops resolving, an occurrence is merged, or relabeling changes incidence/markings.",
+      "supporting_existing_features": []
+    },
+    {
+      "id": "MW4-MODEL-EXTENDED",
+      "domain": "case_centric",
+      "title": "Reset/inhibitor and stochastic model contracts",
+      "implementation_status": "native_profile",
+      "delivery": "added_or_extended",
+      "reference_replacement_verified": false,
+      "domain_review_status": "not_yet_reviewed",
+      "source_scope_ids": [
+        "PM-MODEL-002",
+        "PM-MODEL-003"
+      ],
+      "plan_ids": [
+        "MODEL-01",
+        "MODEL-02"
+      ],
+      "exact_native_profile": "Exclusive input arc kinds; consume-reset-produce firing with pre-state inhibitor tests. Persisted stochastic parameters have separate weight/duration origins and local weighted-choice serial steps.",
+      "source_mapping_boundary": "Data guards remain a separate existing type. Local stochastic steps are not a concurrent timing law; reservation timing is separately registered below.",
+      "code_files": [
+        "src/pix/case_centric/extended_nets.py"
+      ],
+      "test_files": [
+        "tests/case_centric/test_extended_nets.py"
+      ],
+      "entrypoints": [
+        {
+          "path": "src/pix/case_centric/extended_nets.py",
+          "symbol": "fire_reset_inhibitor"
+        },
+        {
+          "path": "src/pix/case_centric/extended_nets.py",
+          "symbol": "reset_inhibitor_is_enabled"
+        },
+        {
+          "path": "src/pix/case_centric/extended_nets.py",
+          "symbol": "stochastic_transition_probabilities"
+        },
+        {
+          "path": "src/pix/case_centric/extended_nets.py",
+          "symbol": "sample_stochastic_step"
+        }
+      ],
+      "remaining_limits": [
+        "Ordinary P/T algorithms reject wrappers that would lose extended semantics.",
+        "No timed race/GSPN priorities or complete extended-net analysis."
+      ],
+      "withdrawal_condition": "Withdraw if stated token arithmetic, inhibitor thresholds, parameter persistence or wrapper rejection fails.",
+      "supporting_existing_features": []
+    },
+    {
+      "id": "MW4-MODEL-EXCHANGE",
+      "domain": "cross_model",
+      "title": "Bounded PNML, PTML and BPMN model exchange",
+      "implementation_status": "native_profile",
+      "delivery": "added_or_extended",
+      "reference_replacement_verified": false,
+      "domain_review_status": "not_yet_reviewed",
+      "source_scope_ids": [
+        "PM-IO-015",
+        "PM-IO-016",
+        "PM-IO-018"
+      ],
+      "plan_ids": [
+        "MODEL-03"
+      ],
+      "exact_native_profile": "PNML ordinary weighted accepting P/T with explicit final marking; PTML binary loop plus tau exit; BPMN single plain start/end, atomic tasks and XOR/AND. Typed provenance and atomic file publication.",
+      "source_mapping_boundary": "These are named syntax/semantics profiles, not complete standard implementations or arbitrary upstream export interoperability.",
+      "code_files": [
+        "src/pix/model_io/pnml.py",
+        "src/pix/model_io/ptml.py",
+        "src/pix/model_io/bpmn.py",
+        "src/pix/model_io/common.py",
+        "src/pix/model_io/__init__.py"
+      ],
+      "test_files": [
+        "tests/model_io/test_pnml.py",
+        "tests/model_io/test_ptml.py",
+        "tests/model_io/test_bpmn.py",
+        "tests/model_io/test_publication.py"
+      ],
+      "entrypoints": [
+        {
+          "path": "src/pix/model_io/pnml.py",
+          "symbol": "loads_pnml"
+        },
+        {
+          "path": "src/pix/model_io/pnml.py",
+          "symbol": "dumps_pnml"
+        },
+        {
+          "path": "src/pix/model_io/ptml.py",
+          "symbol": "loads_ptml"
+        },
+        {
+          "path": "src/pix/model_io/ptml.py",
+          "symbol": "dumps_ptml"
+        },
+        {
+          "path": "src/pix/model_io/bpmn.py",
+          "symbol": "loads_bpmn"
+        },
+        {
+          "path": "src/pix/model_io/bpmn.py",
+          "symbol": "dumps_bpmn"
+        }
+      ],
+      "remaining_limits": [
+        "PNML extended arcs and absent/multiple final markings are rejected.",
+        "BPMN conditions, inclusive/event gateways, subprocesses, DI and unknown extensions are rejected.",
+        "Byte-identical XML round-trip and arbitrary external-corpus compatibility are not established."
+      ],
+      "withdrawal_condition": "Withdraw a preservation claim if a supported round-trip changes IDs, labels, weights, markings or accepted behavior.",
+      "supporting_existing_features": []
+    },
+    {
+      "id": "MW4-MODEL-POWL-TREE",
+      "domain": "case_centric",
+      "title": "Series-parallel POWL to process tree",
+      "implementation_status": "native_profile",
+      "delivery": "added_or_extended",
+      "reference_replacement_verified": false,
+      "domain_review_status": "not_yet_reviewed",
+      "source_scope_ids": [
+        "PM-MODEL-010"
+      ],
+      "plan_ids": [
+        "MODEL-04"
+      ],
+      "exact_native_profile": "Occurrence-preserving recursive series/parallel partial-order decomposition with XOR/loop/tau retained.",
+      "source_mapping_boundary": "Adds one directional structural profile; existing POWL-to-net support is separate.",
+      "code_files": [
+        "src/pix/case_centric/powl_conversion.py"
+      ],
+      "test_files": [
+        "tests/case_centric/test_powl_conversion.py"
+      ],
+      "entrypoints": [
+        {
+          "path": "src/pix/case_centric/powl_conversion.py",
+          "symbol": "powl_to_process_tree"
+        }
+      ],
+      "remaining_limits": [
+        "N-shaped non-series-parallel orders return unavailable, without arbitrary sequencing or duplicated activities.",
+        "No universal POWL/tree inverse or source-log lineage."
+      ],
+      "withdrawal_condition": "Withdraw if a supported occurrence order or bounded visible language differs from an independent oracle.",
+      "supporting_existing_features": []
+    },
+    {
+      "id": "MW4-MODEL-TREE-BORDERED",
+      "domain": "case_centric",
+      "title": "Transition-bordered process tree to Petri net",
+      "implementation_status": "native_profile",
+      "delivery": "added_or_extended",
+      "reference_replacement_verified": false,
+      "domain_review_status": "not_yet_reviewed",
+      "source_scope_ids": [
+        "PM-MODEL-005"
+      ],
+      "plan_ids": [
+        "MODEL-04"
+      ],
+      "exact_native_profile": "Each tree occurrence has transition entry/exit boundaries; compositional sequence/XOR/parallel/binary-loop constructions and occurrence witnesses.",
+      "source_mapping_boundary": "This implements the named transition-bordered direction; does not assert identity-name or all-option parity.",
+      "code_files": [
+        "src/pix/case_centric/tree_bordered.py"
+      ],
+      "test_files": [
+        "tests/case_centric/test_tree_bordered.py"
+      ],
+      "entrypoints": [
+        {
+          "path": "src/pix/case_centric/tree_bordered.py",
+          "symbol": "tree_to_transition_bordered_petri_net"
+        }
+      ],
+      "remaining_limits": [
+        "Only native ProcessTree operators; bounded construction.",
+        "Timing, probability and upstream statistics are not preserved by a control-flow construction."
+      ],
+      "withdrawal_condition": "Withdraw if an independently enumerated supported visible word is gained or lost, or occurrence boundaries are inconsistent.",
+      "supporting_existing_features": []
+    },
+    {
+      "id": "MW4-MODEL-TRIE",
+      "domain": "case_centric",
+      "title": "Finite prefix trie to accepting Petri net",
+      "implementation_status": "native_profile",
+      "delivery": "added_or_extended",
+      "reference_replacement_verified": false,
+      "domain_review_status": "not_yet_reviewed",
+      "source_scope_ids": [
+        "PM-MODEL-011"
+      ],
+      "plan_ids": [
+        "MODEL-04"
+      ],
+      "exact_native_profile": "Validated full-prefix TransitionSystem; each edge has its own transition and only observed terminal states terminate, including epsilon.",
+      "source_mapping_boundary": "Covers the trie member of the source row, not arbitrary merged transition systems or every GeneticMatrix conversion.",
+      "code_files": [
+        "src/pix/case_centric/trie_conversion.py"
+      ],
+      "test_files": [
+        "tests/case_centric/test_trie_conversion.py"
+      ],
+      "entrypoints": [
+        {
+          "path": "src/pix/case_centric/trie_conversion.py",
+          "symbol": "trie_to_petri_net"
+        }
+      ],
+      "remaining_limits": [
+        "Requires complete count-conserving full-prefix input; partial or windowed/merged graphs are rejected.",
+        "Frequencies are retained evidence, not probabilities or arc weights."
+      ],
+      "withdrawal_condition": "Withdraw if the resulting net accepts a word not in a terminal context or loses an observed terminal word.",
+      "supporting_existing_features": []
+    },
+    {
+      "id": "MW4-MODEL-DECOMPOSITION",
+      "domain": "case_centric",
+      "title": "Maximal structural decomposition and exact recomposition",
+      "implementation_status": "native_profile",
+      "delivery": "added_or_extended",
+      "reference_replacement_verified": false,
+      "domain_review_status": "not_yet_reviewed",
+      "source_scope_ids": [
+        "PM-MODEL-019"
+      ],
+      "plan_ids": [
+        "MODEL-04",
+        "MODEL-06"
+      ],
+      "exact_native_profile": "Finest allowed unit-arc ordinary-net ownership partition; shared globally unique visible transitions synchronize and duplicate labels/silent transitions stay together.",
+      "source_mapping_boundary": "This is structural decomposition with exact recomposition, not decomposed alignment border-disagreement search.",
+      "code_files": [
+        "src/pix/case_centric/maximal_decomposition.py"
+      ],
+      "test_files": [
+        "tests/case_centric/test_maximal_decomposition.py"
+      ],
+      "entrypoints": [
+        {
+          "path": "src/pix/case_centric/maximal_decomposition.py",
+          "symbol": "maximal_decompose_model"
+        },
+        {
+          "path": "src/pix/case_centric/maximal_decomposition.py",
+          "symbol": "recompose_maximal_decomposition"
+        }
+      ],
+      "remaining_limits": [
+        "Weighted arcs are unavailable.",
+        "Isolated-node retention is a declared extension of the incident-net construction.",
+        "No automatic soundness, boundedness or alignment certificate."
+      ],
+      "withdrawal_condition": "Withdraw if a valid finer partition exists under the same constraints, recomposition changes the net, or synchronized/global firing differs.",
+      "supporting_existing_features": []
+    },
+    {
+      "id": "MW4-MODEL-COVERABILITY",
+      "domain": "case_centric",
+      "title": "Weighted P/T coverability and boundedness",
+      "implementation_status": "native_profile",
+      "delivery": "added_or_extended",
+      "reference_replacement_verified": false,
+      "domain_review_status": "not_yet_reviewed",
+      "source_scope_ids": [
+        "PM-MODEL-015"
+      ],
+      "plan_ids": [
+        "MODEL-05"
+      ],
+      "exact_native_profile": "Classical Karp-Miller tree with ancestor acceleration, omega, concrete first-pumping witnesses, place bounds and conditional target/dead-transition decisions.",
+      "source_mapping_boundary": "Supports specific boundedness/coverability questions within the broader WOFLAN source row; it is not WOFLAN parity.",
+      "code_files": [
+        "src/pix/case_centric/coverability.py"
+      ],
+      "test_files": [
+        "tests/case_centric/test_coverability.py"
+      ],
+      "entrypoints": [
+        {
+          "path": "src/pix/case_centric/coverability.py",
+          "symbol": "coverability"
+        }
+      ],
+      "remaining_limits": [
+        "Coverability is not exact reachability, liveness or general workflow soundness.",
+        "Search caps preserve unknown assessments unless a positive proof is already present.",
+        "Reset/inhibitor/colored semantics are excluded."
+      ],
+      "withdrawal_condition": "Withdraw the respective proof claim if an independent coverability oracle or executable pumping witness disagrees.",
+      "supporting_existing_features": []
+    },
+    {
+      "id": "MW4-MODEL-OC-SUBPROCESS",
+      "domain": "object_centric",
+      "title": "Typed local subprocess and transformation pipeline",
+      "implementation_status": "native_profile",
+      "delivery": "added_or_extended",
+      "reference_replacement_verified": false,
+      "domain_review_status": "not_yet_reviewed",
+      "source_scope_ids": [
+        "OC-MODEL-002",
+        "OC-MODEL-003",
+        "OC-MODEL-004",
+        "OC-MODEL-005"
+      ],
+      "plan_ids": [
+        "MODEL-06"
+      ],
+      "exact_native_profile": "Type-restricted directed-walk interval with synchronization cuts, original IDs/cardinalities, inside/outside marking ledger; optional project-restrict-hide-reduce.",
+      "source_mapping_boundary": "The output is a structural selection. Original process language preservation or standalone subprocess soundness is not inferred.",
+      "code_files": [
+        "src/pix/object_centric/subprocess.py"
+      ],
+      "test_files": [
+        "tests/object_centric/test_subprocess.py"
+      ],
+      "entrypoints": [
+        {
+          "path": "src/pix/object_centric/subprocess.py",
+          "symbol": "local_ocpn_subprocess"
+        },
+        {
+          "path": "src/pix/object_centric/subprocess.py",
+          "symbol": "transform_ocpn_subprocess"
+        }
+      ],
+      "remaining_limits": [
+        "Projection can cut cross-type synchronization and keeps that loss explicit.",
+        "Reduction preservation applies only to its already-projected input.",
+        "No automatic token seeding at chosen boundaries."
+      ],
+      "withdrawal_condition": "Withdraw if independent type-restricted reachability, marking partition or synchronization-cut accounting differs.",
+      "supporting_existing_features": [
+        {
+          "meaning": "Existing projection, hiding and reduction profiles are reused.",
+          "source_scope_ids": [
+            "OC-MODEL-003",
+            "OC-MODEL-004"
+          ],
+          "code_files": [
+            "src/pix/object_centric/models.py"
+          ],
+          "test_files": [
+            "tests/object_centric/test_models.py"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "MW4-DISC-STRICT-IM",
+      "domain": "case_centric",
+      "title": "Explicit strict optional-block inductive profile",
+      "implementation_status": "native_profile",
+      "delivery": "added_or_extended",
+      "reference_replacement_verified": false,
+      "domain_review_status": "not_yet_reviewed",
+      "source_scope_ids": [
+        "PM-DISC-001",
+        "PM-DISC-002",
+        "PM-DISC-003"
+      ],
+      "plan_ids": [
+        "DISC-01",
+        "DISC-02"
+      ],
+      "exact_native_profile": "Explicit IM/IMf/IMd strict-sequence optional-interval contraction while the persisted legacy plain-sequence profile stays unchanged.",
+      "source_mapping_boundary": "Pinned strict-cut comparisons support this refinement, not all PM4Py miner variants or global model precision.",
+      "code_files": [
+        "src/pix/case_centric/inductive.py"
+      ],
+      "test_files": [
+        "tests/case_centric/test_inductive.py",
+        "tests/case_centric/test_inductive_optional_blocks.py"
+      ],
+      "entrypoints": [
+        {
+          "path": "src/pix/case_centric/inductive.py",
+          "symbol": "discover_inductive_strict"
+        },
+        {
+          "path": "src/pix/case_centric/inductive.py",
+          "symbol": "StrictInductiveSpec"
+        }
+      ],
+      "remaining_limits": [
+        "IMd cannot reconstruct correlations lost in DFG input.",
+        "IMf may filter observations; strict sequence still generalizes rather than memorizing the full language."
+      ],
+      "withdrawal_condition": "Withdraw if a supported strict-cut counterexample or legacy persisted-identity regression is reproduced.",
+      "supporting_existing_features": []
+    },
+    {
+      "id": "MW4-FEAT-CASE-DATASET",
+      "domain": "case_centric",
+      "title": "Cutoff observations, censored targets and leakage-safe encoders",
+      "implementation_status": "native_profile",
+      "delivery": "added_or_extended",
+      "reference_replacement_verified": false,
+      "domain_review_status": "not_yet_reviewed",
+      "source_scope_ids": [
+        "PM-ADV-001",
+        "PM-ADV-002",
+        "PM-ADV-003",
+        "PM-ADV-004",
+        "PM-ADV-005",
+        "PM-ADV-011",
+        "PM-ADV-012"
+      ],
+      "plan_ids": [
+        "FEAT-01",
+        "FEAT-02"
+      ],
+      "exact_native_profile": "One cutoff per call; explicit observation/completion/horizon facts; indivisible shared/time blocks; train-only vocabulary/IDF; known-value masks and separate sequence padding.",
+      "source_mapping_boundary": "Named native observation contracts complement existing feature encoders; this is not an assertion of every default PM4Py feature formula.",
+      "code_files": [
+        "src/pix/case_centric/feature_dataset.py"
+      ],
+      "test_files": [
+        "tests/case_centric/test_feature_dataset.py"
+      ],
+      "entrypoints": [
+        {
+          "path": "src/pix/case_centric/feature_dataset.py",
+          "symbol": "observation_dataset"
+        },
+        {
+          "path": "src/pix/case_centric/feature_dataset.py",
+          "symbol": "leakage_safe_split"
+        },
+        {
+          "path": "src/pix/case_centric/feature_dataset.py",
+          "symbol": "fit_observation_encoder"
+        },
+        {
+          "path": "src/pix/case_centric/feature_dataset.py",
+          "symbol": "transform_observations"
+        },
+        {
+          "path": "src/pix/case_centric/feature_dataset.py",
+          "symbol": "encode_case_sequences"
+        }
+      ],
+      "remaining_limits": [
+        "No per-case multi-landmark cutoff API or time-aware trace-attribute as-of joins.",
+        "Shared groups and label-availability times must be supplied accurately.",
+        "Event globals are assumed timeless; actual information arrival times are not inferred."
+      ],
+      "withdrawal_condition": "Withdraw if future-only data changes fitted inputs, supplied groups cross partitions, censorship is presented as completion, or missing/padding values become known zeroes.",
+      "supporting_existing_features": [
+        {
+          "meaning": "Existing feature vocabulary, n-grams, TF-IDF and numerical encoders.",
+          "source_scope_ids": [
+            "PM-ADV-004",
+            "PM-ADV-005",
+            "PM-ADV-007"
+          ],
+          "code_files": [
+            "src/pix/case_centric/features.py"
+          ],
+          "test_files": [
+            "tests/case_centric/test_features.py"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "MW4-FEAT-OC-LEARNING",
+      "domain": "object_centric",
+      "title": "Object k-step data, inverse encoding and linear regression",
+      "implementation_status": "native_profile",
+      "delivery": "added_or_extended",
+      "reference_replacement_verified": false,
+      "domain_review_status": "not_yet_reviewed",
+      "source_scope_ids": [
+        "OC-FEAT-005",
+        "OC-FEAT-007",
+        "OC-FEAT-009"
+      ],
+      "plan_ids": [
+        "FEAT-01",
+        "FEAT-02"
+      ],
+      "exact_native_profile": "K distinct timestamp groups retain ties; targets are strictly later; numeric OLS and MAE with explicit object/event/execution training scopes and held-out entity checks.",
+      "source_mapping_boundary": "Complements existing OC feature extraction/encoding/splitting. Entity-disjoint evaluation is not causal or prospective independence.",
+      "code_files": [
+        "src/pix/object_centric/learning.py"
+      ],
+      "test_files": [
+        "tests/object_centric/test_learning.py"
+      ],
+      "entrypoints": [
+        {
+          "path": "src/pix/object_centric/learning.py",
+          "symbol": "build_object_k_step_dataset"
+        },
+        {
+          "path": "src/pix/object_centric/learning.py",
+          "symbol": "inverse_transform_object_features"
+        },
+        {
+          "path": "src/pix/object_centric/learning.py",
+          "symbol": "fit_object_regression"
+        },
+        {
+          "path": "src/pix/object_centric/learning.py",
+          "symbol": "predict_object_regression"
+        },
+        {
+          "path": "src/pix/object_centric/learning.py",
+          "symbol": "evaluate_object_regression"
+        }
+      ],
+      "remaining_limits": [
+        "Global-context features and retrospectively extracted executions may require further prospective feature design.",
+        "Numeric inverse results use floating-point and cannot promise exact very-large integer restoration.",
+        "No nonlinear predictor family, automatic causal feature selection or arbitrary external ML estimator API."
+      ],
+      "withdrawal_condition": "Withdraw if tied events gain an invented order, training entities overlap a declared held-out cohort, or independent OLS/MAE arithmetic differs.",
+      "supporting_existing_features": [
+        {
+          "meaning": "Existing event/execution feature graphs, aggregation, encoding and train-only normalization.",
+          "source_scope_ids": [
+            "OC-FEAT-001",
+            "OC-FEAT-002",
+            "OC-FEAT-003",
+            "OC-FEAT-004",
+            "OC-FEAT-005",
+            "OC-FEAT-006",
+            "OC-FEAT-008"
+          ],
+          "code_files": [
+            "src/pix/object_centric/features.py"
+          ],
+          "test_files": [
+            "tests/object_centric/test_features.py"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "MW4-FEAT-DECISION",
+      "domain": "case_centric",
+      "title": "Held-out mixed-feature decision evaluation",
+      "implementation_status": "native_profile",
+      "delivery": "added_or_extended",
+      "reference_replacement_verified": false,
+      "domain_review_status": "not_yet_reviewed",
+      "source_scope_ids": [
+        "PM-ADV-013"
+      ],
+      "plan_ids": [
+        "FEAT-03"
+      ],
+      "exact_native_profile": "Train-only categorical vocabulary/numeric CART, whole-case/group disjointness, confusion/accuracy and explicit retained versus complete-population coverage.",
+      "source_mapping_boundary": "Automatic conformance-derived observations currently use numeric prefix features; generic explicit categorical rows have a separate caller contract.",
+      "code_files": [
+        "src/pix/case_centric/decision_evaluation.py"
+      ],
+      "test_files": [
+        "tests/case_centric/test_decision_evaluation.py"
+      ],
+      "entrypoints": [
+        {
+          "path": "src/pix/case_centric/decision_evaluation.py",
+          "symbol": "fit_decision_encoder"
+        },
+        {
+          "path": "src/pix/case_centric/decision_evaluation.py",
+          "symbol": "evaluate_decision_tree"
+        },
+        {
+          "path": "src/pix/case_centric/decision_evaluation.py",
+          "symbol": "evaluate_decision_table"
+        }
+      ],
+      "remaining_limits": [
+        "No automatic categorical conformance extraction or guarantee that external rows were available before outcomes.",
+        "No automatic cross-validation/model selection or causal explanation.",
+        "Incomplete upstream populations withhold complete-coverage claims."
+      ],
+      "withdrawal_condition": "Withdraw if held-out values change fitted vocabulary/tree, supplied groups cross the split, or known missing observations produce complete coverage.",
+      "supporting_existing_features": []
+    },
+    {
+      "id": "MW4-FEAT-DRIFT",
+      "domain": "case_centric",
+      "title": "Bose drift multiplicity adjustment",
+      "implementation_status": "native_profile",
+      "delivery": "added_or_extended",
+      "reference_replacement_verified": false,
+      "domain_review_status": "not_yet_reviewed",
+      "source_scope_ids": [
+        "PM-ADV-016"
+      ],
+      "plan_ids": [
+        "FEAT-04"
+      ],
+      "exact_native_profile": "Exact rational Holm/BH/none arithmetic over the declared full hypothesis family, with conservative bounds and unresolved decisions for incomplete families.",
+      "source_mapping_boundary": "This is adjustment of the existing native Bose diagnostic; exact arithmetic does not establish validity of raw permutation p-values or real process change.",
+      "code_files": [
+        "src/pix/case_centric/drift_evaluation.py"
+      ],
+      "test_files": [
+        "tests/case_centric/test_drift_evaluation.py"
+      ],
+      "entrypoints": [
+        {
+          "path": "src/pix/case_centric/drift_evaluation.py",
+          "symbol": "adjust_drift_pvalues"
+        }
+      ],
+      "remaining_limits": [
+        "FWER/FDR interpretations require valid p-values and the declared family; BH further requires independence or PRDS.",
+        "Overlapping windows do not establish these assumptions.",
+        "Monte Carlo raw tests remain Monte Carlo."
+      ],
+      "withdrawal_condition": "Withdraw the numerical claim if an independent adjustment oracle differs; withdraw error-control interpretation when its assumptions fail.",
+      "supporting_existing_features": [
+        {
+          "meaning": "Existing raw Bose windows/permutation profile is retained.",
+          "source_scope_ids": [
+            "PM-ADV-016"
+          ],
+          "code_files": [
+            "src/pix/case_centric/advanced.py"
+          ],
+          "test_files": [
+            "tests/case_centric/test_advanced.py"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "MW4-FEAT-EXISTING-ANALYTICS",
+      "domain": "case_centric",
+      "title": "Existing clustering and stochastic-language distance",
+      "implementation_status": "native_profile",
+      "delivery": "existing_native",
+      "reference_replacement_verified": false,
+      "domain_review_status": "not_yet_reviewed",
+      "source_scope_ids": [
+        "PM-ADV-014",
+        "PM-ADV-015",
+        "PM-ADV-017"
+      ],
+      "plan_ids": [
+        "FEAT-03",
+        "FEAT-04"
+      ],
+      "exact_native_profile": "Native named trace/vector/profile clustering and finite stochastic-language transport profiles already implemented before this increment.",
+      "source_mapping_boundary": "Recorded as supporting existing W4 coverage, not newly implemented or certified upstream equivalent.",
+      "code_files": [
+        "src/pix/case_centric/advanced.py"
+      ],
+      "test_files": [
+        "tests/case_centric/test_advanced.py"
+      ],
+      "entrypoints": [
+        {
+          "path": "src/pix/case_centric/advanced.py",
+          "symbol": "cluster_cases"
+        },
+        {
+          "path": "src/pix/case_centric/advanced.py",
+          "symbol": "cluster_case_attribute_groups"
+        },
+        {
+          "path": "src/pix/case_centric/advanced.py",
+          "symbol": "cluster_case_profiles"
+        },
+        {
+          "path": "src/pix/case_centric/advanced.py",
+          "symbol": "compare_stochastic_languages"
+        }
+      ],
+      "remaining_limits": [
+        "Not every upstream clustering option or embedding family is covered.",
+        "Finite/truncated language inputs cannot certify equality of arbitrary infinite model languages."
+      ],
+      "withdrawal_condition": "Withdraw the relevant profile claim if an independent distance, merge or transport-cost oracle disagrees.",
+      "supporting_existing_features": []
+    },
+    {
+      "id": "MW4-SIM-EXISTING-CASE",
+      "domain": "case_centric",
+      "title": "Existing finite case playout and artificial tree generation",
+      "implementation_status": "native_profile",
+      "delivery": "existing_native",
+      "reference_replacement_verified": false,
+      "domain_review_status": "not_yet_reviewed",
+      "source_scope_ids": [
+        "PM-SIM-001",
+        "PM-SIM-003",
+        "PM-SIM-004",
+        "PM-SIM-005",
+        "PM-SIM-010"
+      ],
+      "plan_ids": [
+        "SIM-01",
+        "SIM-02",
+        "SIM-04"
+      ],
+      "exact_native_profile": "Existing bounded PN/tree/DFG generation, weighted finite DFG enumeration, DFG durations and seeded process-tree generation.",
+      "source_mapping_boundary": "These existing native profiles provide work-plan coverage; random/sample policy names do not assert upstream random-stream parity.",
+      "code_files": [
+        "src/pix/case_centric/simulation.py"
+      ],
+      "test_files": [
+        "tests/case_centric/test_simulation.py"
+      ],
+      "entrypoints": [
+        {
+          "path": "src/pix/case_centric/simulation.py",
+          "symbol": "playout_petri_net"
+        },
+        {
+          "path": "src/pix/case_centric/simulation.py",
+          "symbol": "playout_process_tree"
+        },
+        {
+          "path": "src/pix/case_centric/simulation.py",
+          "symbol": "playout_dfg"
+        },
+        {
+          "path": "src/pix/case_centric/simulation.py",
+          "symbol": "enumerate_dfg"
+        },
+        {
+          "path": "src/pix/case_centric/simulation.py",
+          "symbol": "generate_process_tree"
+        }
+      ],
+      "remaining_limits": [
+        "Generated models are not evidence of real-process representativeness.",
+        "Bounds can leave unobserved behavior; simulation does not prove soundness."
+      ],
+      "withdrawal_condition": "Withdraw if an emitted completed run violates its declared model/ending condition or a documented seeded/profile contract changes.",
+      "supporting_existing_features": [
+        {
+          "meaning": "Existing bounded Declare-language generation remains a separate finite profile.",
+          "source_scope_ids": [
+            "PM-SIM-006"
+          ],
+          "code_files": [
+            "src/pix/case_centric/declarative_simulation.py"
+          ],
+          "test_files": [
+            "tests/case_centric/test_declarative_simulation.py"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "MW4-SIM-EXISTING-OC",
+      "domain": "object_centric",
+      "title": "Existing object binding playout",
+      "implementation_status": "native_profile",
+      "delivery": "existing_native",
+      "reference_replacement_verified": false,
+      "domain_review_status": "not_yet_reviewed",
+      "source_scope_ids": [
+        "PM-SIM-007",
+        "PM-SIM-008"
+      ],
+      "plan_ids": [
+        "SIM-01"
+      ],
+      "exact_native_profile": "Finite seeded OCPN and object-centric causal-net playout using concrete object binding contracts.",
+      "source_mapping_boundary": "This is existing object-aware playout, not case flattening or reference numerical parity.",
+      "code_files": [
+        "src/pix/object_centric/simulation.py"
+      ],
+      "test_files": [
+        "tests/object_centric/test_simulation.py"
+      ],
+      "entrypoints": [
+        {
+          "path": "src/pix/object_centric/simulation.py",
+          "symbol": "playout_ocpn"
+        },
+        {
+          "path": "src/pix/object_centric/simulation.py",
+          "symbol": "playout_causal_net"
+        }
+      ],
+      "remaining_limits": [
+        "Bounded sampled runs do not enumerate every binding or certify arbitrary-net soundness.",
+        "No concurrent timed object-binding simulation is implied."
+      ],
+      "withdrawal_condition": "Withdraw if a returned accepted run violates the declared binding or final-state rule.",
+      "supporting_existing_features": []
+    },
+    {
+      "id": "MW4-SIM-TIMED-PN",
+      "domain": "case_centric",
+      "title": "Concurrent reservation timed Petri-net playout",
+      "implementation_status": "native_profile",
+      "delivery": "added_or_extended",
+      "reference_replacement_verified": false,
+      "domain_review_status": "not_yet_reviewed",
+      "source_scope_ids": [
+        "PM-SIM-002",
+        "PM-MODEL-003"
+      ],
+      "plan_ids": [
+        "SIM-02"
+      ],
+      "exact_native_profile": "Nonpreemptive input-token reservation at start, delayed output at completion, completion batches before dispatch and final marking only with no in-flight work.",
+      "source_mapping_boundary": "Dispatch weights are choices, not exponential race rates. This is a named native stochastic-net timing profile.",
+      "code_files": [
+        "src/pix/case_centric/timed_playout.py"
+      ],
+      "test_files": [
+        "tests/case_centric/test_timed_playout.py"
+      ],
+      "entrypoints": [
+        {
+          "path": "src/pix/case_centric/timed_playout.py",
+          "symbol": "playout_timed_petri_net"
+        }
+      ],
+      "remaining_limits": [
+        "No GSPN priorities, preemption/cancellation, resource calendars or object binding.",
+        "Finite binary64 time and runtime-specific seeded RNG; horizon/start limits preserve censored runs."
+      ],
+      "withdrawal_condition": "Withdraw if tokens are double-consumed, outputs appear early, in-flight work is accepted as complete or tied completion batching is violated.",
+      "supporting_existing_features": []
+    },
+    {
+      "id": "MW4-SIM-RESOURCES",
+      "domain": "case_centric",
+      "title": "Multi-resource calendars, duration fitting and what-if",
+      "implementation_status": "native_profile",
+      "delivery": "added_or_extended",
+      "reference_replacement_verified": false,
+      "domain_review_status": "not_yet_reviewed",
+      "source_scope_ids": [
+        "PM-SIM-009",
+        "PM-SIM-002"
+      ],
+      "plan_ids": [
+        "SIM-02",
+        "SIM-03"
+      ],
+      "exact_native_profile": "Atomic multi-resource nonpreemptive jobs on absolute windows/capacities, feasible FIFO backfill, keyed duration draws, paired completed-cohort comparisons and explicit lifecycle fit exclusions.",
+      "source_mapping_boundary": "Sequential operation routes are supplied; this is not a general stochastic-PN solver or proof of intervention effectiveness.",
+      "code_files": [
+        "src/pix/case_centric/resource_simulation.py"
+      ],
+      "test_files": [
+        "tests/case_centric/test_resource_simulation.py"
+      ],
+      "entrypoints": [
+        {
+          "path": "src/pix/case_centric/resource_simulation.py",
+          "symbol": "simulate_resources"
+        },
+        {
+          "path": "src/pix/case_centric/resource_simulation.py",
+          "symbol": "compare_resource_scenarios"
+        },
+        {
+          "path": "src/pix/case_centric/resource_simulation.py",
+          "symbol": "fit_resource_durations"
+        }
+      ],
+      "remaining_limits": [
+        "No recurrent weekly/DST calendars, preemption, skill routing or inferred arrival/route model.",
+        "Common random numbers do not guarantee variance reduction for every distribution family.",
+        "Suspended/resumed intervals without known active service duration are excluded from fitting."
+      ],
+      "withdrawal_condition": "Withdraw if capacity/calendar constraints fail, a partial acquisition blocks work, an input case disappears or dispatch order changes keyed service draws.",
+      "supporting_existing_features": []
+    },
+    {
+      "id": "MW4-STREAM-CASE-REVISION",
+      "domain": "case_centric",
+      "title": "Retained-fact case stream corrections and checkpoint",
+      "implementation_status": "native_profile",
+      "delivery": "added_or_extended",
+      "reference_replacement_verified": false,
+      "domain_review_status": "not_yet_reviewed",
+      "source_scope_ids": [
+        "PM-STREAM-001",
+        "PM-STREAM-004",
+        "PM-STREAM-010"
+      ],
+      "plan_ids": [
+        "STREAM-01",
+        "STREAM-02",
+        "STREAM-03"
+      ],
+      "exact_native_profile": "Explicit process ordering, event CAS/tombstones, operation/offset deduplication, full retained-fact DFG recomputation with count retractions and replay-verified checkpoint.",
+      "source_mapping_boundary": "Adds late/correction behavior beyond the source stream rows; it does not claim their API equivalence or replace the separate ordered CaseStream.",
+      "code_files": [
+        "src/pix/case_centric/revisable_stream.py"
+      ],
+      "test_files": [
+        "tests/case_centric/test_revisable_stream.py"
+      ],
+      "entrypoints": [
+        {
+          "path": "src/pix/case_centric/revisable_stream.py",
+          "symbol": "RevisableCaseStream.upsert_event"
+        },
+        {
+          "path": "src/pix/case_centric/revisable_stream.py",
+          "symbol": "RevisableCaseStream.delete_event"
+        },
+        {
+          "path": "src/pix/case_centric/revisable_stream.py",
+          "symbol": "RevisableCaseStream.snapshot"
+        },
+        {
+          "path": "src/pix/case_centric/revisable_stream.py",
+          "symbol": "RevisableCaseStream.checkpoint"
+        },
+        {
+          "path": "src/pix/case_centric/revisable_stream.py",
+          "symbol": "RevisableCaseStream.restore"
+        }
+      ],
+      "remaining_limits": [
+        "Full retained data/history grow; not bounded-memory incremental or distributed durable streaming.",
+        "Open-case end counts describe current prefixes, not business completion.",
+        "Only minimal calculation event fields, not arbitrary XES attributes."
+      ],
+      "withdrawal_condition": "Withdraw if retained-fact batch results differ, a rejected mutation consumes state/offset or checkpoint replay changes identity/counts.",
+      "supporting_existing_features": []
+    },
+    {
+      "id": "MW4-STREAM-OC-REVISION",
+      "domain": "object_centric",
+      "title": "Canonical OC stream revisions and execution merge/split",
+      "implementation_status": "native_profile",
+      "delivery": "added_or_extended",
+      "reference_replacement_verified": false,
+      "domain_review_status": "not_yet_reviewed",
+      "source_scope_ids": [
+        "PM-STREAM-001",
+        "PM-STREAM-003",
+        "PM-STREAM-010"
+      ],
+      "plan_ids": [
+        "STREAM-01",
+        "STREAM-02",
+        "STREAM-03"
+      ],
+      "exact_native_profile": "Canonical event/object/E2O facts, stream-wide CAS, opaque source offsets and revision journals; exact batch execution recomputation with explicit merge/split/overlap evidence.",
+      "source_mapping_boundary": "The closest stream source rows are transport/distribution infrastructure. This native OC revision profile is additional functionality, not a claim of OCEL-flattening distributor equivalence.",
+      "code_files": [
+        "src/pix/object_centric/revisable_stream.py"
+      ],
+      "test_files": [
+        "tests/object_centric/test_revisable_stream.py"
+      ],
+      "entrypoints": [
+        {
+          "path": "src/pix/object_centric/revisable_stream.py",
+          "symbol": "OCRevisableStream.upsert_event"
+        },
+        {
+          "path": "src/pix/object_centric/revisable_stream.py",
+          "symbol": "OCRevisableStream.delete_event"
+        },
+        {
+          "path": "src/pix/object_centric/revisable_stream.py",
+          "symbol": "OCRevisableStream.snapshot"
+        },
+        {
+          "path": "src/pix/object_centric/revisable_stream.py",
+          "symbol": "OCRevisableStream.checkpoint"
+        },
+        {
+          "path": "src/pix/object_centric/revisable_stream.py",
+          "symbol": "OCRevisableStream.restore"
+        }
+      ],
+      "remaining_limits": [
+        "No type-schema/O2O mutation API, broker, watermark service or crash-durable store.",
+        "Every correction recomputes retained facts; advanced analytics are not all automatically revised.",
+        "Leading-object overlap is not mislabeled as connected-component merge/split."
+      ],
+      "withdrawal_condition": "Withdraw if canonical facts/qualifiers are lost, batch executions differ, rejected CAS changes state or replay differs.",
+      "supporting_existing_features": []
+    },
+    {
+      "id": "MW4-STREAM-EXISTING-MONITORS",
+      "domain": "case_centric",
+      "title": "Existing ordered stream monitoring",
+      "implementation_status": "native_profile",
+      "delivery": "existing_native",
+      "reference_replacement_verified": false,
+      "domain_review_status": "not_yet_reviewed",
+      "source_scope_ids": [
+        "PM-STREAM-004",
+        "PM-STREAM-005",
+        "PM-STREAM-006",
+        "PM-STREAM-007",
+        "PM-STREAM-008",
+        "PM-STREAM-010"
+      ],
+      "plan_ids": [
+        "STREAM-01",
+        "STREAM-02",
+        "STREAM-03"
+      ],
+      "exact_native_profile": "Existing ordered CaseStream with DFG, token replay, temporal, Declare and footprint state plus checkpoint contracts.",
+      "source_mapping_boundary": "Separate ordered profile remains available; this row does not turn those monitors into revisable late-event analytics.",
+      "code_files": [
+        "src/pix/case_centric/streaming.py"
+      ],
+      "test_files": [
+        "tests/case_centric/test_streaming.py"
+      ],
+      "entrypoints": [
+        {
+          "path": "src/pix/case_centric/streaming.py",
+          "symbol": "CaseStream"
+        }
+      ],
+      "remaining_limits": [
+        "Late/correction handling belongs to the new retained-fact engines, not this ordered profile.",
+        "No assertion of every upstream streaming adapter or approximate alignment variant."
+      ],
+      "withdrawal_condition": "Withdraw if an accepted ordered input disagrees with the stated batch/profile contract or checkpoint restoration loses supported state.",
+      "supporting_existing_features": [
+        {
+          "meaning": "Existing bounded proxy/window online alignment is separate from revisable DFG recomputation; approximate semantics remain explicit.",
+          "source_scope_ids": [
+            "PM-STREAM-009"
+          ],
+          "code_files": [
+            "src/pix/case_centric/online_alignment.py"
+          ],
+          "test_files": [
+            "tests/case_centric/test_online_alignment.py"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "MW4-ACT-MATCH-PLAN",
+      "domain": "object_centric",
+      "title": "All-witness action matching and bounded exact planning",
+      "implementation_status": "native_profile",
+      "delivery": "added_or_extended",
+      "reference_replacement_verified": false,
+      "domain_review_status": "not_yet_reviewed",
+      "source_scope_ids": [
+        "OC-ACT-001",
+        "OC-ACT-002"
+      ],
+      "plan_ids": [
+        "ACT-01",
+        "ACT-02"
+      ],
+      "exact_native_profile": "Distinct slot-to-interval witnesses; required/optional partitions, precedence, pairwise conflicts, deadlines/horizon/costs and optional explicit objective; exhaustive bounded subset/order search.",
+      "source_mapping_boundary": "Optimal means exact only for a complete supplied candidate catalog and this scheduling model. Witnesses are not authorization to execute.",
+      "code_files": [
+        "src/pix/object_centric/action_planning.py"
+      ],
+      "test_files": [
+        "tests/object_centric/test_action_planning.py"
+      ],
+      "entrypoints": [
+        {
+          "path": "src/pix/object_centric/action_planning.py",
+          "symbol": "enumerate_action_matches"
+        },
+        {
+          "path": "src/pix/object_centric/action_planning.py",
+          "symbol": "plan_actions"
+        }
+      ],
+      "remaining_limits": [
+        "No cumulative capacity >1, preemption, calendar holes or time-dependent utility/cost.",
+        "Limited search preserves feasible/unknown and cannot certify global infeasibility/optimality.",
+        "No-op must still satisfy required obligations."
+      ],
+      "withdrawal_condition": "Withdraw if a schedule violates declared constraints, independent exhaustive schedules improve a claimed optimum or a limited search falsely certifies infeasibility.",
+      "supporting_existing_features": []
+    },
+    {
+      "id": "MW4-ACT-OPERATIONAL",
+      "domain": "object_centric",
+      "title": "Replay-verified operational population impact",
+      "implementation_status": "native_profile",
+      "delivery": "added_or_extended",
+      "reference_replacement_verified": false,
+      "domain_review_status": "not_yet_reviewed",
+      "source_scope_ids": [
+        "OC-ACT-004"
+      ],
+      "plan_ids": [
+        "ACT-03"
+      ],
+      "exact_native_profile": "Reexecutes and verifies replay; compares typed distinct-object populations at event-count cutoffs before terminal finalization; separates observed-binding, silent, repaired and unknown evidence.",
+      "source_mapping_boundary": "State is conditional on the model, initial marking and deterministic replay. Scenario-minus-baseline is a population difference, not applying an action or causal counterfactual.",
+      "code_files": [
+        "src/pix/object_centric/operational_impact.py"
+      ],
+      "test_files": [
+        "tests/object_centric/test_operational_impact.py"
+      ],
+      "entrypoints": [
+        {
+          "path": "src/pix/object_centric/operational_impact.py",
+          "symbol": "assess_operational_impact"
+        }
+      ],
+      "remaining_limits": [
+        "Cutoffs are replay lexical-topological prefix counts, not timestamp cutoffs.",
+        "No physical-state measurement or enumeration of all nondeterministic markings.",
+        "Unknown placement withholds population totals/deltas instead of inventing zero."
+      ],
+      "withdrawal_condition": "Withdraw if independent prefix token/object arithmetic, uncertainty propagation or signed deltas disagree, or a forged replay is accepted.",
+      "supporting_existing_features": []
+    },
+    {
+      "id": "MW4-ACT-EXISTING-IMPACT",
+      "domain": "object_centric",
+      "title": "Existing structural/performance impact and configuration",
+      "implementation_status": "native_profile",
+      "delivery": "existing_native",
+      "reference_replacement_verified": false,
+      "domain_review_status": "not_yet_reviewed",
+      "source_scope_ids": [
+        "OC-ACT-003",
+        "OC-ACT-005",
+        "OC-ACT-006"
+      ],
+      "plan_ids": [
+        "ACT-03"
+      ],
+      "exact_native_profile": "Existing typed structural regions, observed before/after window metrics and immutable action-configuration updates.",
+      "source_mapping_boundary": "Configuration updates modify a calculation model; observed window differences are not causal effectiveness or external action execution.",
+      "code_files": [
+        "src/pix/object_centric/actions.py"
+      ],
+      "test_files": [
+        "tests/object_centric/test_actions.py"
+      ],
+      "entrypoints": [
+        {
+          "path": "src/pix/object_centric/actions.py",
+          "symbol": "structural_action_impact"
+        },
+        {
+          "path": "src/pix/object_centric/actions.py",
+          "symbol": "compare_action_windows"
+        },
+        {
+          "path": "src/pix/object_centric/actions.py",
+          "symbol": "update_action_configuration"
+        }
+      ],
+      "remaining_limits": [
+        "No external agent/controller deployment or automatic intervention.",
+        "Cohort, denominator and missing-value contracts remain explicit; confounding is not removed."
+      ],
+      "withdrawal_condition": "Withdraw if the declared structure/cohort/signed arithmetic or configuration identity is not preserved.",
+      "supporting_existing_features": []
+    }
+  ],
+  "source_snapshot": {
+    "state": "frozen",
+    "recorded_at": "2026-09-18T08:44:05.655314+00:00",
+    "meaning": "Source identity only; not evidence that tests passed or semantics match.",
+    "sha256": {
+      "docs/requirements/2026-09-13_PIX_DETAILED_DEVELOPMENT_PLAN.md": "e3c0750a14a92f7c0d837fb82c74d73e1820d1c42061925955be52b80fd0cb83",
+      "docs/requirements/scope-01/replacement_registry.json": "2c5b17fe1686927469483994018c54e22c5f65c316d9498bc60293a358b4ccbd",
+      "docs/requirements/union-2026-09-15/implementation_registry.json": "55e8387db7bcad9338c853f6afc787483d1b067a8cf060037c89b2b18cae8f5b",
+      "examples/models_w4_review.py": "be5de8cd80dbb1a85c31a75253218f8062a4d9d3865c9a4773397a862eb3b998",
+      "src/pix/_mining_registry.py": "924f81643e48c6749db1589246efaafb8b7bd50609f8a42d434e34cba12a2467",
+      "src/pix/case_centric/__init__.py": "161cd541b7fdd59f861b254e5ed2524f1fc547935bd8e196b87b07e5dfaec9f3",
+      "src/pix/case_centric/advanced.py": "e122f409335e4842f88a8c9e508e94c07fb73fe67bf2d51a93658d9e18b39e68",
+      "src/pix/case_centric/coverability.py": "0fefbc8c8237b9eaebaa1afb7bd6930eb375993e51176ef7ace477770f18aec6",
+      "src/pix/case_centric/decision_evaluation.py": "f87858c7e4b79acdb60a34bcc9327e6afb94d198e02c6a7ba30755bf948bae15",
+      "src/pix/case_centric/declarative_simulation.py": "7b2b2bc646ba4fdd8840f0a25d55a04dce12a796839aa737d78f9bff643215bd",
+      "src/pix/case_centric/drift_evaluation.py": "669266ccc1b8445a44a019c398be0374d9579b1ab565abf5b751405be5bcc944",
+      "src/pix/case_centric/extended_nets.py": "711246b7bf19c35b16f1d6d38525e36ac10636442a9ed0e6af29bc92105263d1",
+      "src/pix/case_centric/feature_dataset.py": "61c2ea2fe01582df755d754c57ddede3cfbaec303a8aea954381fb6ad7632e86",
+      "src/pix/case_centric/features.py": "320fcd80bf54f435a32f84649f2a0372eb3eac010369b44579998bb7a43e5b38",
+      "src/pix/case_centric/inductive.py": "a1bac323786a261c793104c1c3756fc96a1cdb0ac4883c7280b81764aa62c085",
+      "src/pix/case_centric/maximal_decomposition.py": "5a4c5f47edbb6c94a84e3e550e5649f286a722bbce3604b387c4aa625fe83a25",
+      "src/pix/case_centric/model_labels.py": "24c9cd870553aee17bc57843c15616e40b6a60088abd4b398e1e449db5db614b",
+      "src/pix/case_centric/online_alignment.py": "1d3630870c61d6f09db6562f886d3f01c4c784c0c1419467e05956738d8208cf",
+      "src/pix/case_centric/powl_conversion.py": "2b3056ba199612cfcb8f92d2f356a75500e20cfe85ab51da52618177830b6f9d",
+      "src/pix/case_centric/resource_simulation.py": "3c619a4f330e3e8579111438d1d7e5a04ba274b3906eab1964f3522f8e642211",
+      "src/pix/case_centric/revisable_stream.py": "ce2f1fc01e171d90d62a0ba5f1b61a4d7382ccead3b7d345da9c792cc5224eea",
+      "src/pix/case_centric/simulation.py": "9a5325c5b219bd6587907d042b4fb86c33b52369383ca4514b79fc5bc71ec863",
+      "src/pix/case_centric/streaming.py": "afbd9b42b2cf73d20f450fb0ef2c12676353dfd8420b82fa54ff53e6450ee619",
+      "src/pix/case_centric/timed_playout.py": "b8e51e4874b1d77ee0a0d5f69c5f78b5cea648f47ed6e8d2b466c96c0340446b",
+      "src/pix/case_centric/tree_bordered.py": "c36e99adfe9d30e3c6f8cb58401f642b426a6a16d4027dbd138a80bd97f67024",
+      "src/pix/case_centric/trie_conversion.py": "a740115155c3ac26aded2ff97b24e41aea9507a9c2875974d64241c7294e124c",
+      "src/pix/model_capabilities.py": "7a5079b9ab9dd54376571c472a81976f18e11acbb7aceabcfd9ee8082c1aa8df",
+      "src/pix/model_io/__init__.py": "5a60e4ff5c5d09d55232ab2fe2f334052c3fae2834a16f70475eca6fec8c80d0",
+      "src/pix/model_io/bpmn.py": "965cb3474dbe50ce427e88940b41593016e448d3b1268ca69ae5bf3cf6bad0f7",
+      "src/pix/model_io/common.py": "fdba16d15ccf6761ffeffd3500bc5a345a2f9a0de3552b8524b5ed3d05807e39",
+      "src/pix/model_io/pnml.py": "396e495f85cf1f05839e12388dae9225bd688ac1886d13430bb8e37338651891",
+      "src/pix/model_io/ptml.py": "d75b6234a54c9de7981e86f763f0152740631af780166403d8a2271a78a1e237",
+      "src/pix/models.py": "6866689409e65453809f5bd977a978be9206a3459b972c14fe6ceb304f53b66b",
+      "src/pix/object_centric/__init__.py": "a67174c7288d233851bf52a3fe3b054de999c0551098e7d9b695d52cb146e1fb",
+      "src/pix/object_centric/action_planning.py": "7945dcd107653092a2e1b3ae6ffbe3e2a402c3066c68f25f2938bb3e57ad5ede",
+      "src/pix/object_centric/actions.py": "bb79648f5f1ce7e552cbc451d340cc3a03fb4f5f607b7c8dba2d855627924ef7",
+      "src/pix/object_centric/features.py": "8d5ce55365bf7b26b09a959910703d77191d5d9c338bcdfb6318b1497c2bf57e",
+      "src/pix/object_centric/learning.py": "bee516b3065aafaf54547ca99428336b1cd803f1ec94e3f110f46b4126fda979",
+      "src/pix/object_centric/models.py": "165dc583543da39bde87630678ab2fca8581e72b990146953de90308d2a8f266",
+      "src/pix/object_centric/operational_impact.py": "bb9df45d3d54b6f6499817af8911f6f6fe4faa2411792b5b01b2c98426e884c0",
+      "src/pix/object_centric/revisable_stream.py": "8e085af87c7c1973a6d9c92c874b235a60ca138fb5a68d5349a4046711c7bf94",
+      "src/pix/object_centric/simulation.py": "8f20636366cef436bf8a30201de6357d5257d2e8c2ce030b0dd996e8f736681f",
+      "src/pix/object_centric/subprocess.py": "f555cf6ceacb4f57965823e003da693c7313cbe81fc257ee4085170ea3a2ce90",
+      "src/pix/results.py": "bc6233a893d7c5f7a1d682cedf0d62243c8a8b2a3362baee0b0eeae0c7e3e8c3",
+      "tests/case_centric/test_advanced.py": "bcec23937f7ae5f571ba0ee51fd6c9891d79eac1fa7d6327c97c13eeb2d05272",
+      "tests/case_centric/test_coverability.py": "699f7cf5a23f4164766bcd8932af076a74a88956956fbb268efe5a075f8a7341",
+      "tests/case_centric/test_decision_evaluation.py": "de7090d786bf0b30940a295d1b1c9f9b68306df85135b34c5556fa4decd1a3d5",
+      "tests/case_centric/test_declarative_simulation.py": "db31647f3ebb23714375f176c23c49de1ca418e5cf236e5be866c60f3b1de410",
+      "tests/case_centric/test_drift_evaluation.py": "be01e3cfabc4768a2f2e2ef129e20dd24fdb220e3688d64c4e539c7a72560205",
+      "tests/case_centric/test_extended_nets.py": "e4785604bda5b4a68ed86cb808bca903621cd924e9b489b62d77d4860a90a4ae",
+      "tests/case_centric/test_feature_dataset.py": "c5eb3420bf9a232a8b9cbdb11d4ed9dc7d62700a0331917836a957ce6cd40301",
+      "tests/case_centric/test_features.py": "76e9a472ea35a8e6e5a4c3673055bbe7d36c73471835deb763fbd65ca668a6bf",
+      "tests/case_centric/test_inductive.py": "482edf731b81b3730b98963e84bb2ea2adbf92c3a835bfed4aef43a79831e56d",
+      "tests/case_centric/test_inductive_optional_blocks.py": "0f27a37c17155b2147a1f6b0a16cb75ec4fa695b99dda35cc787598cf15dbe7c",
+      "tests/case_centric/test_maximal_decomposition.py": "51dfba101622de9f6d37ac687c8f563dce991d5360818cbfa33168c0515c3486",
+      "tests/case_centric/test_model_labels.py": "67a4ddff5a43da26f1d329a1c3c0574bc8a8c2482f8e934e1b5698c9efe80b30",
+      "tests/case_centric/test_online_alignment.py": "4fee250867165ceaf590deafe11df2306c79660f51fc6082d9b52d181786ecfb",
+      "tests/case_centric/test_powl_conversion.py": "495d541b312d99882fb958ce33089f7d2fd171b286adf43f04c73191689bb731",
+      "tests/case_centric/test_resource_simulation.py": "40d7185a923a40ebd95a0df348e09af0bb8db2049e564e34ba318c2ce8997647",
+      "tests/case_centric/test_revisable_stream.py": "e53cc1cce3a7be5c70815988a9e5c7f2fe511c99bc652418a019962f4cdb41d7",
+      "tests/case_centric/test_simulation.py": "010c0365038ef33b2ba4583d3e361532f28c89b1cbcd283f61ac004de3260fb6",
+      "tests/case_centric/test_streaming.py": "8517e0556943a3d4c9b626b8564257e20ae089359e76952f41fe466149043ba4",
+      "tests/case_centric/test_timed_playout.py": "ec861305f60bd9a2dbb4eee8db41a13e67948a381b276dd8d85c693b5a40dac4",
+      "tests/case_centric/test_tree_bordered.py": "5042480838c36157170252596e271bb36879c7a997f48bb717f80d6a7703006f",
+      "tests/case_centric/test_trie_conversion.py": "22c6ac129b9b39b36266b17121656fe60670422d3c19b5ccf17e3e3ab6746833",
+      "tests/model_io/test_bpmn.py": "acf39470970e5f2b6338d2dfe80e089eb3eae68cd5f5c773fea459b53c3c211c",
+      "tests/model_io/test_pnml.py": "edff49aadb00740b3a41351c9fd435abb8f37987f4968b284bbcf6596198345f",
+      "tests/model_io/test_ptml.py": "8b8fdd26ca9a4375d8c24e5f2b819236624d9c5df1ef756944961cd44cbb2f78",
+      "tests/model_io/test_publication.py": "24a22361e45a4e747732d04f05a449d6b55f85a38ed165cdbcef8f05e82057db",
+      "tests/object_centric/test_action_planning.py": "55fae7a1446b423893007a988acef8ad70dd001f2a7c86c7ddc6b2de512fc9f6",
+      "tests/object_centric/test_actions.py": "c9ce4821fe2a85894a8723c44ddc9f00345208381d953694e7cdc0202f48836a",
+      "tests/object_centric/test_features.py": "c93940ca892930df258b71463ba75d37488e3a770aa3f1776a6fef8a55349fd2",
+      "tests/object_centric/test_learning.py": "0a1161465ee1a03fa8fbec7fe80e71858ca25915135ed58993b640da8cfbd7eb",
+      "tests/object_centric/test_models.py": "7d78e954a41a6dcfcb1a8ff254f7690af91d8e04b8cd36fa596d90ebf872e988",
+      "tests/object_centric/test_operational_impact.py": "db280b11da3c9aabb57ac7e8faf72cbccb6d0c59aaadc231e660c9fba7e6e8e5",
+      "tests/object_centric/test_revisable_stream.py": "77c45340426981fa069154c15239b0b036b8c311ad8a4e2b1dd2a64d49ba1389",
+      "tests/object_centric/test_simulation.py": "5a1cbc882c4527088d65ba4e9613d899f495ba6ceedaded38181edc1ccfeeaf3",
+      "tests/object_centric/test_subprocess.py": "043681557454aa8a53b6699578206ffc51f155f5d55ab560610798c138e35645",
+      "tests/test_mining_serialization.py": "0bde21e4e9f78fa83a0c3404ac8aa0d8b8ecd7df001140543c8acf4693807709",
+      "tests/test_model_capabilities.py": "861efeeb8f309cee2a47c0cd6bbccd8499ab486f0afe0a4afd4ae7a59ff0605f",
+      "tests/test_models_w4_integration.py": "c632bbb07c8b2466a9c8e038b036279ca70b0f059ba95a49ffb7848593e5a319",
+      "tools/check_models_w4_registry.py": "ea5fd34e82b8a910eb4ccddb9f610896a36989b3cf263a2f69144a38cde154b3"
+    }
+  }
+}

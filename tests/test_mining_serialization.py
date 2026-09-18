@@ -6,6 +6,8 @@ fixtures keep the integration independent of each algorithm's oracle tests.
 
 from dataclasses import is_dataclass, replace
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
+from runpy import run_path
 
 import pytest
 
@@ -638,6 +640,12 @@ def test_registry_only_allows_frozen_native_contracts():
 def test_every_registered_native_module_has_a_live_codec_representative():
     represented = {f"pix.case_centric.{name}" for name, _ in CASE_FACTORIES}
     represented.update(f"pix.object_centric.{name}" for name, _ in OBJECT_FACTORIES)
+    review = run_path(
+        str(Path(__file__).resolve().parents[1] / "examples/models_w4_review.py")
+    )
+    for result in review["build_review_cases"]().values():
+        _roundtrip(result)
+        represented.add(type(result.spec).__module__)
     registered = {
         request.__module__
         for _, request, _ in mining_schemas().values()

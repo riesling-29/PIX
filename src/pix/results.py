@@ -185,7 +185,32 @@ def _check_identity(result: ComputationResult) -> None:
 
 
 def _check_envelope(result: ComputationResult) -> None:
-    """Check redundant request/payload facts, without repeating the computation."""
+    """Check request/payload facts and registered structural certificates."""
+    from pix.case_centric.maximal_decomposition import (
+        RESULT_SCHEMAS as decomposition_schemas,
+    )
+    from pix.case_centric.maximal_decomposition import (
+        validate_maximal_decomposition_result,
+    )
+    from pix.object_centric.learning import RESULT_SCHEMAS, validate_learning_result
+
+    if result.operator_id in decomposition_schemas:
+        validate_maximal_decomposition_result(result)
+    if result.operator_id in RESULT_SCHEMAS:
+        validate_learning_result(result)
+    if result.operator_id == "pix.object_centric.assess_operational_impact":
+        from pix.object_centric.operational_impact import (
+            validate_operational_impact_result,
+        )
+
+        validate_operational_impact_result(result)
+    if result.operator_id in (
+        "pix.object_centric.local_ocpn_subprocess",
+        "pix.object_centric.transform_ocpn_subprocess",
+    ):
+        from pix.object_centric.subprocess import validate_subprocess_result
+
+        validate_subprocess_result(result)
     if result.operator_id == "pix.case_centric.discover_interleavings":
         from pix.case_centric.interleavings import validate_interleaving_result
 

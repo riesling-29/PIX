@@ -17,8 +17,10 @@ from xml.etree import ElementTree
 
 import pytest
 
+from pix.viewer import export_html
+
 ROOT = Path(__file__).resolve().parents[2]
-ARTIFACTS = ROOT / ".artifacts/graphviz-2026-09-16/qa"
+ARTIFACTS = ROOT / ".artifacts/2026-09-17-validation-neutral-chevron-default/graphviz"
 pytestmark = pytest.mark.browser
 SCENARIOS = (
     "graphviz-default",
@@ -137,6 +139,7 @@ scenarios['chevron-coordinates-frequency']=async()=>{
     assert(document.provenance.length>=2);
     for(const [index,chevron] of chevrons.entries()) {
       await panel(page,chevron.id);
+      assert.equal(await page.locator('.pv-svg').getAttribute('data-chevron-style'),'classic');
       assert.equal(await page.locator('.pv-chevron-event').count(),chevron.events.length);
       assert.equal(await page.locator('.pv-chevron-shape').count(),chevron.events.reduce((sum,e)=>sum+e.lane_ids.length,0));
       assert.equal(chevron.lanes.filter(l=>l.object_type==='Item').length,2);
@@ -262,6 +265,14 @@ def browser_evidence(tmp_path_factory):
     before = hashes()
     gallery = tmp_path_factory.mktemp("graphviz-chevron-gallery")
     demo.write_gallery(gallery)
+    # These scenarios specifically exercise the retained segmented classic fills
+    # and 154-pixel slot geometry. The presentation suite covers the neutral default.
+    export_html(
+        demo.build_demo_documents()["variant-chevrons"],
+        gallery / "variant-chevrons.html",
+        chevron_style="classic",
+        overwrite=True,
+    )
     ARTIFACTS.mkdir(parents=True, exist_ok=True)
     harness = gallery / "browser-harness.cjs"
     harness.write_text(HARNESS, encoding="utf-8")

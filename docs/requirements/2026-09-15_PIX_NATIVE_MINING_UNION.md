@@ -11,6 +11,11 @@
 
 ## 1. 범위와 읽는 방법
 
+2026-09-18 추가 모델·W4 구현은 [후속 보고서](../reports/2026-09-17_MODELS_AND_W4_IMPLEMENTATION_REPORT.md)와
+[추가 registry](models-w4-2026-09-17/implementation_registry.json)에 기록한다.
+이 문서와 9월 15일 registry의 수치·source hash는 당시 snapshot을 유지하며,
+새 구현이 모든 참조 variant의 대체 검증 완료를 뜻하지 않는다.
+
 고정한 PM4Py 2.7.23.8·OCPA 1.3.4의 334개 검토 행 중 계산 및 필수 계산 지원에 해당하는
 268개 행을 83개 구현 패키지에 연결했다. Case-Centric은 51개 패키지·168개 행,
 Object-Centric은 32개 패키지·100개 행이다. 나머지 66개 행은 파일 입출력·렌더링·외부 서비스 연결

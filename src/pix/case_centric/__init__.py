@@ -11,6 +11,19 @@ from pix.contracts.case_log import CaseTraceSpec
 from pix.event_log import CaseLog, case_traces
 
 _MODULES = (
+    "coverability",
+    "decision_evaluation",
+    "drift_evaluation",
+    "extended_nets",
+    "feature_dataset",
+    "maximal_decomposition",
+    "model_labels",
+    "powl_conversion",
+    "resource_simulation",
+    "revisable_stream",
+    "timed_playout",
+    "tree_bordered",
+    "trie_conversion",
     "bpmn_conversion",
     "dfg_conversion",
     "evaluation",
@@ -73,6 +86,7 @@ _FUNCTIONS = {
     "discover_efg": "discovery",
     "discover_footprints": "discovery",
     "discover_inductive": "inductive",
+    "discover_inductive_strict": "inductive",
     "discover_alpha": "alpha",
     "discover_alpha_plus": "alpha",
     "discover_heuristics": "heuristics",

@@ -31,6 +31,13 @@ and [validation record](docs/version/2026-09-15_NATIVE_MINING_VALIDATION.md).
 The implementation registry distinguishes supported definitions, partial variants
 and unverified optional runtime paths; it does not claim complete upstream parity.
 
+The subsequent model/W4 implementation adds explicit PNML/PTML/BPMN exchange
+profiles, model decomposition and coverability, observation-safe feature datasets,
+held-out learning evaluation, resource and timed simulation, revisable streams,
+and bounded action planning. The [implementation report](docs/reports/2026-09-17_MODELS_AND_W4_IMPLEMENTATION_REPORT.md)
+explains domain examples, validation evidence and remaining limits;
+the [model/W4 guide](docs/user-guide/MODELS_AND_W4_GUIDE.md) links the public APIs.
+
 OCPN discovery's observed-log acceptance witness does not certify joint soundness
 or normative cardinalities. Joint alignment consumes shared events once and
 preserves per-object partial orders. Precision and context have named population
@@ -46,7 +53,9 @@ viewer documents**. Graphviz 16.0.0 is bundled through `@viz-js/viz` 3.30.0, inc
 its WebAssembly, so exported HTML needs no CDN, `dot` installation or Python
 `graphviz` package. Native layout is an explicit experimental option for new
 documents, and ELK is an explicit option for legacy documents; neither is a silent
-fallback. Chevron lanes use domain-specific precedence slots rather than graph
+fallback. Chevron views default to neutral horizontal presentation, with explicit
+vertical/auto orientation and the previous colored `classic` style available.
+Chevron lanes use domain-specific precedence slots rather than graph
 layout or elapsed time. See the
 [2026-09-16 decision and acceptance requirements](docs/requirements/2026-09-16_GRAPHVIZ_AND_OC_VARIANT_VISUALIZATION.md).
 The
@@ -55,6 +64,10 @@ records supported source semantics and remaining reference variants. See the
 [visualization validation record](docs/version/2026-09-15_NATIVE_VISUALIZATION_VALIDATION.md)
 for the earlier 2026-09-15 baseline; those counts do not validate the subsequent
 Graphviz and chevron changes.
+
+The [local artifact guide](docs/user-guide/ARTIFACTS_GUIDE.md) defines naming and
+preservation rules for generated previews and validation records. In a workspace
+with local artifacts, open `.artifacts/index.html` to browse the visual catalog.
 
 ## Implemented import flow
 

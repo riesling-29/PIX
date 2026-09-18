@@ -383,7 +383,7 @@ def test_offline_html_uses_selected_engine_and_escapes_source_markup(tmp_path, e
     assert hostile not in text
     assert "PIXVisualization.mount" in text and "pixViewerReady" in text
     assert "elk.bundled" not in text and "new ELK" not in text
-    assert f'{{layoutEngine: "{engine}"}}' in text
+    assert f'{{layoutEngine: "{engine}",' in text
     if engine == "graphviz":
         assert "PIXGraphvizGeometry" in text
         assert 'id="pix-viewer-license"' in text
@@ -423,7 +423,7 @@ def test_huge_integer_json_is_lossless_but_browser_export_refuses_rounding(
 
 def test_visualization_document_defaults_to_graphviz_and_refuses_elk(tmp_path):
     document = build_visualization(cc.discover_dfg(small_log()))
-    assert '{layoutEngine: "graphviz"}' in render_html(document)
+    assert '{layoutEngine: "graphviz",' in render_html(document)
     with pytest.raises(ValueError, match="requires a legacy graph"):
         export_html(document, tmp_path / "unsupported.html", layout_engine="elk")
     assert not list(tmp_path.iterdir())

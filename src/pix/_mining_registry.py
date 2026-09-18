@@ -20,6 +20,8 @@ def mining_schemas() -> dict[str, tuple[str, type, type]]:
         conformance_approximation,
         context_discovery,
         correlation,
+        coverability,
+        decision_evaluation,
         decision_mining,
         declarative,
         declarative_simulation,
@@ -27,10 +29,12 @@ def mining_schemas() -> dict[str, tuple[str, type, type]]:
         dfg_conversion,
         dfg_filtering,
         discovery,
+        drift_evaluation,
         embedding_retrieval,
         embeddings,
         evaluation,
         extended_discovery,
+        feature_dataset,
         features,
         filtering,
         genetic_miner,
@@ -43,15 +47,20 @@ def mining_schemas() -> dict[str, tuple[str, type, type]]:
         lifecycle,
         link_analysis,
         marking_equation,
+        maximal_decomposition,
         model_analysis,
         model_conversion,
         model_discovery,
+        model_labels,
         online_alignment,
         organization,
         pn_language_alignment,
         powl,
+        powl_conversion,
         pripel,
         privacy,
+        resource_simulation,
+        revisable_stream,
         sacofa,
         sequence_alignment,
         simulation,
@@ -59,11 +68,17 @@ def mining_schemas() -> dict[str, tuple[str, type, type]]:
         statistics,
         stream_adapters,
         streaming,
+        timed_playout,
         transformations,
         transformer_embeddings,
         tree_alignment,
+        tree_bordered,
         tree_reduction,
+        trie_conversion,
         wfnet_conversion,
+    )
+    from pix.object_centric import (
+        action_planning as object_action_planning,
     )
     from pix.object_centric import (
         actions as object_actions,
@@ -102,6 +117,9 @@ def mining_schemas() -> dict[str, tuple[str, type, type]]:
         graph_comparison as object_graph_comparison,
     )
     from pix.object_centric import (
+        learning as object_learning,
+    )
+    from pix.object_centric import (
         legacy_discovery as object_legacy_discovery,
     )
     from pix.object_centric import (
@@ -111,16 +129,25 @@ def mining_schemas() -> dict[str, tuple[str, type, type]]:
         models as object_models,
     )
     from pix.object_centric import (
+        operational_impact as object_operational_impact,
+    )
+    from pix.object_centric import (
         performance as object_performance,
     )
     from pix.object_centric import (
         relations as object_relations,
     )
     from pix.object_centric import (
+        revisable_stream as object_revisable_stream,
+    )
+    from pix.object_centric import (
         simulation as object_simulation,
     )
     from pix.object_centric import (
         statistics as object_statistics,
+    )
+    from pix.object_centric import (
+        subprocess as object_subprocess,
     )
     from pix.object_centric import (
         temporal_summary as object_temporal_summary,
@@ -130,6 +157,23 @@ def mining_schemas() -> dict[str, tuple[str, type, type]]:
     )
 
     modules = (
+        coverability,
+        decision_evaluation,
+        drift_evaluation,
+        feature_dataset,
+        model_labels,
+        maximal_decomposition,
+        powl_conversion,
+        resource_simulation,
+        revisable_stream,
+        timed_playout,
+        tree_bordered,
+        trie_conversion,
+        object_action_planning,
+        object_learning,
+        object_operational_impact,
+        object_revisable_stream,
+        object_subprocess,
         object_advanced_filtering,
         bpmn_conversion,
         dfg_conversion,

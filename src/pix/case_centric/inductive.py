@@ -1,8 +1,9 @@
 """Native frequency-aware inductive discovery with explicit PIX profiles.
 
-These profiles share XOR, plain-sequence, parallel and do/redo cut kernels with
-PIX's existing IM implementation. They are not aliases for a PM4Py release:
-optional-block strict-sequence merging is not performed. ``imf`` preserves case
+These profiles share XOR, sequence, parallel and do/redo cut kernels with
+PIX's existing IM implementation. ``InductiveSpec`` retains plain sequence;
+``StrictInductiveSpec`` adds optional-block merging without changing persisted
+legacy requests. They are not aliases for a PM4Py release. ``imf`` preserves case
 multiplicities, tries original cuts before a filtered-DFG retry, and projects
 the original weighted traces at the selected cut. ``imd`` recurses on graphs,
 never on invented traces. Filtering is not a promise that the original log fits.
@@ -38,6 +39,11 @@ _PROFILES = {
     "im": "pix.im.weighted.v1",
     "imf": "pix.imf.filtered_dfg.v1",
     "imd": "pix.imd.dfg.v1",
+}
+_STRICT_PROFILES = {
+    "im": "pix.im.weighted.strict_sequence.v2",
+    "imf": "pix.imf.filtered_dfg.strict_sequence.v2",
+    "imd": "pix.imd.dfg.strict_sequence.v2",
 }
 
 
@@ -82,6 +88,19 @@ class InductiveSpec:
             raise TypeError("trace_spec must be CaseTraceSpec")
 
 
+@dataclass(frozen=True, slots=True)
+class StrictInductiveSpec(InductiveSpec):
+    """Opt into strict sequence cuts that keep jointly optional blocks intact.
+
+    This separate immutable request type preserves the fields and identities of
+    existing ``InductiveSpec`` results. Other cuts, filtering and fallthroughs
+    retain PIX's documented semantics; reference-release equivalence is not
+    implied. In particular, a DFG still cannot recover lost trace correlations.
+    """
+
+    SCHEMA_VERSION: ClassVar[str] = "1.0.0"
+
+
 _Trace = tuple[str, ...]
 _Log = Counter[_Trace]
 
@@ -110,12 +129,67 @@ def _from_log(log: _Log) -> _Graph:
     return _Graph(alphabet, edges, starts, ends, bool(log.get(())))
 
 
-def _cut(graph: _Graph) -> tuple[str, tuple[set[str], ...]] | None:
+def _strict_sequence_groups(
+    graph: _Graph, groups: tuple[set[str], ...]
+) -> tuple[set[str], ...]:
+    """Contract sequence intervals around bypassed groups.
+
+    Algorithmic basis: Leemans, *Robust Process Mining with Guarantees* (2017),
+    strict sequence cut, p. 233. An interval may grow left while preceding
+    groups have no exit beyond the pivot, and right while following groups
+    have no entry before it. Start/end boundaries act as external entries/exits.
+    Bounds refer to the initial ordered partition; bypass witnesses refer to
+    the currently contracted partition. Keeping those two notions separate is
+    necessary for overlapping optional intervals.
+    """
+    count = len(groups)
+    if count < 2:
+        return groups
+    original = {activity: i for i, group in enumerate(groups) for activity in group}
+    entries = [count] * count
+    exits = [-1] * count
+    for activity in graph.starts:
+        entries[original[activity]] = -1
+    for activity in graph.ends:
+        exits[original[activity]] = count
+    for source, target in graph.edges:
+        left, right = original[source], original[target]
+        entries[right] = min(entries[right], left)
+        exits[left] = max(exits[left], right)
+
+    contracted = [set(group) for group in groups]
+    for pivot in range(count):
+        owner = {
+            activity: i for i, group in enumerate(contracted) for activity in group
+        }
+        bypassed = (
+            any(owner[a] > pivot for a in graph.starts)
+            or any(owner[a] < pivot for a in graph.ends)
+            or any(owner[a] < pivot < owner[b] for a, b in graph.edges)
+        )
+        if not bypassed:
+            continue
+        left = 1 + max((i for i in range(pivot) if exits[i] > pivot), default=-1)
+        right = min(
+            (i for i in range(pivot + 1, count) if entries[i] < pivot),
+            default=count,
+        )
+        merged = set().union(*contracted[left:right])
+        contracted[left:right] = [set() for _ in range(right - left)]
+        contracted[pivot] = merged
+    return tuple(group for group in contracted if group)
+
+
+def _cut(
+    graph: _Graph, strict_sequence: bool = False
+) -> tuple[str, tuple[set[str], ...]] | None:
     alphabet, edges = graph.alphabet, set(graph.edges)
     xor = tuple(_components(alphabet, lambda a, b: (a, b) in edges or (b, a) in edges))
     if len(xor) > 1:
         return "xor", xor
     sequence = tuple(_sequence_groups(alphabet, edges))
+    if strict_sequence:
+        sequence = _strict_sequence_groups(graph, sequence)
     if len(sequence) > 1:
         return "sequence", sequence
     parallel = _im_parallel_groups(alphabet, edges, set(graph.starts), set(graph.ends))
@@ -247,6 +321,7 @@ def _check_tree_bounds(tree: ProcessTree, spec: InductiveSpec) -> None:
 class _Miner:
     def __init__(self, spec: InductiveSpec, issues: list[ComputeIssue]):
         self.spec, self.issues, self.nodes = spec, issues, 0
+        self.strict_sequence = isinstance(spec, StrictInductiveSpec)
 
     def visit(self, path: tuple[str, ...]) -> None:
         self.nodes += 1
@@ -343,10 +418,10 @@ class _Miner:
         graph = _from_log(log)
         if len(graph.alphabet) == 1 and all(len(trace) == 1 for trace in log):
             return ProcessTree("activity", next(iter(graph.alphabet)))
-        cut = _cut(graph)
+        cut = _cut(graph, self.strict_sequence)
         if cut is None and self.spec.variant == "imf" and self.spec.noise_threshold:
             filtered = self.filter(graph, path)
-            cut = _cut(filtered)
+            cut = _cut(filtered, self.strict_sequence)
             if cut is not None:
                 self.issues.append(
                     ComputeIssue(
@@ -386,7 +461,10 @@ class _Miner:
                 )
         for activity in sorted(graph.alphabet):
             remaining = _projection(log, graph.alphabet - {activity})
-            if () not in remaining and _cut(_from_log(remaining)) is not None:
+            if (
+                () not in remaining
+                and _cut(_from_log(remaining), self.strict_sequence) is not None
+            ):
                 self.issues.append(
                     ComputeIssue(
                         "inductive_activity_concurrent",
@@ -441,7 +519,7 @@ class _Miner:
             )
         if len(graph.alphabet) == 1 and not graph.edges:
             return ProcessTree("activity", next(iter(graph.alphabet)))
-        cut = _cut(graph)
+        cut = _cut(graph, self.strict_sequence)
         if cut:
             operator, groups = cut
             return _node(
@@ -462,7 +540,9 @@ def _envelope(
     issues=(),
 ):
     return _result(
-        "pix.case_centric.discover_inductive",
+        "pix.case_centric.discover_inductive_strict"
+        if isinstance(spec, StrictInductiveSpec)
+        else "pix.case_centric.discover_inductive",
         None,
         spec,
         status,
@@ -547,7 +627,11 @@ def discover_inductive(
         *parent.issues,
         ComputeIssue(
             "inductive_profile",
-            f"Profile {_PROFILES[spec.variant]}; plain-sequence cuts, no pinned-release equivalence claim",
+            (
+                f"Profile {_STRICT_PROFILES[spec.variant]}; strict-sequence optional-block cuts, no pinned-release equivalence claim"
+                if isinstance(spec, StrictInductiveSpec)
+                else f"Profile {_PROFILES[spec.variant]}; plain-sequence cuts, no pinned-release equivalence claim"
+            ),
         ),
     ]
     miner = _Miner(spec, issues)
@@ -701,7 +785,11 @@ def discover_inductive_dfg(
         *data.issues,
         ComputeIssue(
             "inductive_profile",
-            "Profile pix.imd.dfg.v1; graph-only correlations, plain sequence, observed crossing-arc boundary counts",
+            (
+                "Profile pix.imd.dfg.strict_sequence.v2; graph-only correlations, strict sequence, observed crossing-arc boundary counts"
+                if isinstance(spec, StrictInductiveSpec)
+                else "Profile pix.imd.dfg.v1; graph-only correlations, plain sequence, observed crossing-arc boundary counts"
+            ),
         ),
     ]
     try:
@@ -714,8 +802,28 @@ def discover_inductive_dfg(
     return _envelope(data, spec, ComputeStatus.COMPUTED, tree, issues)
 
 
+def discover_inductive_strict(
+    data: CaseInput, spec: StrictInductiveSpec = StrictInductiveSpec()
+) -> ComputationResult[ProcessTree]:
+    """Discover with the explicit optional-block strict-sequence refinement."""
+    if not isinstance(spec, StrictInductiveSpec):
+        raise TypeError("spec must be StrictInductiveSpec")
+    return discover_inductive(data, spec)
+
+
 RESULT_SCHEMAS = {
-    "pix.case_centric.discover_inductive": ("process_tree", InductiveSpec, ProcessTree)
+    "pix.case_centric.discover_inductive": ("process_tree", InductiveSpec, ProcessTree),
+    "pix.case_centric.discover_inductive_strict": (
+        "process_tree",
+        StrictInductiveSpec,
+        ProcessTree,
+    ),
 }
 
-__all__ = ("InductiveSpec", "discover_inductive", "discover_inductive_dfg")
+__all__ = (
+    "InductiveSpec",
+    "StrictInductiveSpec",
+    "discover_inductive",
+    "discover_inductive_dfg",
+    "discover_inductive_strict",
+)

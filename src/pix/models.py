@@ -25,6 +25,7 @@ from pix._publication import FilePublication, publish_bytes
 from pix.case_centric.decision_mining import DataPetriNet, data_petri_net_digest
 from pix.case_centric.declarative import DeclareModel, LogSkeleton, TemporalProfile
 from pix.case_centric.discovery import FootprintModel, TransitionSystem
+from pix.case_centric.extended_nets import ResetInhibitorNet, StochasticPetriNet
 from pix.case_centric.heuristics import HeuristicsNet
 from pix.case_centric.powl import POWLNode
 from pix.case_centric.split_miner import SplitBPMN
@@ -52,6 +53,8 @@ Model = (
     | ObjectCentricCausalNet
     | StochasticArcWeightNet
     | DataPetriNet
+    | ResetInhibitorNet
+    | StochasticPetriNet
 )
 ModelOrigin = Literal["provided", "discovered", "unspecified"]
 
@@ -76,6 +79,14 @@ _MODELS: dict[type, tuple[str, str]] = {
     ),
     StochasticArcWeightNet: ("stochastic-arc-weight-net", "pix.observed_saw.v1"),
     DataPetriNet: ("data-petri-net", "pix.typed-numeric-decision-guards.v1"),
+    ResetInhibitorNet: (
+        "reset-inhibitor-net",
+        "pix.exclusive-input-reset-inhibitor.v1",
+    ),
+    StochasticPetriNet: (
+        "stochastic-petri-net",
+        "pix.weighted-choice-serial-duration.v1",
+    ),
 }
 
 _LEGACY_MODELS = (PetriNet, ObjectCentricPetriNet, ProcessTree)

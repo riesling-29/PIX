@@ -60,7 +60,7 @@ export_html(view, "object-analysis.html")
 | Matrix | footprints, 관계 비교, cube 등의 행·열 관계 | `?`는 unknown, `—`는 공급되지 않은 cell. `0`은 실제로 공급된 수치 0 |
 | Chart | 제공된 빈도·duration·분포·timestamp 경로 | 축의 이름·단위, 알려진 표본 수, 결측을 확인. renderer가 KDE나 통계를 새로 계산하지 않음 |
 | Timeline | case 또는 object lane의 사건·구간 | timestamp인지 relative/선행관계 위치인지 확인. 끝이 없는 구간은 종료 시각이 알려지지 않은 상태 |
-| Chevron | 대표 OC execution의 객체별 활동과 공유 사건 | lane은 객체 instance. 같은 event의 여러 표시가 하나의 사건을 참조하며, 가로 슬롯과 화살표 폭은 실제 시간이 아님 |
+| Chevron | 대표 OC execution의 객체별 활동과 공유 사건 | lane은 객체 instance. 같은 event의 여러 표시가 하나의 사건을 참조하며, 진행 방향의 슬롯과 chevron 길이는 실제 시간이 아님 |
 | Table | move·binding·token·qualifier·표본·계산 조건 | 화면 행 수와 원본 행 수는 다를 수 있음. 검색·페이지화가 계산 결과를 바꾸지 않음 |
 
 탭으로 panel을 바꾸고, 항목을 선택하면 오른쪽 inspector에 전체 label·ID·원값·단위·근거가 나온다. 그리기 panel은 drag로 이동하고 scroll 또는 `+`/`−`로 확대·축소하며 `Fit`으로 전체를 맞춘다. `Readable` 또는 키보드 `1`은 SVG 1단위를 화면의 CSS 1픽셀에 맞춘다. 키보드로는 `Tab`으로 항목에 접근하고 `Enter`로 근거를 연다. 검색은 그리기 항목을 강조하고 표에서는 현재 보여줄 행을 고른다.
@@ -117,9 +117,39 @@ view = build_variant_visualization(execution_result, variant_result, title="OC v
 export_html(view, "object-variants.html")
 ```
 
+생성할 때 방향과 스타일을 명시할 수 있다. 다음 옵션은 `render_html`, `export_html`, `export_html_report`에서 동일하게 받는다.
+
+```python
+export_html(
+    view, "object-variants-horizontal.html",
+    chevron_orientation="horizontal", chevron_style="neutral",
+)
+export_html(
+    view, "object-variants-vertical.html",
+    chevron_orientation="vertical", chevron_style="neutral",
+)
+```
+
+| 옵션 | 값과 동작 |
+|---|---|
+| `chevron_orientation` | `"horizontal"` 기본값: 객체별 행, 왼쪽에서 오른쪽으로 진행. `"vertical"`: 객체별 열, 위에서 아래로 진행. `"auto"`: 화면 크기에 따라 방향 선택 |
+| `chevron_style` | `"neutral"` 기본값: 작은 이벤트 표식, 바깥 활동명, 얇은 슬롯 범위선과 객체형 텍스트. `"classic"`: 기존 객체형 색상 |
+
+명시한 가로·세로 방향은 창 너비가 바뀌어도 자동으로 전환하지 않는다. 자동 방향 전환은 `"auto"`를 선택했을 때만 사용한다. 두 옵션은 `VisualizationDocument`의 Chevron panel에만 적용하며, 같은 문서의 DFG·OCDFG 등 다른 panel의 방향이나 스타일을 바꾸지 않는다. 기존 `GraphDocument`·`ModelGraphDocument`에는 Chevron panel이 없으므로 유효한 `chevron_style` 값은 표시를 바꾸지 않는다. 이 기존 문서들에 가로형 외의 `chevron_orientation`을 전달하면 거부한다. 잘못된 타입·값은 파일을 만들거나 기존 파일을 덮어쓰기 전에 거부한다.
+
+`export_html(view, "object-variants.html")`만 호출하면 승인된 Neutral 가로형으로 생성한다. 기존 컬러 Chevron이 필요하면 `chevron_style="classic"`을 지정한다. 이미 생성해 둔 HTML은 자체 렌더러를 포함하므로 다시 export해야 새 기본값이 적용된다.
+
+이 설정은 화면 표시 옵션이다. Variant 계산, 객체·사건 ID, 공유 사건의 참여 관계와 슬롯 값은 유지되며, 시각화 JSON에 별도 표시 설정으로 저장하지 않는다. JSON을 다시 HTML로 내보낼 때 원하는 옵션을 다시 지정한다.
+
+Neutral은 면을 채운 Chevron 대신 이벤트 표식과 방향이 있는 범위선을 표시한다. 범위선의 길이는 기존 Chevron과 같은 inclusive 슬롯 범위를 뜻한다. 공유 사건을 선택하면 모든 참여 객체의 표시가 함께 강조되고 점선으로 연결된다. 이 점선은 **같은 이벤트 ID를 연결하는 선택 표시**이며, 추가로 발견한 프로세스 간선이 아니다. 원본 활동명·객체 ID·참여 근거는 선택 상세와 SVG metadata에 보존한다. 긴 화면 라벨만 공간에 맞게 줄인다.
+
+Neutral 기본 화면은 글자를 축소하지 않고 읽을 수 있는 크기로 표시한다. 지정한 방향의 그림이 화면보다 크면 이동·확대로 탐색하거나 `Fit`을 사용한다. 화면이 좁아졌다는 이유만으로 고정 방향을 바꾸지 않는다. SVG 저장에는 현재 방향과 스타일이 유지되며 HTML과 별개로 열 수 있는 스타일도 포함된다.
+
+동일한 합성 로그로 두 스타일과 세 방향을 비교하는 실행 예제는 [`examples/chevron_presentation.py`](../../examples/chevron_presentation.py)이다. `python examples/chevron_presentation.py --output <directory>`로 계산 근거 JSON, 옵션 없는 기본 출력 1개, 명시적 옵션의 HTML 6개와 비교 색인을 생성한다. DFG·OCDFG의 무채색 디자인 시안과는 별도의 Chevron 구현 범위다.
+
 단순히 두 결과의 source digest만 같은 것으로는 충분하지 않다. Variant가 참조한 parent execution 계산과 원본 결과가 맞아야 하며, 모든 execution이 variant partition에 정확히 한 번 포함되는지와 대표 실행·빈도·모집단·출처를 검사한다. 현재 helper는 **`COMPUTED`인 정확한 `ExecutionSet`과 `VariantSet`만** 받는다. Partial·실패 결과, 미해결 tie·불완전한 객체 경로·cycle은 `ValueError`로 거부한다. 명시적으로 event ID로 해결한 tie는 허용하고 순서 근거의 `tie_broken`으로 드러낸다. Canonical labeling을 다시 실행해 variant의 동형성을 재증명하는 기능은 아니다.
 
-행 하나는 `Order` 같은 객체형 전체가 아니라 `Order:42` 같은 **개별 객체**다. 색은 객체형을 구별한다. 같은 사건이 주문·상품·배송 객체에 함께 참여하면 해당 행마다 chevron이 보이지만, 원 event ID와 시작·끝 슬롯은 하나다. 선택한 표시의 ID와 참여 근거를 확인해 같은 사건임을 구별한다.
+가로형의 행 하나, 세로형의 열 하나는 `Order` 같은 객체형 전체가 아니라 `Order:42` 같은 **개별 객체**다. Classic 스타일의 색과 Neutral 스타일의 객체형 텍스트로 객체형을 구별한다. 같은 사건이 주문·상품·배송 객체에 함께 참여하면 해당 lane마다 chevron이 보이지만, 원 event ID와 시작·끝 슬롯은 하나다. 선택한 표시의 ID와 참여 근거를 확인해 같은 사건임을 구별한다.
 
 시작 슬롯은 선행 사건 중 가장 긴 경로의 단계다. 끝 슬롯은 가장 먼저 시작하는 후속 사건의 직전 슬롯이며, 후속 사건이 없으면 자신의 시작 슬롯이다. `[start, end]`는 양끝을 포함하므로 `[2, 2]`도 한 칸을 차지한다. 경로 길이가 다른 분기에서는 짧은 분기의 chevron이 합류 전까지 넓어질 수 있다. **이 폭은 기다린 시간이나 처리시간이 아니다.** 정확한 시간 비교는 timestamp timeline과 성능 계산에서 한다.
 
