@@ -5,6 +5,13 @@ interpretation engine.
 
 ## Status
 
+The residual implementation adds XES/DFG and OCEL bundle exchange, explicit
+object-to-case projection, contextual n-grams, business-calendar path timing,
+POWL footprints and single-trace fit checks. See the
+[API guide](docs/user-guide/RESIDUAL_CORE_GUIDE.md) and
+[scope and validation record](docs/reports/2026-09-18_PIX_RESIDUAL_CORE_IMPLEMENTATION.md).
+This is a subset of the agreed residual plan, not a declaration of full upstream parity.
+
 PIX `0.5.0` adds native case-centric logs and explicit business-table mappings to
 the immutable OCEL foundation. Import profiles cover OCEL 1 JSON/XML and classic
 SQLite, OCEL 2 JSON/XML/SQLite, OCEL 2.1.0pre4 compact CSV and CSV/Parquet bundles,

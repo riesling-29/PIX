@@ -19,6 +19,7 @@ def mining_schemas() -> dict[str, tuple[str, type, type]]:
         conformance,
         conformance_approximation,
         context_discovery,
+        context_ngrams,
         correlation,
         coverability,
         decision_evaluation,
@@ -28,6 +29,7 @@ def mining_schemas() -> dict[str, tuple[str, type, type]]:
         decomposed_alignment,
         dfg_conversion,
         dfg_filtering,
+        dfg_relations,
         discovery,
         drift_evaluation,
         embedding_retrieval,
@@ -54,6 +56,7 @@ def mining_schemas() -> dict[str, tuple[str, type, type]]:
         model_labels,
         online_alignment,
         organization,
+        path_performance,
         pn_language_alignment,
         powl,
         powl_conversion,
@@ -69,6 +72,7 @@ def mining_schemas() -> dict[str, tuple[str, type, type]]:
         stream_adapters,
         streaming,
         timed_playout,
+        trace_fit,
         transformations,
         transformer_embeddings,
         tree_alignment,
@@ -157,6 +161,10 @@ def mining_schemas() -> dict[str, tuple[str, type, type]]:
     )
 
     modules = (
+        trace_fit,
+        dfg_relations,
+        path_performance,
+        context_ngrams,
         coverability,
         decision_evaluation,
         drift_evaluation,

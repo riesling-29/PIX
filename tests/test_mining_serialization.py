@@ -23,6 +23,7 @@ from pix.case_centric import (
     conformance,
     conformance_approximation,
     context_discovery,
+    context_ngrams,
     correlation,
     decision_mining,
     declarative,
@@ -30,6 +31,7 @@ from pix.case_centric import (
     decomposed_alignment,
     dfg_conversion,
     dfg_filtering,
+    dfg_relations,
     discovery,
     embedding_retrieval,
     embeddings,
@@ -52,6 +54,7 @@ from pix.case_centric import (
     model_discovery,
     online_alignment,
     organization,
+    path_performance,
     pn_language_alignment,
     powl,
     pripel,
@@ -63,6 +66,7 @@ from pix.case_centric import (
     statistics,
     stream_adapters,
     streaming,
+    trace_fit,
     transformations,
     transformer_embeddings,
     tree_alignment,
@@ -85,6 +89,7 @@ from pix.contracts.models import (
 from pix.contracts.ocpn_discovery import OCPNDiscoverySpec
 from pix.contracts.result import ComputeStatus
 from pix.event_log import CaseAttribute, CaseEvent, CaseLog, CaseTrace
+from pix.model_io import project_dfg_exchange
 from pix.object_centric import (
     actions as oc_actions,
 )
@@ -280,6 +285,23 @@ def _interleavings_ocel_result(log):
 
 
 CASE_FACTORIES = (
+    (
+        "trace_fit",
+        lambda log, net: trace_fit.check_trace_fit(
+            replace(log, traces=log.traces[:1]), net
+        ),
+    ),
+    (
+        "dfg_relations",
+        lambda log, net: dfg_relations.dfg_relations(
+            project_dfg_exchange(discovery.discover_dfg(log)).model
+        ),
+    ),
+    (
+        "path_performance",
+        lambda log, net: path_performance.measure_path_performance(log),
+    ),
+    ("context_ngrams", lambda log, net: context_ngrams.fit_context_ngrams(log)),
     (
         "bpmn_conversion",
         lambda log, net: bpmn_conversion.bpmn_to_petri_net(

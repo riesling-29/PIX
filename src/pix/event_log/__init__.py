@@ -24,8 +24,30 @@ from pix.event_log.model import (
 )
 from pix.event_log.mxml import import_mxml, read_mxml
 from pix.event_log.reader import import_xes, read_xes
+from pix.event_log.utilities import (
+    AttributeSequence,
+    AttributeSequences,
+    case_log_from_activity_text,
+    event_attribute_sequences,
+)
+from pix.event_log.writer import (
+    CaseExportError,
+    CaseXESExport,
+    read_xes_bytes,
+    write_xes,
+    xes_bytes,
+)
 
 __all__ = [
+    "AttributeSequence",
+    "AttributeSequences",
+    "case_log_from_activity_text",
+    "event_attribute_sequences",
+    "CaseExportError",
+    "CaseXESExport",
+    "read_xes_bytes",
+    "write_xes",
+    "xes_bytes",
     "CaseAttribute",
     "CaseClassifier",
     "CaseConversionError",

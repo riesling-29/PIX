@@ -20,8 +20,24 @@ from pix._publication import FilePublication, publish_bytes
 
 from .bpmn import dumps_bpmn, loads_bpmn
 from .common import ModelIOError, ParsedModel, XMLLimits, fail
+from .dfg import (
+    DFGExchangeProjection,
+    DFGFile,
+    dumps_dfg,
+    loads_dfg,
+    project_dfg_exchange,
+    read_dfg,
+    write_dfg,
+)
 from .pnml import dumps_pnml, loads_pnml
 from .ptml import dumps_ptml, loads_ptml
+from .text_models import (
+    TextModelLimits,
+    dumps_powl_text,
+    dumps_tree_text,
+    loads_powl_text,
+    loads_tree_text,
+)
 
 
 def _read(path, loader, format, limits):
@@ -77,6 +93,18 @@ def write_bpmn(
 
 
 __all__ = (
+    "TextModelLimits",
+    "dumps_powl_text",
+    "dumps_tree_text",
+    "loads_powl_text",
+    "loads_tree_text",
+    "DFGFile",
+    "DFGExchangeProjection",
+    "project_dfg_exchange",
+    "dumps_dfg",
+    "loads_dfg",
+    "read_dfg",
+    "write_dfg",
     "ModelIOError",
     "ParsedModel",
     "XMLLimits",

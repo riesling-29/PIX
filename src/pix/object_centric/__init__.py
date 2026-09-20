@@ -20,6 +20,7 @@ from pix.contracts.execution import ExecutionSpec, VariantSpec
 from pix.ocel import OCEL
 
 _MODULES = (
+    "case_projection",
     "action_planning",
     "learning",
     "operational_impact",

@@ -15,6 +15,7 @@ from dataclasses import dataclass
 from itertools import combinations
 
 from pix.case_centric.model_analysis import Reachability, ReachabilitySpec, reachability
+from pix.case_centric.powl import POWLNode, powl_to_petri_net
 from pix.compute._common import _derived_result
 from pix.compute.discovery import process_tree_to_petri_net
 from pix.compute.model_semantics import enabled_transitions, fire, model_digest
@@ -95,7 +96,7 @@ class _AnalysisLimit(Exception):
 
 
 def discover_model_footprints(
-    model: PetriNet | ProcessTree | ComputationResult,
+    model: PetriNet | ProcessTree | POWLNode | ComputationResult,
     spec: ModelFootprintSpec = ModelFootprintSpec(),
 ) -> ComputationResult[ModelFootprints]:
     """Discover finite reachable-state footprints, retaining explicit bounds.
@@ -125,18 +126,22 @@ def discover_model_footprints(
                 parent_computation_ids=parent_ids,
             )
         model = parent.value
-        if not isinstance(model, (PetriNet, ProcessTree)):
+        if not isinstance(model, (PetriNet, ProcessTree, POWLNode)):
             model = getattr(model, "model", None)
-    if not isinstance(model, (PetriNet, ProcessTree)):
+    if not isinstance(model, (PetriNet, ProcessTree, POWLNode)):
         raise TypeError(
-            "model must be a native PetriNet, ProcessTree or a result containing one"
+            "model must be a native PetriNet, ProcessTree, POWLNode or a result containing one"
         )
-    if isinstance(model, ProcessTree):
+    if isinstance(model, (ProcessTree, POWLNode)):
         from pix.models import model_document
 
         original_digest = model_document(model)["model_digest"]
-        kind = "process-tree"
-        net = process_tree_to_petri_net(model)
+        kind = "process-tree" if isinstance(model, ProcessTree) else "powl"
+        net = (
+            process_tree_to_petri_net(model)
+            if isinstance(model, ProcessTree)
+            else powl_to_petri_net(model)
+        )
     else:
         original_digest = model_digest(model)
         kind, net = "petri-net", model

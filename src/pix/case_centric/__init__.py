@@ -11,6 +11,11 @@ from pix.contracts.case_log import CaseTraceSpec
 from pix.event_log import CaseLog, case_traces
 
 _MODULES = (
+    "trace_fit",
+    "dfg_relations",
+    "business_time",
+    "path_performance",
+    "context_ngrams",
     "coverability",
     "decision_evaluation",
     "drift_evaluation",
