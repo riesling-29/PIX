@@ -252,12 +252,25 @@ class ImportResult:
 
         return None
 
-    def require_ocel(self) -> OCEL:
-        """Return the valid OCEL or raise an error carrying this result."""
+    def require_ocel(self, *, reject_timezone_assumptions: bool = False) -> OCEL:
+        """Return valid storage, optionally rejecting disclosed UTC assumptions.
+
+        Admission does not change import validity or canonical identity. Unknown
+        external provenance cannot be inferred from an assumption-free receipt.
+        """
+
+        if type(reject_timezone_assumptions) is not bool:
+            raise TypeError("reject_timezone_assumptions must be bool")
 
         ocel = self.ocel
         if ocel is None:
             raise OCELImportError(self)
+        if reject_timezone_assumptions and any(
+            t.code == "timezone_assumed_utc" for t in self.transformations
+        ):
+            raise ValueError(
+                "admission rejected: timezone_assumed_utc; retain import receipt"
+            )
         return ocel
 
     def describe(self) -> dict[str, object]:

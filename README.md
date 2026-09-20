@@ -5,6 +5,14 @@ interpretation engine.
 
 ## Status
 
+Current requirements and responsibility boundaries are recorded in the
+[PIX/Schumpeter user requirements](docs/requirements/2026-09-13_PIX_SCHUMPETER_USER_REQUIREMENTS.md)
+and [residual design](docs/requirements/2026-09-18_PIX_RESIDUAL_DETAILED_DESIGN.md).
+Early v0.1 scope documents are historical baselines, not removal instructions for
+later discovery/conformance features. See the
+[2026-09-20 review corrections](docs/reports/2026-09-20_PIX_REVIEW_REMEDIATION.md)
+for tested corrections, identity migration and remaining limits.
+
 The residual implementation adds XES/DFG and OCEL bundle exchange, explicit
 object-to-case projection, contextual n-grams, business-calendar path timing,
 POWL footprints and single-trace fit checks. See the
@@ -123,7 +131,9 @@ Core formats use the standard library. XLSX requires `pip install "pix[excel]"`;
 Parquet bundles require `pip install "pix[parquet]"`; `pix[imports]` installs both.
 OCEL 2.1 support targets the pinned **2.1.0pre4** PDF, not a final-standard
 certification. Generic database connections, generic Parquet tables, legacy
-`.xls`, and XES/MXML export are outside this import release.
+`.xls` and MXML export remain outside this profile. XES export was outside the
+initial import release; the subsequent residual extension implements native
+XES/gzip/bytes export as described in the residual guide.
 
 ## Public OCEL API
 

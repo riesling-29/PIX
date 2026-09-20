@@ -231,7 +231,13 @@ class Object:
             "Object.attributes",
         )
         _require_unique(
-            tuple((attribute.name, attribute.time) for attribute in self.attributes),
+            # datetime equality with the same tzinfo ignores fold. Assignment
+            # identity is an absolute instant, while stored source values remain
+            # untouched. Out-of-range UTC conversion deliberately raises.
+            tuple(
+                (attribute.name, attribute.time.astimezone(timezone.utc))
+                for attribute in self.attributes
+            ),
             "Object attribute assignments",
         )
 

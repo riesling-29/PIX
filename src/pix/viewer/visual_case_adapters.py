@@ -499,7 +499,7 @@ def _performance(value):
                 "unknown case durations",
                 "busy union seconds",
                 "cycle denominator",
-                "cycle seconds",
+                "busy union / complete service cases (seconds)",
             ),
             (
                 (

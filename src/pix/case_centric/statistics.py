@@ -390,6 +390,11 @@ class IntervalPair:
 
 @dataclass(frozen=True, slots=True)
 class CasePerformance:
+    """Observed case metrics. cycle_seconds is busy service union / complete
+    service case count, not mean case service or sojourn duration. Two cases
+    served during the same ten seconds yield 5 seconds, not 10.
+    """
+
     cases: tuple[ObservedCaseInterval, ...]
     duration_summary: NumericSummary
     eligible_case_count: int
@@ -442,8 +447,9 @@ def measure_case_performance(
 
     Cases with any missing or decreasing completion timestamps have unknown span.
     Arrival/completion samples sort valid case boundaries (never trace events).
-    Cycle time is the union of explicit service intervals / fully timed nonempty
-    case count. Without an explicit start attribute it is unknown. Strict overlap
+    cycle_seconds is the union of explicit service intervals / fully timed
+    nonempty service case count (not mean case duration). Without an explicit
+    start attribute it is unknown. Strict overlap
     requires a positive intersection; inclusive overlap includes touching points.
     """
     if not isinstance(spec, CasePerformanceSpec):

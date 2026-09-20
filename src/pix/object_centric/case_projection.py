@@ -9,12 +9,12 @@ from __future__ import annotations
 
 import json
 from collections import defaultdict
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 
-from pix.event_log import CaseAttribute, CaseEvent, CaseLog, CaseTrace
+from pix.compute.context import ComputationContext
+from pix.event_log import CaseAttribute, CaseEvent, CaseLog, CaseTrace, case_log_digest
 from pix.ocel import OCEL, canonical_digest
-from pix.ocel.validate import validate
 
 
 @dataclass(frozen=True, slots=True)
@@ -43,6 +43,24 @@ class ObjectCaseProjection:
     occurrence_source_ids: tuple[tuple[str, str], ...]
     excluded_event_ids: tuple[str, ...]
     tied_object_ids: tuple[str, ...]
+    profile: str = "pix.object-case-projection.v2"
+
+    def describe(self) -> dict[str, object]:
+        """JSON-ready lineage receipt; retain source OCEL separately for recovery."""
+        return {
+            "profile": self.profile,
+            "spec": asdict(self.spec),
+            "canonicalSourceDigest": canonical_digest(self.source).identifier,
+            "derivedCaseLogDigest": case_log_digest(self.case_log),
+            "occurrenceSourceIds": self.occurrence_source_ids,
+            "excludedEventIds": self.excluded_event_ids,
+            "tiedObjectIds": self.tied_object_ids,
+            "sourceObjectCount": len(self.source.objects),
+            "projectedCaseCount": len(self.case_log.traces),
+            "o2oStorage": "source_receipt_only",
+            "sourceO2OCount": len(self.source.o2o),
+            "historySemantics": "full_history_not_observation_cutoff_features",
+        }
 
 
 def _attr(name, value):
@@ -67,9 +85,8 @@ def project_object_cases(
     """
     if not isinstance(log, OCEL) or not isinstance(spec, ObjectCaseProjectionSpec):
         raise TypeError("expected OCEL and ObjectCaseProjectionSpec")
-    report = validate(log)
-    if report.errors:
-        raise ValueError("invalid OCEL: " + "; ".join(i.message for i in report.errors))
+    source = log
+    log = ComputationContext(log).log
     if spec.object_type not in {t.name for t in log.object_types}:
         raise ValueError("unknown object type")
     by_object, participation = defaultdict(set), defaultdict(list)
@@ -162,10 +179,11 @@ def project_object_cases(
         attributes=(
             _attr("pix:ocel_digest", canonical_digest(log).identifier),
             _attr("pix:projection_order", "timestamp/" + spec.tie_policy),
+            _attr("pix:projection_profile", "pix.object-case-projection.v2"),
         ),
     )
     return ObjectCaseProjection(
-        log,
+        source,
         spec,
         projected,
         tuple(lineage),
@@ -174,4 +192,57 @@ def project_object_cases(
     )
 
 
-__all__ = ["ObjectCaseProjectionSpec", "ObjectCaseProjection", "project_object_cases"]
+def shared_event_case_groups(
+    projection: ObjectCaseProjection,
+) -> tuple[tuple[str, ...], ...]:
+    """Groups for LeakageSplitSpec; only shared source events create constraints.
+
+    Resource/object co-participation alone is deliberately not a leakage rule.
+    The existing split operator computes transitive closure of these groups.
+    """
+    lineage = dict(projection.occurrence_source_ids)
+    owners = defaultdict(set)
+    for trace in projection.case_log.traces:
+        for event in trace.events:
+            owners[lineage[event.id]].add(trace.id)
+    return tuple(sorted(set(tuple(sorted(v)) for v in owners.values() if len(v) > 1)))
+
+
+def audit_projected_split(projection: ObjectCaseProjection, split, *, namespace: str):
+    """Return (namespace, source event ID, partitions) violations, not a seal
+    of statistical independence. The caller owns the stable source namespace.
+    Every projected case must be assigned; exclusions must be explicit upstream.
+    """
+    from pix.case_centric.features import CaseSplit
+
+    if not isinstance(split, CaseSplit):
+        raise TypeError("split must be CaseSplit")
+    if not isinstance(namespace, str) or not namespace.strip():
+        raise ValueError("namespace must be nonblank")
+    partitions = {}
+    for label, ids in (
+        ("train", split.train_case_ids),
+        ("validation", split.validation_case_ids),
+        ("test", split.test_case_ids),
+    ):
+        partitions.update((case, label) for case in ids)
+    if set(partitions) != {t.id for t in projection.case_log.traces}:
+        raise ValueError("split must cover exactly the projected cases")
+    lineage, owners = dict(projection.occurrence_source_ids), defaultdict(set)
+    for trace in projection.case_log.traces:
+        for event in trace.events:
+            owners[lineage[event.id]].add(partitions[trace.id])
+    return tuple(
+        (namespace, event, tuple(sorted(parts)))
+        for event, parts in sorted(owners.items())
+        if len(parts) > 1
+    )
+
+
+__all__ = [
+    "ObjectCaseProjectionSpec",
+    "ObjectCaseProjection",
+    "project_object_cases",
+    "shared_event_case_groups",
+    "audit_projected_split",
+]
