@@ -35,80 +35,135 @@ Vera와 병행 개발 중. 코드 변경 PR을 열기 전에 Ashlar에게 브랜
 
 | 축 | 담당 | 상태 | 첨부 |
 |---|---|---|---|
-| PI 계약·의미론·Skill 최소 표면 | Provenance | 1차 완료 (read-only) | Appendix PI |
+| PI 계약·의미론·Skill 최소 표면 | Provenance | 1차 완료 (read-only) | Appendix A |
 | DS 재현성·테스트·PASS 프로토콜 | Fathom | 1차 완료 (read-only, pytest 미재실행) | Appendix DS |
 
 **Ashlar 합본 메모:** 두 축 모두 코드 수정 PR 없음. Vera 다음 작업은 P0 golden/digest·approx/genetic sensitivity, ImportResult/canonical/stub 가짜 COMPUTED·OCPN observational 오해 방지.
 
 ---
 
-## Appendix PI — PIX PI 알고리즘 완결성 검증 (Provenance)
+## Appendix A — PI findings (Provenance) · 2026-09-26
 
-- 기준: `feat/ocel-readers-v0.2.0` / package `0.5.0` / `/workspace/PIX`
-- 일자: 2026-09-26 (Asia/Seoul)
-- 성격: read-only. PIX PR#1 audit 문서 후속 첨부용 초안.
+**Author:** Provenance (PI Scientist)  
+**Basis:** local read-only review of `feat/ocel-readers-v0.2.0` @ `8a66984` / package `0.5.0`  
+**Claim labels:** [사실] confirmed in code/docs · [추론] contract judgment · [알 수 없음] not evidenced in this pass  
+**Note:** DS축(재현성·수치·평가 프로토콜)은 Fathom 초안과 합칠 것. 본 섹션은 PI 의미론·계약·Skill 표면만 다룬다. PIX PR#1에 Provenance가 직접 쓰지 않음 — Ashlar 병합용.
 
-주장 표기: [사실] / [추론] / [알 수 없음]
+### A.0 Executive summary
 
-## Executive summary
+1. [사실] Canonical OCEL: typed model → `build`(무수리) → `validate` → Canonical V1 bytes → SHA-256. invalid candidate는 digest 없음.
+2. [사실] `import_info`는 OCEL equality/hash 및 digest 경로에서 제외.
+3. [사실] `ImportResult` status 불변식 엄격. `ImportFormat`의 TABLE_*는 OCEL loader가 아님(`pix.io` + 명시적 mapping).
+4. [사실] 공개 분석 표면은 `pix.api`(+ root `import_log`/`read_log`). `case_centric`/`object_centric`는 대형 named-profile. `intelligence/*` 및 다수 `compute/*` owner는 empty stub.
+5. [사실] OCPN discovery는 observational(수용 witness)이며 joint soundness·normative joint cardinality가 아님.
+6. [사실] `ComputeStatus` ∈ {computed, partial, unavailable, invalid_input}; 실패를 0/False/빈 목록으로 위장 금지.
+7. [사실] union-2026-09-15 registry: native_profile 126 / partial 141 / `reference_replacement_verified` **0**.
+8. [추론] Schumpeter Skill은 아래 A.4 최소 표면만 pin; mining 확장·stub은 기본 UNAVAILABLE.
+9. [추론] Vera 병행 최대 위험: identity/status invariants, Case↔OCEL 암묵 변환, IM 프로파일 혼동, OCPN 과대주장, stub 가짜 COMPUTED.
+10. [알 수 없음] 본 pass에서 전체 pytest/성능 매트릭스는 재실행하지 않음.
 
-1. [사실] Canonical OCEL 경로: typed model → build(무수리) → validate → Canonical V1 → SHA-256. invalid candidate는 digest 없음.
-2. [사실] `import_info`는 equality/hash/digest에서 제외.
-3. [사실] `ImportResult` status 불변식 엄격. TABLE_*는 enum에 있으나 OCEL loader가 아님(`pix.io`+mapping).
-4. [사실] 공개 분석 표면은 `pix.api`(+`import_log`/`read_log`). `case_centric`/`object_centric`는 대형 named-profile. `intelligence/*` 및 일부 `compute/*`는 stub.
-5. [사실] OCPN discovery는 observational(수용 witness)이며 joint soundness가 아님.
-6. [사실] `ComputeStatus`: computed/partial/unavailable/invalid_input. 실패를 값으로 위장 금지.
-7. [사실] scope-01 대부분 absent; union-2026-09-15는 native_profile 126 / partial 141 / reference_replacement_verified **0**.
-8. [추론] Schumpeter Skill은 최소 `pix.api`+OCEL+results만 pin. mining 확장·stub은 기본 UNAVAILABLE.
-9. [추론] Vera 병행 최대 위험: identity/status, Case↔OCEL 암묵 변환, IM 프로파일 혼동, OCPN 과대주장, stub 가짜 COMPUTED.
-10. [알 수 없음] 이 감사에서 전체 pytest/성능 매트릭스는 재실행하지 않음.
+### A.1 Public operator / API inventory
 
-## 1) OCEL build / validation / Canonical / ImportResult
+| Surface | Role | Label |
+|---|---|---|
+| `pix` root | `__version__`, `import_log`, `read_log` | [사실] |
+| `pix.api` | Facade: OCEL I/O, case traces/mappings, native discovery/conformance/constraints, `engine.compute`, model/result persistence | [사실] |
+| `pix.ocel` | model/build/validate/canonical/ingest/export | [사실] |
+| `pix.results` / `pix.models` | versioned analysis-result & model JSON (allowlist; digests ≠ signatures) | [사실] |
+| `pix.case_centric` / `pix.object_centric` | broad mining extension (named profiles) | [사실] |
+| `pix.compute.__all__` | narrow subset only — full operators via `pix.api` | [사실] |
 
-보장 [사실]: frozen model; build는 normalize/sort만; validate는 타입·참조·중복 관계; disconnected entity 허용; digest는 semantic valid만; provenance 독립 동일성.
+Skill에 권장하는 최소 admit 목록은 A.4.
 
-빈틈 [사실]+[추론]: declared attr 전부 출현 강제 없음; WARNING 레벨은 validate가 사실상 error만; ImportFormat TABLE_* 메시지 혼동; 직접 `OCEL(...)`는 invalid 가능.
+### A.2 Stub 또는 UNAVAILABLE
 
-## 2) case_centric vs object_centric
+**Empty stub owners** [사실] (`__all__` empty, “not implemented”):  
+`compute/{integrity,lifecycle,lineage,object_projection,recovery}.py` · `intelligence/{__init__,diagnostics,findings,recommendations,rules}.py`
 
-[사실] Case: CaseLog 입력, 명시적 to_ocel. OC: OCEL 입력, joint align vs flattened replay 분리. OCPN은 observational. IMf/IMd는 api tree miner가 아니라 case_centric named profile.
+**의미상 UNAVAILABLE / 기본 deny** [추론]:  
+광범위 case_centric·object_centric extras(IMf/IMd를 Skill 기본 경로에 넣기, genetic/privacy/streaming/embeddings, SAW를 기본 discovery로), 암묵 CaseLog↔OCEL, Hub/auth, “PM4Py-equivalent” 주장 (`reference_replacement_verified==0`).
 
-오용 위험 [추론]: OCPN을 joint soundness로 해석; `pix.im.v1`과 case IMf 동일시; UNAVAILABLE→0 fitness.
+**OCPN** [사실]: witness 실패·state bound → `UNAVAILABLE`/`PARTIAL` + issues.
 
-## 3) pix.api vs stubs
+### A.3 Discovery / conformance / visualization 의미론·손실
 
-[사실] BE/DB는 `pix.api`·`ImportResult`/`ComputationResult` envelope 기준. `pix.compute.lineage`/`pix.intelligence.*`는 동작 가정 금지. SEMANTIC_INVALID candidate를 운영 진실로 저장 금지.
+| Axis | Case-centric | Object-centric |
+|---|---|---|
+| Input | `CaseLog` (XES/MXML/mapped); source order, empty traces | Canonical `OCEL` |
+| Bridge | 명시적 `to_ocel` — `import_log`에서 silent XES→OCEL 없음 [사실] | 명시적 object→case projection (v2 metadata; v1 cache 재사용 금지 [사실]/remediation) |
+| Discovery | `pix.im.weighted.v1`, `pix.imf.*`, `pix.imd.*` 등 | native `pix.inductive_cut.v1` / `pix.im.v1` via OCPN; SAW `pix.observed_saw.v1` |
+| Conformance | classical align/replay/precision | joint `align_object_log`; object token replay ≠ flattened replay |
 
-## 4) Schumpeter Skill 최소 표면 [추론]
+**손실·오용** [사실]+[추론]:  
+flattened case를 합산하면 shared event 이중계산; OCPN≠joint soundness; tie time은 order deferred; zero denominator/search limit는 issue로 남김(수치 0 fitness 금지); `discover_process_tree`는 IMf/IMd 미지원 — case_centric inductive의 별도 profile; visualization은 Graphviz WASM 기본이나 완전 parity 미주장.
 
-Admit: import/read_log, ocel I/O·build·validate·canonical_digest, case_traces, DFG/OCDFG/temporal, executions/variants, discover_process_tree(DiscoverySpec), discover_ocpn, align/replay(case+object), prefix precision, object context, constraints, write/read result·model. 항상 status 분기.
+### A.4 Determinism / digest / temporal identity 회귀 위험
 
-UNAVAILABLE(기본): intelligence.*, stub compute owners, 광범위 case/object 확장 프로파일, 암묵 Case↔OCEL, PM4Py-equivalent 주장.
+| Risk | Contract break |
+|---|---|
+| invalid candidate에 digest | 금지; SEMANTIC_INVALID는 digest 없음 |
+| equality에 `import_info` 포함 | provenance-independent identity 파괴 |
+| validate에서 int→float widen / build에서 drop·dedup | 증거 은닉 |
+| Object attr uniqueness가 UTC fold 무시 | REV-01 회귀 |
+| projection v1 cache after v2 | identity migration |
+| OCPN “sound” / joint cardinality marketing | observational 계약 모순 |
+| `UNAVAILABLE`→0 fitness | status envelope 위반 |
+| auto XES→OCEL in `import_log` | 명시적 거절 경로 |
+| intelligence stub을 COMPUTED로 채움 | false confidence |
+| `pix.im.v1` ↔ case IMf 혼동 | 서로 다른 알고리즘/identity |
+| RESULT_VERSION / schema allowlist drift | decode 실패·unsafe types |
 
-## 5) pm4py/ocpa 대체
+### A.5 테스트 공백 (PI 관점)
 
-[사실] verified replacement 0. 필수 PI 경로(native/partial)는 import·trace·DFG/OCDFG·IM/inductive_cut·observational OCPN·align/replay·precision·constraints·persistence. 부재/미검증: api IMf noise-threshold, Alpha/Heuristics/ILP/Genetic verified, 다수 precision/anti-align, full OC filter 등.
+[사실] 저장소에 `tests/ocel`, golden canonical vectors, import/native suites가 존재한다고 문서·트리에 기록됨.  
+[알 수 없음] 본 pass에서 suite를 재실행하지 않아 현재 checkout의 pass/fail은 미확인.  
+[추론] Skill 게이트로 우선 고정할 것: ImportResult invariants, canonical golden, no silent Case↔OCEL, OCPN observational issue text, IM profile string isolation, results allowlist.
 
-## Vera 취약점 후보 (경로)
+(통계·metamorphic·수치 안정성은 Fathom DS 축에 위임.)
 
-- `src/pix/ocel/ingest/contract.py` ImportResult invariants
-- `src/pix/ocel/model.py` import_info / Object UTC uniqueness
-- `src/pix/ocel/build.py`, `validate.py`, `canonical/v1.py`
-- `src/pix/ocel/ingest/reader.py`, `src/pix/io.py`
-- `src/pix/compute/context.py`, `contracts/result.py`
-- `src/pix/compute/ocpn_discovery.py`, `contracts/discovery.py`
-- `src/pix/case_centric/inductive.py`, `object_centric/{discovery,conformance}.py`
-- `src/pix/results.py`, `_mining_registry.py`
-- `src/pix/intelligence/*`, stub `compute/*`
+### A.6 Vera용 취약점 후보 (우선순위)
 
-## 권고 (코드 변경 없음)
+**P0**
+- `src/pix/ocel/ingest/contract.py` — `ImportResult` status↔candidate↔digest 결합
+- `src/pix/ocel/canonical/v1.py` + `docs/specifications/PIX_OCEL_CANONICAL_V1.md` — byte layout / eligibility
+- `src/pix/ocel/model.py` — `import_info` compare/hash; Object UTC-instant uniqueness
+- `src/pix/io.py` / `src/pix/ocel/ingest/reader.py` — TABLE_* vs OCEL loader; XES reject path; no silent conversion
 
-1. Skill 계약에 §4 allowlist+status 처리 고정
-2. BE/DB는 status+digest envelope 유지
-3. Vera 경로 변경 PR은 identity golden 게이트
-4. 온보딩: api vs compute.__all__ vs stubs vs IMf
-5. registry는 union/models-w4 우선; verified 주장 금지
-6. PIX PR#1 audit 문서에 본 보고 후속 첨부 가능 (경로 충돌 확인 후)
+**P1**
+- `src/pix/ocel/build.py`, `validate.py` — no-repair / no-widen / disconnected-OK / duplicate relations
+- `src/pix/compute/context.py`, `src/pix/contracts/result.py` — invalid OCEL reject; ComputeStatus coexistence
+- `src/pix/compute/ocpn_discovery.py`, `contracts/ocpn_discovery.py`, `contracts/discovery.py` — observational bounds; only `pix.inductive_cut.v1`/`pix.im.v1` on api tree
+- `src/pix/case_centric/inductive.py` — separate IM/IMf/IMd profile strings
+- `src/pix/object_centric/conformance.py` — joint vs flattened operator_ids
+- `src/pix/results.py`, `src/pix/_mining_registry.py` — schema allowlists
+
+**P2**
+- `src/pix/intelligence/*` 및 stub `compute/*` — “완성” 시 가짜 success
+- `src/pix/object_centric/discovery.py` — SAW histogram ≠ probabilities
+- projection identity / REV-02 v2 metadata
+
+### A.7 Schumpeter Skill 최소 PIX 표면 [추론]
+
+**Admit (pin profile + status branch):**  
+`import_log`/`read_log` · `pix.ocel.{import_ocel,read_ocel,export_ocel,OCEL,ImportResult,canonical_digest,validate,build}` · `pix.api`: `case_traces`, mappings, `reconstruct_traces`, `discover_dfg`/`discover_ocdfg`, `measure_temporal`, `discover_executions`/`discover_variants`, `discover_process_tree`+`DiscoverySpec`, `discover_ocpn`, `process_tree_to_petri_net`, `align_traces`/`replay_traces`, `align_object_log`, `measure_prefix_precision`, `measure_object_context`, `evaluate_constraints`, `write_result`/`read_result`, `write_model`/`read_model`.
+
+**Default UNAVAILABLE:** A.2 stub·확장 프로파일 전부, 암묵 Case↔OCEL, verified PM4Py replacement claim.
+
+### A.8 pm4py/ocpa 대체 관점 [사실] (registry)
+
+- scope-01: early matrix (다수 `absent`) — 현재 부재 판단에 단독 사용 금지, union 대조 필요.
+- union-2026-09-15: native/partial 다수, **verified replacement 0**.
+- 필수 PI 경로(native/partial로 존재): import·traces·DFG/OCDFG·temporal·IM/inductive_cut·observational OCPN·align/replay·precision·constraints·persistence.
+- 부재/미검증 고수요: api tree의 noise-threshold IMf, Alpha/Heuristics/ILP/Genetic verified, 다수 precision/anti-align, full OC filter suite 등.
+
+### A.9 권고 (코드 변경 없음)
+
+1. Skill 계약에 A.7 allowlist + status 처리 고정.
+2. BE/DB: `ImportResult`/`ComputationResult` envelope + digests 유지; SEMANTIC_INVALID candidate만 저장 금지.
+3. Vera PR: P0–P1 경로 변경 시 identity golden 게이트.
+4. 온보딩: `pix.api` vs `compute.__all__` vs stubs vs case IMf.
+5. registry는 union/models-w4 우선; verified 주장 금지.
+6. 본 Appendix를 charter에 붙인 뒤 Fathom DS 섹션과 교차 참조.
 
 
 
