@@ -2,6 +2,8 @@
 
 작성일: 2026-09-28. 최초 작성 시 상태는 패치 설계 / 구현·신규 테스트 미착수였다. 이후 일부 구현·검증을 진행했으며 현재 상태는 [진행 기록](../reports/2026-09-28_OCPM_PATCH_PROGRESS.md)을 따른다. 아래 항목은 전체 완료 선언이 아니다.
 
+2026-10-04 기준점 이후의 작업 분할·파일 ownership·수락 조건은 [후속 세부 계획](2026-10-04_PIX_PARALLEL_DEVELOPMENT_PLAN.md)을 따른다. 기존 패치 번호와 요구 의미는 유지한다.
+
 상위 결정: [개발계획 변경](2026-09-28_OCPM_DEVELOPMENT_PLAN_AMENDMENT.md), [Vera 답변서](../reports/2026-09-28_OCPM_REQUIREMENTS_VERA_RESPONSE.md).
 저장소 기준: `2b515bcaa674f90cddf438fdfa4f6916e03e3d47`, `feat/ocel-readers-v0.2.0`; 제품 코드 기준은 동일 내용의 `8a66984`. 외부 요구 기준은 `d8b36c8`이다.
 

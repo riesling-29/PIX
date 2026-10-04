@@ -5,6 +5,12 @@ interpretation engine.
 
 ## Status
 
+For the current OCPM development baseline (not `main`), start with the
+[GitHub validation handoff](docs/reports/2026-10-04_PIX_GITHUB_VALIDATION_HANDOFF.md)
+and [next work packages](docs/requirements/2026-10-04_PIX_PARALLEL_DEVELOPMENT_PLAN.md).
+They identify the fixed code commit, actual test results, unexecuted environments,
+and task-based branches for local/cloud handoffs.
+
 Current requirements and responsibility boundaries are recorded in the
 [PIX/Schumpeter user requirements](docs/requirements/2026-09-13_PIX_SCHUMPETER_USER_REQUIREMENTS.md)
 and [residual design](docs/requirements/2026-09-18_PIX_RESIDUAL_DETAILED_DESIGN.md).

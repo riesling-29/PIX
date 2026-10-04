@@ -2,6 +2,8 @@
 
 작성일 2026-09-28. 기준 코드 `8a66984` (계획 commit `2b515bc`). OC-PATCH-01의 1차 조사다. 구현 존재와 실제 실행·참조 대체 검증은 구별한다. 아래에서 '미확인'은 미구현이라는 뜻이 아니다.
 
+후속 상태 (2026-10-04): 아래 표는 최초 조사 snapshot이다. `4e0b471`에서 downstream projection의 명시적 `projection=` 연결과 입력별 `issues_json`, panel별 해석 표시를 구현·검증했다. 해당 행의 '추가 설계 필요'는 최초 상태를 뜻한다. 전체 입력 사용표와 P1 조사 완료는 아니다. 현재 실행 근거는 [원격 인계서](../reports/2026-10-04_PIX_GITHUB_VALIDATION_HANDOFF.md), 잔여 작업은 [후속 계획](../requirements/2026-10-04_PIX_PARALLEL_DEVELOPMENT_PLAN.md)을 따른다.
+
 ## 확인한 계약과 잔여 작업
 
 | 요구 | 기존 owner·계약 | 근거 테스트 | 이번 판단 / 잔여 |
