@@ -20,7 +20,12 @@ from xml.etree import ElementTree
 import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
-ARTIFACTS = ROOT / ".artifacts" / "visualization-2026-09-15" / "browser"
+ARTIFACTS = Path(
+    os.environ.get(
+        "PIX_BROWSER_ARTIFACTS",
+        str(ROOT / ".artifacts" / "visualization-2026-09-15" / "browser"),
+    )
+)
 pytestmark = pytest.mark.browser
 SCENARIOS = (
     "native-panels",
@@ -33,6 +38,7 @@ SCENARIOS = (
     "provenance-scope",
     "small-viewport",
     "empty-partial",
+    "interpretation",
 )
 
 HARNESS = r"""
@@ -70,6 +76,31 @@ async function shot(view, suffix = '') {
 }
 async function select(page, id) { await page.evaluate(id => window.pixVisualization.selectPanel(id), id); }
 async function fixture() { return open('rendering-fixture'); }
+scenarios['interpretation'] = async () => {
+  const view = await fixture(), page = view.page;
+  try {
+    await page.evaluate(async () => {
+      window.pixVisualization.dispose();
+      const host = document.createElement('main'); document.body.append(host);
+      const panel = id => ({kind:'graph',id,title:id,description:'',nodes:[],edges:[],layout:'layered'});
+      window.pixVisualization = PIXVisualization.mount(host, {
+        schema:'pix.visualization.v1',title:'Interpretation boundary',status:'partial',issues:[],
+        panels:[panel('derived'),panel('raw')],
+        provenance:[{panel_ids:['derived'],input_path:[0],operator_id:'pix.review',status:'partial',details:[
+          {name:'projection_notice',value:'Projected Case view <script>hostile</script>'},
+          {name:'issues_json',value:JSON.stringify([{code:'joint_soundness_not_established',message:'Not a soundness guarantee',at:[]}])},
+        ]}],
+      });
+      await window.pixVisualization.ready;
+    });
+    assert.match(await page.locator('.pv-interpretation').innerText(),/pix.review/);
+    assert.match(await page.locator('.pv-interpretation').innerText(),/joint_soundness_not_established/);
+    assert.equal(await page.locator('.pv-interpretation script').count(),0);
+    assert.match(await page.evaluate(()=>window.pixVisualization.exportSVG()),/Projected Case view/);
+    await select(page,'raw');
+    assert.equal(await page.locator('.pv-interpretation').isVisible(),false);
+  } finally { await close(view); }
+};
 scenarios['native-panels'] = async () => {
   const manifest = JSON.parse(fs.readFileSync(path.join(gallery,'manifest.json'),'utf8'));
   for (const entry of manifest.filter(entry => /^(case|object)-/.test(entry.name))) {

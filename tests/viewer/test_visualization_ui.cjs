@@ -59,6 +59,28 @@ const marks = root => root.querySelectorAll('.pv-mark');
 const clickNamed = (root, label) => { const target = root.querySelectorAll('button').find(item => item.textContent === label); assert.ok(target, `Button ${label} exists`); target.click(); return target; };
 const finiteSVG = root => { for (const element of root.querySelectorAll('svg').flatMap(svg => [svg, ...svg.querySelectorAll('path'), ...svg.querySelectorAll('rect'), ...svg.querySelectorAll('circle'), ...svg.querySelectorAll('text')])) for (const [name, value] of element.attributes) if (['d', 'x', 'y', 'cx', 'cy', 'width', 'height', 'transform', 'viewBox'].includes(name)) assert.doesNotMatch(value, /NaN|Infinity/, `${element.tagName} ${name}`); };
 
+test('interpretation follows panel provenance and is retained in SVG', async () => {
+  const source = documentFor(graph(), graph({id:'raw', title:'External model'}));
+  source.provenance = [{panel_ids:['graph'], input_path:[0], operator_id:'pix.review', status:'partial', details:[
+    {name:'issues_json',value:JSON.stringify([{code:'joint_soundness_not_established',message:'Not a soundness guarantee',at:[]}])},
+    {name:'projection_notice',value:'<script>projected case</script>'},
+    {name:'shared_event_case_groups',value:'[["x","y"]]'},
+    {name:'conformance_verdict',value:'not_fitting'},
+    {name:'conformance_notice',value:'Model conformance violation: a separate model is required to admit this behavior.'},
+  ]}];
+  const before = structuredClone(source), host = container(), viewer = UI.mount(host,source);
+  await viewer.ready;
+  assert.match(find(host,'.pv-interpretation').textContent,/pix.review/);
+  assert.match(find(host,'.pv-interpretation').textContent,/Model conformance: not_fitting/);
+  assert.match(find(host,'.pv-interpretation').textContent,/joint_soundness_not_established/);
+  assert.equal(find(host,'.pv-interpretation').querySelectorAll('script').length,0);
+  assert.match(viewer.exportSVG(),/joint_soundness_not_established/);
+  await viewer.selectPanel('raw');
+  assert.equal(find(host,'.pv-interpretation').hidden,true);
+  assert.deepEqual(source,before);
+  viewer.dispose();
+});
+
 test('mount preserves source and renders every graph edge, node and inspectable metric', async () => {
   const host = container(), source = documentFor(graph({nodes: [node('A'), {...node('B'), metrics: [{name: 'Count', value: null, unit: 'events'}]}], edges: [edge('first', 'A', 'B'), edge('second', 'A', 'B'), edge('self', 'B', 'B')]}));
   const before = structuredClone(source), viewer = UI.mount(host, source); await viewer.ready;

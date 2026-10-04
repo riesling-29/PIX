@@ -29,3 +29,7 @@
 .pv-chevron-neutral .pv-description,.pv-chevron-neutral .pv-legend{color:var(--pc-muted);font-size:11px}
 .pv-chevron-neutral .pv-status{font-size:11px;color:var(--pc-muted);background:var(--pc-paper);border-color:var(--pc-rule)}
 @media(max-width:680px){.pv-chevron-neutral .pv-header{padding:17px;gap:12px}.pv-chevron-neutral .pv-heading h1{font-size:17px}.pv-chevron-neutral .pv-toolbar{padding:12px 16px}.pv-chevron-neutral .pv-inspector{padding:18px 16px}.pv-chevron-neutral .pv-fields{grid-template-columns:minmax(88px,115px) minmax(0,1fr);gap:7px 12px}.pv-chevron-neutral .pv-canvas{height:var(--pc-canvas-height,470px)}}
+
+.pv-interpretation { padding: .6rem 1rem; border-bottom: 1px solid #dce1e5; color: #34414b; background: #f7f8f9; overflow-wrap: anywhere; font-size: .85rem; }
+.pv-interpretation p { margin: .25rem 0; }
+.pv-interpretation[hidden] { display: none; }

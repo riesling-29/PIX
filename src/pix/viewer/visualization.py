@@ -20,6 +20,12 @@ from pix.contracts.result import ComputationResult, ComputeStatus, computation_i
 from pix.event_log import CaseLog
 from pix.event_log.adapters import case_log_digest
 from pix.models import Model, ModelArtifact, model_document
+from pix.object_centric.case_projection import (
+    ObjectCaseProjection,
+    project_object_cases,
+    shared_event_case_groups,
+)
+from pix.object_centric.conformance import ObjectReplay
 from pix.ocel import OCEL, canonical_digest
 from pix.results import RESULT_VERSION, _encode
 
@@ -172,11 +178,44 @@ def _source_metadata(value: object) -> tuple[VisualProvenance, ...]:
                 status=value.status.value,
                 details=(
                     VisualField("operator_version", value.operator_version),
+                    *(
+                        (
+                            VisualField("conformance_verdict", "not_fitting"),
+                            VisualField(
+                                "conformance_notice",
+                                "Model conformance violation: this log does not fit "
+                                "the supplied model. A fitting flattened projection "
+                                "does not override this verdict. To admit this behavior, "
+                                "use a separately specified process model; the current "
+                                "model is not automatically changed.",
+                            ),
+                        )
+                        if isinstance(value.value, ObjectReplay)
+                        and value.value.status == "completed"
+                        and value.value.fitting is False
+                        else ()
+                    ),
                     VisualField(
                         "request_type",
                         f"{type(value.spec).__module__}.{type(value.spec).__qualname__}",
                     ),
                     VisualField("request_encoding", f"pix.result/{RESULT_VERSION}"),
+                    VisualField(
+                        "issues_json",
+                        json.dumps(
+                            [
+                                {
+                                    "code": issue.code,
+                                    "message": issue.message,
+                                    "at": issue.at,
+                                }
+                                for issue in value.issues
+                            ],
+                            ensure_ascii=False,
+                            allow_nan=False,
+                            sort_keys=True,
+                        ),
+                    ),
                     VisualField(
                         "request_json",
                         json.dumps(
@@ -226,18 +265,41 @@ def _source_metadata(value: object) -> tuple[VisualProvenance, ...]:
 
 
 def build_visualization(
-    *values: object, title: str | None = None
+    *values: object,
+    title: str | None = None,
+    projection: ObjectCaseProjection | None = None,
 ) -> VisualizationDocument:
     """Adapt native logs, models and results to explicit visual panels.
 
     Each input owns its panels and provenance. This operation does not merge
     metrics across logs or decorate a model with unrelated analysis. Callers can
     also construct typed panels directly and pass a VisualizationDocument.
+
+    An optional projection receipt binds one CaseLog or computation result to
+    its derived case digest. Its source-to-case mapping is revalidated; no
+    mining is run. This verifies the supplied snapshot, not external provenance
+    authenticity. Build inputs separately before composing multiple documents.
     """
     if not values:
         raise ValueError("at least one native visualization input is required")
     if title is not None and type(title) is not str:
         raise TypeError("title must be a string or None")
+    if projection is not None:
+        if not isinstance(projection, ObjectCaseProjection):
+            raise TypeError("projection must be ObjectCaseProjection or None")
+        if len(values) != 1 or not isinstance(values[0], (CaseLog, ComputationResult)):
+            raise ValueError("projection requires one CaseLog or computation result")
+        source_digest = (
+            case_log_digest(values[0])
+            if isinstance(values[0], CaseLog)
+            else values[0].source_digest
+        )
+        if source_digest != case_log_digest(projection.case_log):
+            raise ValueError(
+                "projection derived digest differs from visualization input"
+            )
+        if project_object_cases(projection.source, projection.spec) != projection:
+            raise ValueError("projection receipt differs from its source and spec")
     if len(values) == 1 and isinstance(values[0], VisualizationDocument):
         return values[0] if title is None else replace(values[0], title=title)
     from .visual_case_adapters import case_panels
@@ -363,6 +425,32 @@ def build_visualization(
         if title is not None
         else (panels[0].title if len(panels) == 1 else "PIX Process Intelligence")
     )
+    if projection is not None:
+        groups = shared_event_case_groups(projection)
+        provenance.append(
+            VisualProvenance(
+                source_digest=canonical_digest(projection.source).identifier,
+                panel_ids=tuple(panel.id for panel in panels),
+                input_path=(0,),
+                details=(
+                    VisualField("role", "object_case_projection"),
+                    VisualField(
+                        "projection_receipt_json",
+                        json.dumps(
+                            projection.describe(), ensure_ascii=False, sort_keys=True
+                        ),
+                    ),
+                    VisualField("shared_event_case_groups", _text_list(groups)),
+                    VisualField(
+                        "projection_notice",
+                        "Case analysis projected by object type and ordering policy; "
+                        "it does not represent all source OCEL relationships. "
+                        "Shared-event groups are distinct case sets per source event, "
+                        "not transitive components or counts of source events.",
+                    ),
+                ),
+            )
+        )
     return VisualizationDocument(
         actual_title, tuple(panels), tuple(provenance), tuple(issues), status
     )

@@ -132,9 +132,10 @@
     const canvas = html("div", {class: "pv-canvas"});
     const inspector = html("aside", {class: "pv-inspector", "aria-label": "Selection details"});
     const description = html("p", {class: "pv-description"});
+    const interpretation = html("section", {class: "pv-interpretation", "aria-label": "Analysis interpretation"});
     const legend = html("div", {class: "pv-legend", "aria-label": "Legend"});
     const status = html("div", {class: "pv-status", role: "status", "aria-live": "polite"});
-    workspace.append(canvas, description, legend, status); main.append(workspace, inspector);
+    workspace.append(interpretation, canvas, description, legend, status); main.append(workspace, inspector);
     app.append(header, navigation, toolbar, warning, main); container.replaceChildren(app);
 
     for (const panel of source.panels) {
@@ -156,15 +157,44 @@
       for (const field of values || []) list.append(html("dt", {}, field.name), html("dd", {}, `${textOf(field.value)}${field.unit ? ` ${field.unit}` : ""}`));
       parent.append(list);
     }
+    function panelSources() {
+      return (source.provenance || []).filter(item => {
+        if (!current) return true;
+        const ids = item.panel_ids || [];
+        return ids.length ? ids.includes(current.id) : !(item.input_path || []).length;
+      });
+    }
+    function interpretationLines() {
+      return panelSources().flatMap(item => {
+        const lines = [];
+        if (item.operator_id) lines.push(`Operator: ${item.operator_id}`);
+        if (item.status) lines.push(`Calculation status: ${item.status}`);
+        for (const field of item.details || []) {
+          if (field.name === "conformance_verdict") lines.push(`Model conformance: ${field.value}`);
+          if (field.name === "conformance_notice") lines.push(String(field.value));
+          if (field.name === "projection_notice") lines.push(String(field.value));
+          if (field.name === "projection_receipt_json") {
+            try {
+              const receipt = JSON.parse(field.value);
+              lines.push(`Projection source: ${receipt.canonicalSourceDigest}; object type: ${receipt.spec.object_type}; tie policy: ${receipt.spec.tie_policy}`);
+            } catch (_) { lines.push("Projection receipt details could not be read."); }
+          }
+          if (field.name === "shared_event_case_groups") lines.push(`Shared-event case sets: ${field.value}`);
+          if (field.name === "issues_json") {
+            try {
+              const issues = JSON.parse(field.value);
+              for (const issue of issues) lines.push(`Diagnostic: ${issue.code}: ${issue.message}`);
+            } catch (_) { lines.push("Calculation diagnostics could not be read."); }
+          }
+        }
+        return lines;
+      });
+    }
     function overview() {
       inspector.replaceChildren(html("p", {class: "pv-eyebrow"}, "DETAILS"), html("h2", {}, current ? current.title : source.title));
       inspector.append(html("p", {}, "Select an item to inspect its supplied values and evidence. Search highlights items without changing the calculation."));
       if (current) fields(inspector, [{name: "View", value: KINDS[current.kind] || current.kind}, {name: "Panel ID", value: current.id}]);
-      const provenance = (source.provenance || []).filter(item => {
-        if (!current) return true;
-        const panelIds = item.panel_ids || [];
-        return panelIds.length ? panelIds.includes(current.id) : !(item.input_path || []).length;
-      });
+      const provenance = panelSources();
       let provenanceHost = inspector;
       if (current?.kind === "chevron" && chevronStyle === "neutral" && provenance.length) {
         provenanceHost = html("details", {class: "pv-provenance-disclosure"});
@@ -642,6 +672,8 @@
       const panel = source.panels.find(item => item.id === id);
       if (!panel) throw new Error("Unknown visualization panel.");
       const token = ++generation; current = panel; currentSVG = null; marks = []; selected = null; tableQuery = null; currentNotes = []; moved = false; pointer = null;
+      interpretation.replaceChildren(...interpretationLines().map(line => html("p", {}, line)));
+      interpretation.hidden = interpretation.children.length === 0;
       app.classList.toggle("pv-chevron-neutral", panel.kind === "chevron" && chevronStyle === "neutral");
       search.value = ""; searchStatus.textContent = ""; canvas.replaceChildren(); legend.replaceChildren(); status.textContent = "";
       description.textContent = panel.description || (panel.kind === "chevron" && chevronStyle === "neutral" ? "One lane per object instance. Shared event IDs keep their aligned appearances. Spans encode precedence slots, not elapsed time." : ""); panelTitle.replaceChildren(html("span", {class: "pv-panel-kind"}, KINDS[panel.kind] || panel.kind), html("strong", {}, panel.title));
@@ -670,6 +702,7 @@
       if (!currentSVG) return null;
       const clone = currentSVG.cloneNode(true), width = Math.max(700, bounds.width);
       const notes = [{text: `${source.title} / ${current.title}`}, {text: `Analysis status: ${source.status || "ok"}`}, ...(current.description ? [{text: current.description}] : []), ...Array.from(legend.children).map(item => ({text: item.textContent, color: item.querySelectorAll(".pv-swatch")[0]?.style.backgroundColor})), {text: status.textContent}, ...(source.issues || []).map(issue => ({text: `Analysis note: ${issue}`}))];
+      notes.push(...interpretationLines().map(text => ({text})));
       const lines = notes.flatMap(note => {
         const chars = Array.from(display(note.text)), result = [], length = Math.max(35, Math.floor((width - 70) / 7));
         for (let offset = 0; offset < chars.length; offset += length) result.push({text: chars.slice(offset, offset + length).join(""), color: offset === 0 ? note.color : null});
