@@ -9,6 +9,12 @@ from __future__ import annotations
 import json
 from dataclasses import fields
 
+from pix.case_centric.sequence_alignment import EditMove
+from pix.case_centric.trace_comparison import (
+    RepresentativeAlignment,
+    TraceComparisonGroup,
+    TraceRepresentative,
+)
 from pix.viewer.visual_contracts import (
     ChartPanel,
     ChartPoint,
@@ -23,6 +29,7 @@ from pix.viewer.visual_contracts import (
     TimelineItem,
     TimelineLane,
     TimelinePanel,
+    TraceComparisonPanel,
     VisualEdge,
     VisualField,
     VisualizationDocument,
@@ -32,6 +39,10 @@ from pix.viewer.visual_contracts import (
 )
 
 _TYPES = (
+    EditMove,
+    RepresentativeAlignment,
+    TraceComparisonGroup,
+    TraceRepresentative,
     ChartPanel,
     ChartPoint,
     ChartSeries,
@@ -45,6 +56,7 @@ _TYPES = (
     TimelineItem,
     TimelineLane,
     TimelinePanel,
+    TraceComparisonPanel,
     VisualEdge,
     VisualField,
     VisualizationDocument,
@@ -57,10 +69,15 @@ _PANELS = {
     "matrix": MatrixPanel,
     "chart": ChartPanel,
     "timeline": TimelinePanel,
+    "trace_comparison": TraceComparisonPanel,
     "chevron": ChevronPanel,
     "table": TablePanel,
 }
 _NESTED = {
+    (TraceComparisonPanel, "groups"): TraceComparisonGroup,
+    (TraceComparisonPanel, "candidates"): TraceRepresentative,
+    (TraceComparisonPanel, "alignments"): RepresentativeAlignment,
+    (RepresentativeAlignment, "moves"): EditMove,
     (VisualNode, "metrics"): VisualMetric,
     (VisualEdge, "metrics"): VisualMetric,
     (GraphPanel, "nodes"): VisualNode,
@@ -87,6 +104,12 @@ for _owner in (
 ):
     _NESTED[(_owner, "details")] = VisualField
 _SCALAR_LISTS = {
+    (TraceComparisonPanel, "unassigned_case_ids"),
+    (TraceComparisonGroup, "case_ids"),
+    (TraceComparisonGroup, "candidate_ids"),
+    (TraceRepresentative, "activities"),
+    (TraceRepresentative, "event_ids"),
+    (TraceRepresentative, "member_case_ids"),
     (MatrixPanel, "rows"),
     (MatrixPanel, "columns"),
     (TablePanel, "columns"),
