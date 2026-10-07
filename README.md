@@ -11,6 +11,11 @@ and [next work packages](docs/requirements/2026-10-04_PIX_PARALLEL_DEVELOPMENT_P
 They identify the fixed code commit, actual test results, unexecuted environments,
 and task-based branches for local/cloud handoffs.
 
+The [integrated execution index](docs/requirements/2026-10-06_PIX_INTEGRATED_EXECUTION_PLAN.md)
+preserves the review charter and OCPM/UX source documents, maps all 38 additional
+requirement IDs to their amended acceptance criteria, and connects the first
+documentation, input-semantics, and wheel-validation work packages.
+
 Current requirements and responsibility boundaries are recorded in the
 [PIX/Schumpeter user requirements](docs/requirements/2026-09-13_PIX_SCHUMPETER_USER_REQUIREMENTS.md)
 and [residual design](docs/requirements/2026-09-18_PIX_RESIDUAL_DETAILED_DESIGN.md).
