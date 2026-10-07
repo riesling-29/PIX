@@ -1,0 +1,138 @@
+{
+  "base_sha": "a0688f34e557c885c145051485072fd0623f263f",
+  "environment": {
+    "system": "Linux",
+    "kernel": "6.18.44",
+    "machine": "x86_64"
+  },
+  "source_hash_definition": "SHA-256 of each changed product/test file; report and this evidence file are excluded.",
+  "source_files": {
+    "src/pix/case_centric/statistics.py": "1678f21733214d243695c3fbf44f77236d40473f6f4093a2970dea2ef6ac522b",
+    "src/pix/event_log/reader.py": "149a813d871ccfd886e4e5b2b6b837cea7be61500a14167356c58b30132dd5f3",
+    "src/pix/ocel/ingest/formats/compact.py": "4b049cdc5a693570229e3605cefc175f1b9248872e37f398d35f15ff522b92f7",
+    "src/pix/tabular/values.py": "f5d63b5811c4a7ca0cebf828c243a4d9edef7cb18cbf1f33b5ae363fd87f4dcb",
+    "src/pix/viewer/visual_contracts.py": "1f6cfe131d997394e85c098fb2c89801dabdaacca6a44f5d3ce8bb1ce9dafb8e",
+    "tests/test_python310_compatibility.py": "ceb8ea79ad7962a9043963ae36dbbe4cae96357610aa52579313a3ba6e2437da"
+  },
+  "runs": {
+    "python310-full": {
+      "junit": {
+        "name": "pytest",
+        "errors": "0",
+        "failures": "6",
+        "skipped": "40",
+        "tests": "11759",
+        "time": "210.897",
+        "timestamp": "2026-10-06T06:28:24.661946-07:00",
+        "hostname": "7b01290bf30e"
+      },
+      "xml_sha256": "e6794e356513e6e01ce52e725e4711b2dcd51d4912d4af1886b81ebb2ea5c230",
+      "failed_tests": [
+        "tests.case_centric.test_statistics::test_numeric_cancellation_preserves_small_centers[samples0-1e-100-3.3333333333333336e-101-1e-100]",
+        "tests.case_centric.test_statistics::test_numeric_cancellation_preserves_small_centers[samples1-2e-100-5e-101-1e-100]",
+        "tests.case_centric.test_statistics::test_numeric_cancellation_preserves_small_centers[samples2-0.0-0.0-0.0]",
+        "tests.event_log.test_xes::test_recursive_typed_attributes_no_flattening",
+        "tests.ocel.test_compact_import::test_inferred_timestamp_attribute_precision_is_not_silently_truncated",
+        "tests.viewer.test_visual_contracts::test_time_chart_rfc3339_strings_retain_original_offset_and_precision[2026-09-15T09:00:00.1Z]"
+      ]
+    },
+    "python310-fixed-full": {
+      "junit": {
+        "name": "pytest",
+        "errors": "0",
+        "failures": "0",
+        "skipped": "40",
+        "tests": "11758",
+        "time": "196.361",
+        "timestamp": "2026-10-06T06:38:56.948157-07:00",
+        "hostname": "7b01290bf30e"
+      },
+      "xml_sha256": "e571c57bc191082daccf2f5e721e20c0e63838340de1a703ee8c74047ac9543b",
+      "failed_tests": []
+    },
+    "python312-fixed-full": {
+      "junit": {
+        "name": "pytest",
+        "errors": "0",
+        "failures": "0",
+        "skipped": "40",
+        "tests": "11758",
+        "time": "152.294",
+        "timestamp": "2026-10-06T06:38:57.108509-07:00",
+        "hostname": "7b01290bf30e"
+      },
+      "xml_sha256": "0c3fb3a23ace2cd5239d4f8851a24c0d21657df33d5c49435f586140c3757d54",
+      "failed_tests": []
+    }
+  },
+  "wheel": {
+    "mining": {
+      "success": true,
+      "wheel_sha256": "1fad3b4b6107056584c7913bfe8d1eac368aaf81c1dd32a52eb97d8794dd29b4",
+      "matched_files": 249,
+      "dependency_contract": {
+        "platform": "linux",
+        "declared_core_requirements": [
+          "tzdata>=2024.1; sys_platform == \"win32\""
+        ],
+        "inactive_optional_requirements": [
+          "pytest; extra == \"dev\"",
+          "ruff; extra == \"dev\"",
+          "playwright; extra == \"browser\"",
+          "openpyxl>=3.1; extra == \"excel\"",
+          "pyarrow>=14; extra == \"parquet\"",
+          "openpyxl>=3.1; extra == \"imports\"",
+          "pyarrow>=14; extra == \"imports\""
+        ],
+        "active_core_dependencies": [],
+        "expected_distributions": [
+          "pix"
+        ],
+        "installed_distributions": [
+          [
+            "pix",
+            "0.5.0"
+          ]
+        ]
+      },
+      "evidence_sha256": "c7e7551b54bb784214060e3c04cbaa4caa15d24f8181cfb260d7f44f4b3e1931"
+    },
+    "visualization": {
+      "success": true,
+      "wheel_sha256": "1fad3b4b6107056584c7913bfe8d1eac368aaf81c1dd32a52eb97d8794dd29b4",
+      "matched_files": 249,
+      "dependency_contract": {
+        "platform": "linux",
+        "declared_core_requirements": [
+          "tzdata>=2024.1; sys_platform == \"win32\""
+        ],
+        "inactive_optional_requirements": [
+          "pytest; extra == \"dev\"",
+          "ruff; extra == \"dev\"",
+          "playwright; extra == \"browser\"",
+          "openpyxl>=3.1; extra == \"excel\"",
+          "pyarrow>=14; extra == \"parquet\"",
+          "openpyxl>=3.1; extra == \"imports\"",
+          "pyarrow>=14; extra == \"imports\""
+        ],
+        "active_core_dependencies": [],
+        "expected_distributions": [
+          "pix"
+        ],
+        "installed_distributions": [
+          [
+            "pix",
+            "0.5.0"
+          ]
+        ]
+      },
+      "evidence_sha256": "914d9b26a62146bf002252949673d3f3082b58b1a40e8a0907987dba2acc1bdf"
+    }
+  },
+  "limits": [
+    "Windows/macOS not executed",
+    "Python 3.13 not executed",
+    "browser install failed before tests",
+    "external corpus skipped"
+  ]
+}
