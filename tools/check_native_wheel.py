@@ -13,6 +13,7 @@ import importlib.metadata
 import importlib.resources
 import json
 import re
+import runpy
 import sys
 import sysconfig
 import zipfile
@@ -427,16 +428,20 @@ def main() -> None:
         pix.__version__ == distribution.version, "Package version differs from metadata"
     )
     requirements = distribution.requires or []
-    require(
-        all(re.search(r";\s*extra\s*==\s*['\"]", item) for item in requirements),
-        "Unexpected runtime dependency in wheel metadata",
+    dependency_helper = Path(__file__).with_name("check_wheel_environment.py")
+    check_core_dependencies = runpy.run_path(str(dependency_helper))[
+        "check_core_dependencies"
+    ]
+    dependency_contract = check_core_dependencies(
+        requirements,
+        [
+            (package.metadata["Name"], package.version)
+            for package in importlib.metadata.distributions()
+        ],
+        sys.platform,
     )
     installed_distributions = sorted(
         package.metadata["Name"] for package in importlib.metadata.distributions()
-    )
-    require(
-        [name.lower() for name in installed_distributions] == ["pix"],
-        "Smoke environment must contain only PIX",
     )
     expected_assets = (
         "viewer.js",
@@ -562,6 +567,8 @@ def main() -> None:
         },
         "requires_dist": requirements,
         "unconditional_runtime_requirements": [],
+        "dependency_contract": dependency_contract,
+        "dependency_helper_sha256": digest(dependency_helper.read_bytes()),
         "viewer_assets": assets,
         "source_wheel_installed_byte_match": {
             "status": "passed",
