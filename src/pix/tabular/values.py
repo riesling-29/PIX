@@ -137,7 +137,10 @@ def timestamp(
                 at,
             )
         try:
-            value = datetime.fromisoformat(value.replace("Z", "+00:00"))
+            normalized = re.sub(
+                r"\.([0-9]+)", lambda m: "." + m[1][:6].ljust(6, "0"), value
+            )
+            value = datetime.fromisoformat(normalized.replace("Z", "+00:00"))
         except ValueError as exc:
             raise mapping_failure("invalid_timestamp", str(exc), at) from exc
     if not isinstance(value, datetime):
