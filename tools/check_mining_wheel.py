@@ -1,7 +1,8 @@
 """Smoke a wheel-only PIX installation from outside its source checkout.
 
 Run with ``python -I`` in an isolated environment containing only the extracted
-or installed PIX wheel. Explicit embedded-Python ``._pth`` environments are
+or installed PIX wheel and its declared platform dependency (tzdata on Windows).
+Explicit embedded-Python ``._pth`` environments are
 supported. This checks packaging and short native pipelines, not algorithm
 equivalence to reference libraries or all optional backends.
 """
@@ -15,12 +16,17 @@ import importlib.metadata
 import importlib.util
 import json
 import pkgutil
-import re
+import runpy
 import sys
 import traceback
 import zipfile
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+
+_DEPENDENCY_HELPER = Path(__file__).with_name("check_wheel_environment.py")
+check_core_dependencies = runpy.run_path(str(_DEPENDENCY_HELPER))[
+    "check_core_dependencies"
+]
 
 
 def require(condition: bool, message: str) -> None:
@@ -58,20 +64,12 @@ def check_environment(wheel: Path, site: Path, source: Path) -> dict:
         (item.metadata["Name"].lower(), item.version)
         for item in importlib.metadata.distributions()
     )
-    require(
-        [name for name, _ in distributions] == ["pix"],
-        "The smoke environment must contain only PIX",
-    )
     distribution = importlib.metadata.distribution("pix")
     require(
         pix.__version__ == distribution.version, "Package/metadata version mismatch"
     )
-    require(
-        all(
-            re.search(r";\s*extra\s*==\s*['\"]", value)
-            for value in (distribution.requires or [])
-        ),
-        "The native wheel unexpectedly requires a runtime dependency",
+    dependency_contract = check_core_dependencies(
+        distribution.requires or [], distributions, sys.platform
     )
     optional = ("pm4py", "ocpa", "numpy", "scipy", "torch", "transformers", "gensim")
     require(
@@ -118,6 +116,8 @@ def check_environment(wheel: Path, site: Path, source: Path) -> dict:
         "pix_path": str(installed),
         "version": distribution.version,
         "distributions": distributions,
+        "dependency_contract": dependency_contract,
+        "dependency_helper_sha256": sha256(_DEPENDENCY_HELPER.read_bytes()),
         "optional_dependencies_absent": list(optional),
         "source_wheel_install_matches": matches,
     }
