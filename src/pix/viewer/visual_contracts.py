@@ -294,7 +294,14 @@ class ChartPanel:
                             "[.1-6 fractional digits](Z|+/-HH:MM)"
                         )
                     try:
-                        parsed = datetime.fromisoformat(point.x.replace("Z", "+00:00"))
+                        # Retain the original point.x; 3.10's parser needs
+                        # three or six fractional digits even for valid RFC3339.
+                        normalized = re.sub(
+                            r"\.([0-9]+)", lambda m: "." + m[1].ljust(6, "0"), point.x
+                        )
+                        parsed = datetime.fromisoformat(
+                            normalized.replace("Z", "+00:00")
+                        )
                     except ValueError as exc:
                         raise ValueError(
                             "time chart x must be a valid RFC3339 timestamp"
