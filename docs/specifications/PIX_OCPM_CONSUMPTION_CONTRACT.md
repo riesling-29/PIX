@@ -6,6 +6,11 @@
 
 ## 확인한 계약과 잔여 작업
 
+2026-10-06 1차 확장: [공개 입력 의미 감사](../reports/2026-10-06_PIX_OCPM_INPUT_AUDIT.md)에
+명시한 namespace의 170개 정의와 20개 함수의 입력 사용표를 연결했다.
+ETOT/OTG edge 비교와 OCCN 양방향 변환·loss/refusal의 기존 경로를 확인했다.
+아래 최초 표의 '미확인'은 해당 범위에서 갱신되지만, 전 함수 감사나 참조 대체 검증 완료는 아니다.
+
 | 요구 | 기존 owner·계약 | 근거 테스트 | 이번 판단 / 잔여 |
 | --- | --- | --- | --- |
 | P0-01 | `compute/ocpn_discovery.py`, `viewer/visual_model_results.py::_ocpn_discovery`: cardinality/fitting 보장과 issues, 요약 패널 | `tests/compute/test_ocpn_discovery.py`, `tests/viewer/test_visual_model_results.py` | 관측성 계약·표시 일부 존재. 모든 상태에서 상시 표시되는지는 browser 확인 필요 |

@@ -1,0 +1,22 @@
+{
+  "pix.compute.ocdfg.discover_ocdfg": "IN-01",
+  "pix.compute.object_context.measure_object_context": "IN-02",
+  "pix.object_centric.conformance.replay_object_log": "IN-03",
+  "pix.object_centric.conformance.replay_flattened_object_log": "IN-04",
+  "pix.object_centric.relations.discover_etot": "IN-05",
+  "pix.object_centric.relations.discover_otg": "IN-06",
+  "pix.object_centric.relations.compare_object_graphs": "IN-07",
+  "pix.object_centric.relations.object_attributes_as_of": "IN-08",
+  "pix.object_centric.relations.query_object_relations": "IN-09",
+  "pix.object_centric.filtering.filter_ocel": "IN-10",
+  "pix.object_centric.filter_predicates.evaluate_filter_predicates": "IN-11",
+  "pix.object_centric.advanced_filtering.filter_ocel_by_predicate": "IN-12",
+  "pix.object_centric.features.extract_object_features": "IN-13",
+  "pix.object_centric.models.ocpn_to_causal_net": "IN-14",
+  "pix.object_centric.models.causal_net_to_ocpn": "IN-15",
+  "pix.object_centric.performance.measure_performance": "IN-16",
+  "pix.object_centric.performance.measure_replay_performance": "IN-17",
+  "pix.object_centric.model_integration.enhance_ocpn": "IN-18",
+  "pix.object_centric.enrichment.mark_lifecycle_qualifiers": "IN-19",
+  "pix.object_centric.case_projection.project_object_cases": "IN-20"
+}
