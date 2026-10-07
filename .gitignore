@@ -15,6 +15,12 @@ venv/
 .mypy_cache/
 .coverage
 htmlcov/
+.artifacts/
+node_modules/
+
+# Downloaded event logs; keep the fixture policy tracked
+/tests/fixtures/event_logs/*
+!/tests/fixtures/event_logs/README.md
 
 # Environment
 .env

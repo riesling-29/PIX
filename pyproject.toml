@@ -4,17 +4,24 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pix"
-version = "0.1.2"
+version = "0.5.0"
 description = "Deterministic Process Intelligence computation and interpretation engine"
 readme = "README.md"
 requires-python = ">=3.10"
-dependencies = []
+dependencies = ["tzdata>=2024.1; sys_platform == 'win32'"]
+
+[project.scripts]
+pix = "pix.cli:main"
 
 [project.optional-dependencies]
 dev = [
     "pytest",
     "ruff",
 ]
+browser = ["playwright"]
+excel = ["openpyxl>=3.1"]
+parquet = ["pyarrow>=14"]
+imports = ["openpyxl>=3.1", "pyarrow>=14"]
 
 [tool.setuptools]
 package-dir = {"" = "src"}
@@ -22,10 +29,14 @@ package-dir = {"" = "src"}
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools.package-data]
+"pix.viewer" = ["assets/*.js", "assets/*.css", "assets/vendor/*"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
 addopts = "--import-mode=importlib"
+markers = ["browser: opt-in real browser verification (PIX_RUN_BROWSER=1)"]
 
 [tool.ruff]
 target-version = "py310"

@@ -1,0 +1,56 @@
+{
+    "schema":  "pix.third_party.graphviz.v1",
+    "verified_at":  "2026-09-16",
+    "package":  {
+                    "repository":  "https://github.com/mdaines/viz-js",
+                    "version":  "3.30.0",
+                    "license":  "MIT",
+                    "revision":  "99da545270e6e7b127a5c7ba65974b8a604a6358",
+                    "name":  "@viz-js/viz",
+                    "published":  "2026-09-01T15:32:25.882Z",
+                    "tarball":  "https://registry.npmjs.org/@viz-js/viz/-/viz-3.30.0.tgz",
+                    "integrity":  "sha512-2zmcP55QY44uQfZ+GvgNHmGd8S6KUD+2eMur9AbYybSzrOd/m8nMUg0ZircJNiJRKGgVBKAE8kh0hAwpUFUFQQ=="
+                },
+    "graphviz":  {
+                     "license":  "EPL-2.0",
+                     "source":  "https://gitlab.com/api/v4/projects/4207231/packages/generic/graphviz-releases/16.0.0/graphviz-16.0.0.tar.gz",
+                     "version":  "16.0.0",
+                     "notice":  "The unmodified Graphviz object code is available as Source Code under EPL-2.0 at the source URL; the included GRAPHVIZ-LICENSE.txt applies to Graphviz.",
+                     "source_sha256":  "36a1de1aaf5a2023b14f95170a5f8f0b12522d1c305b517fc261966597050749"
+                 },
+    "expat":  {
+                  "license":  "MIT",
+                  "source":  "https://github.com/libexpat/libexpat/releases/download/R_2_8_4/expat-2.8.4.tar.gz",
+                  "version":  "2.8.4",
+                  "source_sha256":  "b8ece2437692dad44d851c4532723390a5a330990007706be9c8d2b90d294f36"
+              },
+    "verification":  {
+                         "scope":  "Registry SRI and ECDSA signature verified. The package upstream build provenance records source digests; source-build reproducibility is not verified.",
+                         "offline_wasm_fetch_calls":  0,
+                         "npm_registry_signature_valid":  true,
+                         "npm_registry_keyid":  "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U",
+                         "tarball_sha512_matches_registry":  true
+                     },
+    "files":  [
+                  {
+                      "sha256":  "c857641af952c8f82ac7243917f8563959046e5cfc44d7e84eff9a2b470f5eab",
+                      "name":  "viz-global.js",
+                      "bytes":  1324675
+                  },
+                  {
+                      "sha256":  "f1fb91bf7cbcb42b2af56949e4fa909e1979d5b57c2826cabacdb4b631457720",
+                      "name":  "VIZ-LICENSE.txt",
+                      "bytes":  1066
+                  },
+                  {
+                      "sha256":  "0becf16567beb77fa252b7664631dd177c8f9a1889e48995b45379c7130e5303",
+                      "name":  "GRAPHVIZ-LICENSE.txt",
+                      "bytes":  14198
+                  },
+                  {
+                      "sha256":  "31b15de82aa19a845156169a17a5488bf597e561b2c318d159ed583139b25e87",
+                      "name":  "EXPAT-LICENSE.txt",
+                      "bytes":  1144
+                  }
+              ]
+}

@@ -1,6 +1,8 @@
-# OCPA OCEL 객체 모델 및 파일 입력·출력 분석
+<!-- 한국어 버전 -->
 
-**문서 유형:** Upstream 참조 분석 / OCEL 객체 모델 및 파일 I/O 기준선
+# OCPA OCEL 데이터 모델 및 파일 입력·출력 분석
+
+**문서 유형:** Upstream 참조 분석 / OCEL 데이터 모델 및 파일 I/O 기준선
 
 **대상 프로젝트:** PIX
 
@@ -16,7 +18,7 @@
 
 **분석일:** 2026-07-23
 
-**상태:** 소스 수준 OCEL 객체 모델 및 입력·출력 분석 기준선
+**상태:** 소스 수준 OCEL 데이터 모델 및 입력·출력 분석 기준선
 
 ---
 
@@ -103,7 +105,7 @@ classic JSON-OCEL 1.0
 
 ---
 
-## 3. OCEL 객체 모델
+## 3. OCEL 데이터 모델
 
 ### 3.1 최상위 `OCEL`
 
@@ -832,3 +834,842 @@ de056e0203a3fa4a9bbc19a95e001eada323074a
 ## 19. 최종 평가
 
 **OCPA의 `OCEL`은 `Table + ObjectCentricEventLog + EventGraph`를 필수로 묶고 OCEL 2.0에서 `ObjectGraph + ObjectChangeTable`을 추가하는 mutable multi-representation composite다. 이 구조는 object-centric case, variant, discovery 계산에 편리하지만 representation consistency와 source identity 보존을 자동으로 보장하지 않는다. CSV와 classic JSON import는 event ID를 재생성하고 일부 path는 representation별로 다른 ID space를 만들며, classic XML은 composite OCEL 반환을 지원하지 않는다. SQLite에는 source event ID와 RangeIndex 사이 E2O alignment 실패 경로가 있고, XML event attribute는 일반적인 선언에서 lexical value를 남기되 declared type을 잃고 string으로 수렴한다. 유일한 classic JSON exporter는 OCEL 2.0의 qualifier·O2O·object change를 보존하지 않고 E2E와 공통 loss report도 없다. 따라서 PIX는 OCPA의 object-centric semantics와 projection algorithm을 참고할 수 있지만 I/O 및 dataset contract는 evidence-preserving 방식으로 재설계해야 한다.**
+
+---
+
+<!-- English version -->
+
+# OCPA OCEL data model and file input and output analysis
+
+**Document type:** Upstream reference analysis / OCEL data model and file I/O baseline
+
+**Target project:** PIX
+
+**Reference library:** OCPA
+
+**Reference repository:** `https://github.com/ocpm/ocpa.git`
+
+**Analysis branch:** `main`
+
+**Analysis commit:** `de056e0203a3fa4a9bbc19a95e001eada323074a`
+
+**OCPA Version:** `1.3.3`
+
+**Analysis date:** 2026-07-23
+
+**Status:** Source level OCEL data model and input-output Analysis baseline line
+
+---
+
+## 0. Purpose and scope
+
+This document describes how OCPA configures the OCEL object, how CSV·classic JSON/XML·OCEL 2.0 reads SQLite/XML as the corresponding representation, and how to display it in what format.
+
+The scope of analysis is as follows:
+
+1. The highest `OCEL` composite dataclass
+2. Table, entity dictionary, EventGraph representation
+3. The O2O graph and the object-change table
+4. Lazy process-execution and variant cache
+5. Format by importer and exporter dispatch
+6. Event/object ID, attribute, E2O, qualifier, O2O, object change, E2E storage
+7. Normalization and mutation between import/export
+8. Preliminary test point for PIX contract and adapter
+
+This document is source-level analysis. It does not demonstrate runtime round-trip equality, processing volume, memory usage or complete compliance with the OCEL standard for all samples.
+
+---
+
+## 1. Analysis baseline
+
+```text
+Repository: ocpm/ocpa
+Branch:     main
+Commit:     de056e0203a3fa4a9bbc19a95e001eada323074a
+Version:    1.3.3
+```
+
+The main areas of examination are:
+
+```text
+ocpa/objects/log/ocel.py
+ocpa/objects/log/variants/
+ocpa/objects/log/converter/
+ocpa/objects/log/importer/csv/
+ocpa/objects/log/importer/ocel/
+ocpa/objects/log/importer/ocel2/
+ocpa/objects/log/exporter/ocel/
+sample_logs/
+tests/
+```
+
+In the current local Python environment, there is no pytest and runtime testing is not possible. Therefore, operations derived from the source without execution are classified as source-level observations in the document.
+
+---
+
+## 2. Complete object I/O architecture
+
+OCPA converts one external log into several in-memory representations.
+
+```text
+외부 OCEL/CSV file
+    ↓
+format factory 또는 parser
+    ↓
+Pandas event table
+    ├──→ Table
+    ├──→ ObjectCentricEventLog
+    └──→ EventGraph
+            ↓
+        OCPA OCEL
+        ├── log
+        ├── obj
+        ├── graph
+        ├── parameters
+        ├── o2o_graph       # optional
+        └── change_table    # optional
+```
+
+Classic JSON exporter does not serialize the entire composite. `ocel.obj`'s metadata and raw event/object dictionary are read and written in JSON-OCEL 1.0 form.
+
+```text
+OCPA OCEL
+    ↓
+ocel.obj.meta + ocel.obj.raw
+    ↓
+classic JSON-OCEL 1.0
+```
+
+Therefore, the scope of internal representation dealt with by the importer and the exporter is different.
+
+---
+
+## 3. OCEL data model
+
+### 3.1 The highest `OCEL`
+
+`ocpa.objects.log.ocel.OCEL` is the next mutable dataclass.
+
+```python
+@dataclass
+class OCEL:
+    log: Table
+    obj: ObjectCentricEventLog
+    graph: EventGraph
+    parameters: dict
+    o2o_graph: ObjectGraph = None
+    change_table: ObjectChangeTable = None
+```
+
+The responsibilities of each field are as follows:
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `log` | `Table` | Event centered Pandas DataFrame and lookup cache |
+| `obj` | `ObjectCentricEventLog` | Event·object entity dictionary and metadata |
+| `graph` | `EventGraph` | Event ordering/object-sharing based directed graph |
+| `parameters` | `dict` | Process execution, variant and import settings |
+| `o2o_graph` | `ObjectGraph \| None` | OCEL 2.0 O2O directed graph |
+| `change_table` | `ObjectChangeTable \| None` | Object type attribute-change DataFrame |
+
+The `OCEL` constructor does not verify whether the three essential representations represent the same event/object/relation.
+
+### 3.2 `Table`
+
+`Table` copies the transmitted event DataFrame and sets `event_id` as an index.
+
+```text
+Table
+├── _log                 # copied Pandas DataFrame
+├── _object_types        # parameters["obj_names"]
+├── _object_attributes
+├── _numpy_log
+├── _column_mapping
+└── _mapping             # event ID → column value lookup
+```
+
+The customary column of the internal event table is as follows:
+
+```text
+event_id
+event_activity
+event_timestamp
+event_start_timestamp
+event_<attribute>
+<object-type-1>          # 관련 object ID list/set
+<object-type-2>
+...
+```
+
+OCPA's E2O relation is expressed as an object-type event column rather than an independent relation table.
+
+### 3.3 Entity representation
+
+`ObjectCentricEventLog` links metadata to raw data.
+
+```text
+ObjectCentricEventLog
+├── meta: MetaObjectCentricData
+└── raw: RawObjectCentricData
+    ├── events: dict[event_id, Event]
+    ├── objects: dict[object_id, Obj]
+    └── obj_event_mapping: dict[object_id, event_id list]
+```
+
+Entity shape is as follows:
+
+```python
+Event(
+    id,
+    act,
+    time,
+    omap,
+    vmap,
+)
+
+Obj(
+    id,
+    type,
+    ovmap,
+)
+```
+
+`ObjectCentricEventLog.__post_init__()` immediately materializes the activity set, activity by event, object-type by object, event by object, object by timestamp-ordered sequence and activity trace.
+
+### 3.4 EventGraph
+
+`EventGraph` is a `nx.DiGraph` wrapper.
+
+```python
+@dataclass
+class EventGraph:
+    eog: nx.DiGraph
+```
+
+`eog_from_log()` connects events that share the same object by object type according to the timestamp-ordered table order. Add edge to the next event from the previous event for each object.
+
+When the Qualifier dictionary is provided, it is set to the NetworkX node attribute. There is no separate typed E2O relation object or qualifier table.
+
+### 3.5 ObjectGraph and ObjectChangeTable
+
+OCEL 2.0 importer selectively adds the following representation.
+
+```python
+@dataclass
+class ObjectGraph:
+    graph: nx.DiGraph
+
+
+@dataclass
+class ObjectChangeTable:
+    tables: dict[str, pd.DataFrame]
+```
+
+The O2O qualifier is stored as a graph edge attribute. Object change keeps the `object_id`, timestamp, changed-field indicator and value column in DataFrame for each object type.
+
+### 3.6 Lazy process execution and variant
+
+The next property is calculated at first access.
+
+```text
+process_executions
+process_execution_objects
+process_execution_mappings
+variants
+variant_frequencies
+variant_graphs
+variants_dict
+```
+
+The basic process execution method is connected component and the basic variant method is two-phase.
+
+The variant calculation adds but removes the temporary `event_objects` column, and records the final `event_variant` column to `Table.log`. Thus read-like property access can change the internal DataFrame.
+
+### 3.7 Mutability and complexity boundaries
+
+OCPA `OCEL` is not an immutable dataset contract.
+
+- You can replace the top-level dataclass field.
+- You can change the public DataFrame of Table.
+- Event, Obj, graph, change table are also mutable.
+- Lazy calculation changes the cache and log column.
+- `Table.remove_object_references()` is an in-place helper.
+- Source comment states that the helper does not guarantee the consistency of all representations.
+
+Therefore, the fact that `OCEL` was created alone does not show that Table, entity dictionary, EventGraph, O2O graph, change table match each other.
+
+---
+
+## 4. API public input
+
+OCPA does not have a single `read_ocel2()` facade that routes all OCEL formats automatically as an extension like PM4Py. Directly import the format family modules.
+
+| Input | Calling surface | Returns |
+| --- | --- | --- |
+| CSV | `objects.log.importer.csv.factory.apply` | The basic `OCEL` |
+| Classic JSON-OCEL | `objects.log.importer.ocel.factory.apply` | `OCEL` |
+| Classic XML-OCEL | `variant="ocel_xml"` of the same factory | DataFrame or tuple when `return_df=True` |
+| OCEL 2.0 SQLite | `objects.log.importer.ocel2.sqlite.factory.apply` | `OCEL` |
+| OCEL 2.0 XML | `objects.log.importer.ocel2.xml.factory.apply` | `OCEL` |
+
+The verified importer does not have a OCEL 2.0 standard JSON, GZIP JSON/XML or Parquet bundle path.
+
+---
+
+## 5. Common Import Processing
+
+Detailed implementations vary by format, but generally make the following representation.
+
+```text
+external records
+→ event DataFrame
+→ object type별 related-object column
+→ Table
+→ Event/Obj dictionary
+→ ObjectCentricEventLog
+→ EventGraph
+→ optional ObjectGraph/ObjectChangeTable
+→ OCEL
+```
+
+There is no common structured import result. The Importer does not report the following as a field.
+
+- normalized field
+- regenerated identifier
+- rejected record
+- inferred record
+- unsupported component
+- lossy conversion
+- assumption
+- source record reference
+
+---
+
+## 6. CSV Import
+
+### 6.1 Type of input
+
+CSV event table specifies column meaning as a parameter.
+
+```python
+parameters = {
+    "obj_names": ["application", "offer"],
+    "val_names": [],
+    "act_name": "event_activity",
+    "time_name": "event_timestamp",
+    "sep": ",",
+}
+```
+
+The cell in the object type column parses to an object ID list or set-form string.
+
+### 6.2 Variant
+
+CSV factory offers the following variant.
+
+```text
+to_df
+to_obj
+to_ocel       # default
+```
+
+`to_ocel` is a combination of `to_df`, `Table`, `df_to_ocel`, and `eog_from_log`.
+
+### 6.3 Identifier and timestamp
+
+`to_df` creates the next ID based on the row position above the source code, even if the input has an event ID.
+
+```python
+event_id = [str(i) for i in range(len(df))]
+```
+
+When making `ObjectCentricEventLog` with this DataFrame, `df_to_ocel` again enumerates an event from 1. Therefore, even within the same CSV import results, the 0-based ID of `Table`·`EventGraph` and the 1-based ID of entity representation may differ.
+
+Timestamp converts to Pandas datetime and sorts the event table according to the timestamp. If there is no start timestamp parameter, the completion timestamp is copied to `event_start_timestamp`.
+
+### 6.4 Preservation limits
+
+CSV importer represents the following:
+
+- Event activity and timestamp
+- event attribute
+- E2O reference by object type
+- Selective object attribute table
+
+The following support path has not been confirmed.
+
+- E2O qualifier
+- O2O relation
+- object change history
+- E2E relation
+
+There is no CSV exporter.
+
+---
+
+## 7. Classic JSON-OCEL Import
+
+### 7.1 External representation
+
+Classic JSON importer uses the following key:
+
+```text
+ocel:global-log
+ocel:events
+ocel:objects
+ocel:activity
+ocel:timestamp
+ocel:omap
+ocel:vmap
+ocel:type
+ocel:ovmap
+```
+
+### 7.2 Parsing
+
+```text
+JSON dictionary
+→ parse_events
+→ parse_objects
+→ MetaObjectCentricData
+→ RawObjectCentricData
+→ ObjectCentricEventLog
+→ jsonocel_to_csv
+→ Table + EventGraph
+→ OCEL
+```
+
+### 7.3 Re-allocate the event ID
+
+`parse_events()` does not preserve the event dictionary key of JSON as an internal ID and assigns `0, 1, 2, ...` according to the iteration sequence.
+
+```text
+external event key → internal sequential integer ID
+```
+
+`Event.id` type annotation is a string, but in this path an integer enters. Python dataclass is allowed because it does not impose a runtime type.
+
+### 7.4 Timestamp and synthetic attribute
+
+When the timestamp ends with `Z`, `Z` is removed and `datetime.fromisoformat()` is called. In this case it can be naive datetime without explicit UTC timezone information.
+
+If `vmap` does not have `start_timestamp`, the event timestamp is used to add synthetic `start_timestamp`. Since then classic JSON export has been able to write this enhanced value to `vmap`.
+
+### 7.5 Object attribute and representation difference
+
+Raw `Obj.ovmap` maintains the JSON object attribute. However, the object returned by the JSON-to-CSV converter DataFrame is currently empty and the importer resets it to `None`. As a result, entity representation may have an attribute, but `Table`'s object-attribute lookup representation may not.
+
+In addition, the public classic JSON factory receives the `file_path_object_attribute_table` argument, but when a selected importer is called, it does not transmit the corresponding value, but it fixes and passes the `None`. Therefore, separate object-attribute table inputs via factory surface are not actually applied.
+
+### 7.6 Known source comment
+
+Source comment states that a downstream alignment error may be propagated as the object type, which is not declared in global metadata but not referenced in any event, does not appear in the DataFrame column.
+
+Also, for the expression that constitutes `val_names` of the Table parameter, source TODO directly indicates — incorrectly concatenated — . Therefore, it should not be assumed that the classic JSON event attribute is exposed with the same name in the entity view and Table view.
+
+---
+
+## 8. Classic XML-OCEL Import
+
+The Classic XML variant looks like a `OCEL` importer in its name and type annotation, but the actual source operates as follows:
+
+```text
+return_df=True
+→ event DataFrame
+→ object DataFrame 또는 event DataFrame만 반환
+
+return_df=False
+→ ValueError(
+    "Returning ocel from xml is not supported yet. Use return_df=True."
+  )
+```
+
+Therefore, routes directly converging from classic XML to OCPA composite `OCEL` are not currently supported.
+
+Additional characteristics are as follows:
+
+- Parsing event and object attributes according to the XML tag type.
+- Convert `omap` to an object type event column.
+- `event_id` is converted to float, then int, assuming a numeric-castable ID.
+- There is no classic XML exporter.
+
+---
+
+## 9. OCEL 2.0 SQLite Import
+
+### 9.1 Reading table
+
+Importer then uses the OCEL 2.0 relational table.
+
+```text
+event
+object
+event_map_type
+object_map_type
+event_<event-type>
+object_<object-type>
+event_object
+object_object
+```
+
+### 9.2 Event reconstruction
+
+The `event` table merges the type-specific event table by default. Type-specific timestamp column is combined into one `event_timestamp` and the event attribute column is assigned the `event_` prefix.
+
+`Table` and `EventGraph` use the source event ID of SQLite. However, the `ObjectCentricEventLog` generated together passes the `df_to_ocel` and enumerates the event from 1 again. Therefore, a source-ID graph/table and a regenerated-ID entity view can coexist within a composite.
+
+### 9.3 E2O and qualifier
+
+`event_object` and `object` are joined to form an event-specific object type column.
+
+The qualifier reads to the next dictionary.
+
+```text
+event_id
+└── object_id → qualifier
+```
+
+This dictionary is forwarded to `eog_from_log()` and set to the EventGraph node attribute. Dedicated E2O relation table is not left on the final `OCEL`.
+
+### 9.4 O2O
+
+`object_object` is converted to `nx.DiGraph`.
+
+```text
+source object → target object
+edge attribute: qualifier
+```
+
+### 9.5 Object change
+
+`object_map_type` searches for a type-specific object table and stores the object type-specific DataFrame dictionary in `ObjectChangeTable`.
+
+### 9.6 Source-level risk
+
+Factory and implementation use `parameters={}`, a mutable default argument, and the importer adds `obj_names` to the dictionary if needed. The possibility of default parameter state sharing between multiple calls is a source-level risk that requires runtime testing.
+
+The index of frames that aggregate `event_object` by object type is the source event ID. On the other hand, the update subject `event_df` is the default RangeIndex Status that does not set the source event ID to index.
+
+```text
+aggregated_data index:
+    e1, e2, ...
+
+event_df index:
+    0, 1, ...
+
+event_df.update(aggregated_data[object_type])
+```
+
+Therefore, in string event ID, object reference may not be reflected in the event table due to Pandas index alignment. In a limited probe performed with Compatible current dependency, the object reference of a sample satisfying 24 relational constraints became zero without entity object, and `ValueError` occurred in the later debug sample helper.
+
+OCPA's pinned Pandas 1.3.5 environment is not currently reproduced in Python, so the runtime exception itself is an auxiliary basis. However, it does not consider the E2O preservation of string event ID to be guaranteed until the source index is explicitly aligned or the pinned dependency probe contradicts it.
+
+There is no SQLite exporter.
+
+---
+
+## 10. OCEL 2.0 XML Import
+
+### 10.1 Parsing object
+
+The Importer handles the next section.
+
+```text
+object-types
+event-types
+objects
+events
+```
+
+### 10.2 Object and O2O
+
+Mapping the object ID and type and making the object relationship `ObjectGraph` edge. The qualifier is stored as an edge attribute.
+
+### 10.3 Object attribute change
+
+The object attribute is collected as a change row by object type.
+
+```text
+object_id
+attribute value column
+chngfield
+event_timestamp
+```
+
+`time="0"` is maintained as a string `"0"`, with the other values parsing as datetime. In the same timestamp column, string and datetime can be mixed.
+
+### 10.4 Event and E2O qualifier
+
+The event consists of `event_id`, `event_activity`, `event_timestamp`, object type related-object list. The E2O qualifier is transmitted through an event-by-event dictionary to the EventGraph node attribute, as with SQLite.
+
+`Table` and `EventGraph` use the XML source event ID, but `ObjectCentricEventLog` creates a new 1-based ID from the DataFrame converter. Representation ID-space differences can occur, such as SQLite.
+
+### 10.5 Event attribute processing risk
+
+Parser first applies the XML prefix to the `event_` event attribute name, then checks the event-type declaration dictionary consisting of an unprefixed name.
+
+```text
+declaration key:
+    pr_creator
+
+lookup key:
+    event_pr_creator
+```
+
+In a standard attribute name, the lookup fails and the `except` branch runs, so the lexical value itself is recorded in the `event_<name>` column. However, declared primitive type is not applied and is parsing as string fallback.
+
+On the other hand, if the declaration name itself already contains the `event_` prefix and the lookup is successful, the attribute may be missing without a value assignment to the `try` branch.
+
+Thus, the identified risk for the common OCEL 2.0 XML is that the declared attribute has a value remaining over the entire missing string, but loses the declared type and converges to the string. If the prefix processing or assignment control flow is corrected, this judgment should be withdrawn.
+
+XML importer stdout the file path to `print()`. There is no OCEL 2.0 XML exporter.
+
+---
+
+## 11. Public release API
+
+The verified exporter is a classic JSON-OCEL.
+
+```python
+from ocpa.objects.log.exporter.ocel import factory
+
+factory.apply(
+    ocel,
+    file_path,
+    variant="ocel_json",
+)
+```
+
+The internal source read by the exporter is limited to:
+
+```text
+ocel.obj.meta
+ocel.obj.raw.events
+ocel.obj.raw.objects
+```
+
+The output declares version `"1.0"` and timestamp ordering.
+
+The top-level fields that Exporter does not use are:
+
+```text
+ocel.log
+ocel.graph
+ocel.o2o_graph
+ocel.change_table
+```
+
+Therefore, when a composite made with a OCEL 2.0 importer is delivered to a classic JSON exporter, the O2O, object change, E2O qualifier is not output.
+
+CSV, XML, SQLite, OCEL 2.0 JSON, bundle exporter has not been confirmed.
+
+---
+
+## 12. Normalization and Mutation in Import-Export
+
+The confirmed normalization or mutation is as follows:
+
+### 12.1 CSV
+
+- Create a sequential string ID instead of the source event ID.
+- Convert the timestamp to Pandas datetime
+- The timestamp standard sort
+- Replace the missing start timestamp with the completion timestamp.
+
+### 12.2 Classic JSON
+
+- Instead of the source event dictionary key, create a sequential integer ID.
+- After removing the trailing `Z` timestamp parsing
+- Add the missing `start_timestamp`
+- materialize the event/object dictionary with DataFrame and a graph
+
+### 12.3 DataFrame converter
+
+- Enter DataFrame by `event_timestamp` according to the in-place sort
+- Create entity representation to recreate the event ID from 1
+- Subject type column with non-`event_` column name
+
+Accordingly, `Table`'s event ID and `ObjectCentricEventLog`'s event ID cannot be generalized to have the same type and numbering depending on the importer path.
+
+### 12.4 Lazy calculation
+
+- The variant calculation adds the `event_variant` column to the table
+- Save the process execution and variant cache to the OCEL instance
+
+### 12.5 Export
+
+- Convert the timestamp to the `isoformat()` string
+- `default=str` to JSON in linear form
+- The classic version of `"1.0"` is declared new.
+
+No common mutation or loss report.
+
+---
+
+## 13. Relation expression and preservation
+
+### 13.1 E2O
+
+E2O is represented differently by each representation.
+
+```text
+Table:
+    object type별 event column의 object ID list
+
+ObjectCentricEventLog:
+    Event.omap
+    RawObjectCentricData.obj_event_mapping
+
+EventGraph:
+    동일 object를 공유하는 event 사이의 directly-following edge
+```
+
+### 13.2 E2O qualifier
+
+Classic JSON and CSV have no qualifier representation. OCEL 2.0 SQLite/XML importer passes the qualifier to the event node attribute dictionary but does not keep it as a dedicated relation object.
+
+### 13.3 O2O
+
+OCEL 2.0 SQLite/XML importer only consists of `ObjectGraph`. Classic JSON exporter does not use this.
+
+### 13.4 Object change
+
+OCEL 2.0 SQLite/XML importer only consists of `ObjectChangeTable`. Classic JSON exporter does not use this.
+
+### 13.5 E2E
+
+There is no E2E field or file mapping on top-level `OCEL`, importer, exporter. E2E round trips on the inspected I/O surface are not supported.
+
+---
+
+## 14. Format-specific storage matrix
+
+| Format path | Event ID | Event attr | Object attr | E2O | E2O qualifier | O2O | Object change | E2E |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| CSV import | Table 0-based / entity 1-based regeneration | Yes, I did. | Selective star table | Yes, I did. | No, you can't. | No, you can't. | No, you can't. | No, you can't. |
+| Classic JSON import | Renewable | Yes, I did. | Yes to the entity representation. | Yes, I did. | No, you can't. | No, you can't. | No, you can't. | No, you can't. |
+| Classic JSON export | The internal ID output | Yes, I did. | Yes, I did. | Yes, I did. | No, you can't. | No, you can't. | No, you can't. | No, you can't. |
+| Classic XML import | numeric conversion | Yes, I did. | DataFrame return the yes | Yes, I did. | No, you can't. | No, you can't. | No, you can't. | No, you can't. |
+| OCEL 2.0 SQLite import | Table/graph source ID, entity 1-based reproducibility | Yes, I did. | Change table center | Yes, I did. | EventGraph node attribute | Yes, I did. | Yes, I did. | No, you can't. |
+| OCEL 2.0 XML import | Table/graph source ID, entity 1-based reproducibility | There is a source-level risk. | Change table center | Yes, I did. | EventGraph node attribute | Yes, I did. | Yes, I did. | No, you can't. |
+
+It means that the source path has been specified. It does not prove semantic equality for all primitive types and malformed inputs.
+
+Classic JSON round trips are not identity-preserving.
+
+```text
+external event ID 재생성
++ trailing Z normalization
++ synthetic start_timestamp 가능
+= byte/semantic identity 미보장
+```
+
+---
+
+## 15. Major risks and ambiguities
+
+1.  — Table, entity dictionary, and graph hold simultaneously but have no common invariant validator.
+2. **Event ID playback and ID-space inconsistency** — CSV and classic JSON import change the source event identity, and some paths use a different ID for each composite representation.
+3.  — OCEL 2.0 qualifier enters the graph node attribute instead of the typed relation.
+4. **OCEL 2.0's lossy export** — the only exporter uses the classic JSON 1.0 million so it loses O2O and change.
+5. **Classic XML surface incomplete** — factory surface but composite OCEL return is not supported.
+6. **Event attribute parser risk** — OCEL 2.0 XML has the possibility of assignment missing from the declared attribute branch.
+7. **Mutable default parameter** — SQLite default dictionary may be shared between importer calls.
+8. **Synthetic data** — automatically adds the missing start timestamp.
+9. **Timezone meaning changes** — classic JSON's trailing `Z` removal may not preserve timezone-aware identity.
+10.  — in-memory and file I/O contract has no E2E.
+11. **Loss report absence** — does not provide a dropped, regenerated, inferred, coerced component as a common result.
+12.  — failed to run the importer/exporter test in the current environment.
+
+---
+
+## 16. Preliminary checkpoint for the PIX
+
+### 16.1 A pattern worth looking at
+
+- The idea of separating the tabular view from the entity view
+- EventGraph based on object-sharing
+- The explicit representation of the O2O graph
+- Change table by object type
+- Connected component and leading-object process execution
+- The real classic JSON and OCEL 2.0 sample log
+
+### 16.2 PIX needs to redesign the pattern
+
+- Keep multiple canonical-like representations in one mutable composite
+- Source event ID can be replicated
+- Query city internal state mutation
+- Dedicated E2O relation contract absence
+- Save the qualifier's graph attribute
+- Import/export loss report missing
+- Classic/OCEL 2.0 version has an asymmetrical surface
+- Empty, invalid, unsupported, unavailable Status is missing
+- E2E subsidy
+
+### 16.3 PIX adapter result candidate
+
+```text
+DatasetImportResult
+├── dataset
+├── source_format
+├── source_format_version
+├── identifier_mapping
+├── normalized_fields
+├── synthetic_fields
+├── rejected_records
+├── inferred_records
+├── unavailable_components
+├── assumptions
+└── source references
+```
+
+Especially if you need to change the source event ID, you need `identifier_mapping`. If you export O2O, object change, E2E to a target that does not support it, you must specify `omitted_components` and `lossy_conversions`.
+
+This shape is a preliminary design candidate and not an approved PIX contract.
+
+---
+
+## 17. Uncertainties
+
+The next one is **unknown** for current source checks.
+
+- Whether the actual import success of all sample logs
+- The exact semantic diff of the classic JSON import→export
+- OCEL 2.0 SQLite/XML the degree to which the downstream algorithm actually uses the qualifier
+- Declared XML event attribute Missing risk of runtime replay or not
+- Accuracy between the base value of the object change and the update value
+- Save the full format of the Timezone-aware timestamp
+- Duplicate event/object ID behavior
+- Dangling E2O/O2O reference behavior
+- The memory overhead of a large dataset
+- The drift frequency between multiple representations
+- authoritative OCEL representation intended by OCPA
+
+---
+
+## 18. Validity and Withdrawal Conditions
+
+This analysis is valid for the following commit.
+
+```text
+de056e0203a3fa4a9bbc19a95e001eada323074a
+```
+
+In the following cases, the relevant judgments shall be reviewed or withdrawn.
+
+- OCPA has introduced the canonical immutable OCEL model.
+- If a representation consistency validator is added,
+- If an importer is introduced to store the source event ID,
+- OCEL 2.0 JSON or if an export path is added
+- If you add a dedicated E2O relation/qualifier contract
+- If the E2E import/export is added,
+- If the Classic XML is forced to return the composite `OCEL`
+- XML event attribute runtime test refutes the source-derived risk
+- If the round-trip test contradicts the current conservation matrix,
+- If the canonical dataset requirement of PIX is changed
+
+---
+
+## 19. The final evaluation
+
+**OCPAof `OCEL`Silver `Table + ObjectCentricEventLog + EventGraph`It is necessary to bind them. OCEL From 2.0. `ObjectGraph + ObjectChangeTable`It's a mutable multi-representation composite that adds. This structure is convenient for object-centric case, variant, and discovery calculations but does not automatically guarantee representation consistency and source identity preservation. CSV and classic JSON import reproduce event IDs and some paths create different ID space per representation, while classic XML does not support composite OCEL returns. SQLite has an E2O alignment failure path between the source event ID and RangeIndex, and the XML event attribute leaves a lexical value in the general declaration, losing the declared type and converging into a string. The only classic JSON exporter does not preserve the qualifier·O2O·object change of OCEL 2.0 and has no common loss report with E2E. Thus PIX can refer to OCPA's object-centric semantics and projection algorithm, but I/O and dataset contracts must be redesigned in an evidence-preserving manner.**

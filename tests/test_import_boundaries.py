@@ -89,7 +89,14 @@ def test_contracts_imports_standard_library_only() -> None:
 
 
 def test_compute_import_boundary() -> None:
-    forbidden_owners = {"intelligence", "projection", "engine", "api"}
+    forbidden_owners = {
+        "intelligence",
+        "projection",
+        "engine",
+        "api",
+        "case_centric",
+        "object_centric",
+    }
     violations: list[str] = []
 
     for path in sorted((PACKAGE_ROOT / "compute").rglob("*.py")):
@@ -100,6 +107,21 @@ def test_compute_import_boundary() -> None:
             violations.append(f"{path.name}: {', '.join(sorted(imported))}")
 
     assert not violations, "Compute boundary violations: " + "; ".join(violations)
+
+
+def test_mining_domain_import_boundary() -> None:
+    forbidden_owners = {"intelligence", "projection", "engine", "api", "viewer"}
+    violations: list[str] = []
+    for domain in ("case_centric", "object_centric"):
+        for path in sorted((PACKAGE_ROOT / domain).rglob("*.py")):
+            imported = {
+                owner for owner in forbidden_owners if _imports_pix_owner(path, owner)
+            }
+            if imported:
+                violations.append(
+                    f"{domain}/{path.name}: {', '.join(sorted(imported))}"
+                )
+    assert not violations, "Mining boundary violations: " + "; ".join(violations)
 
 
 def test_intelligence_import_boundary() -> None:

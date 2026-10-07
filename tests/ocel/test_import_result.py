@@ -7,6 +7,7 @@ from pix.ocel import (
     OCEL,
     Event,
     EventType,
+    ImportFormat,
     ImportIssue,
     ImportResult,
     ImportStage,
@@ -35,7 +36,7 @@ def test_valid_empty_import_exposes_ocel_and_digests() -> None:
     candidate = OCEL()
     result = ImportResult(
         source="empty.json",
-        format="ocel20-json",
+        format=ImportFormat.OCEL20_JSON,
         status=ImportStatus.VALID,
         candidate=candidate,
         semantic_report=validate(candidate),
@@ -64,7 +65,7 @@ def test_valid_import_may_disclose_warnings_and_transformations() -> None:
     )
     result = ImportResult(
         source="valid.json",
-        format="ocel20-json",
+        format=ImportFormat.OCEL20_JSON,
         status=ImportStatus.VALID,
         candidate=candidate,
         import_issues=(warning,),
@@ -89,7 +90,7 @@ def test_semantic_invalid_import_preserves_candidate_only() -> None:
     report = validate(candidate)
     result = ImportResult(
         source="duplicate.json",
-        format="ocel20-json",
+        format=ImportFormat.OCEL20_JSON,
         status=ImportStatus.SEMANTIC_INVALID,
         candidate=candidate,
         semantic_report=report,
@@ -107,6 +108,8 @@ def test_semantic_invalid_import_preserves_candidate_only() -> None:
         (ImportStatus.UNAVAILABLE, ImportStage.SOURCE),
         (ImportStatus.UNSUPPORTED, ImportStage.SOURCE),
         (ImportStatus.SYNTAX_INVALID, ImportStage.SYNTAX),
+        (ImportStatus.SCHEMA_INVALID, ImportStage.SCHEMA),
+        (ImportStatus.MAPPING_INVALID, ImportStage.MAPPING),
     ),
 )
 def test_pre_semantic_failures_have_no_candidate(
@@ -135,7 +138,7 @@ def test_valid_status_requires_complete_valid_evidence() -> None:
     with pytest.raises(ValueError, match="requires candidate"):
         ImportResult(
             source="source.json",
-            format="ocel20-json",
+            format=ImportFormat.OCEL20_JSON,
             status=ImportStatus.VALID,
             candidate=None,
             semantic_report=Report(),
@@ -145,7 +148,7 @@ def test_valid_status_requires_complete_valid_evidence() -> None:
     with pytest.raises(ValueError, match="valid semantic report"):
         ImportResult(
             source="source.json",
-            format="ocel20-json",
+            format=ImportFormat.OCEL20_JSON,
             status=ImportStatus.VALID,
             candidate=candidate,
             semantic_report=None,
@@ -155,7 +158,7 @@ def test_valid_status_requires_complete_valid_evidence() -> None:
     with pytest.raises(ValueError, match="requires canonical digest"):
         ImportResult(
             source="source.json",
-            format="ocel20-json",
+            format=ImportFormat.OCEL20_JSON,
             status=ImportStatus.VALID,
             candidate=candidate,
             semantic_report=Report(),
@@ -164,7 +167,7 @@ def test_valid_status_requires_complete_valid_evidence() -> None:
     with pytest.raises(ValueError, match="cannot contain error"):
         ImportResult(
             source="source.json",
-            format="ocel20-json",
+            format=ImportFormat.OCEL20_JSON,
             status=ImportStatus.VALID,
             candidate=candidate,
             import_issues=(_source_issue(),),
@@ -177,7 +180,7 @@ def test_non_valid_status_cannot_claim_canonical_digest() -> None:
     with pytest.raises(ValueError, match="cannot have canonical digest"):
         ImportResult(
             source="source.json",
-            format="ocel20-json",
+            format=ImportFormat.OCEL20_JSON,
             status=ImportStatus.SYNTAX_INVALID,
             candidate=None,
             import_issues=(_source_issue(),),
@@ -189,7 +192,7 @@ def test_pre_semantic_failure_requires_error_issue() -> None:
     with pytest.raises(ValueError, match="requires error issue"):
         ImportResult(
             source="missing.json",
-            format="ocel20-json",
+            format=ImportFormat.OCEL20_JSON,
             status=ImportStatus.UNAVAILABLE,
             candidate=None,
         )
@@ -205,7 +208,7 @@ def test_import_contracts_require_immutable_local_shape() -> None:
     with pytest.raises(TypeError, match="import_issues must be a tuple"):
         ImportResult(
             source="source.json",
-            format="ocel20-json",
+            format=ImportFormat.OCEL20_JSON,
             status=ImportStatus.SYNTAX_INVALID,
             candidate=None,
             import_issues=[issue],  # type: ignore[arg-type]
@@ -214,7 +217,7 @@ def test_import_contracts_require_immutable_local_shape() -> None:
     with pytest.raises(TypeError, match="transformations must be a tuple"):
         ImportResult(
             source="source.json",
-            format="ocel20-json",
+            format=ImportFormat.OCEL20_JSON,
             status=ImportStatus.SYNTAX_INVALID,
             candidate=None,
             import_issues=(issue,),
@@ -224,7 +227,7 @@ def test_import_contracts_require_immutable_local_shape() -> None:
     with pytest.raises(ValueError, match="source_sha256"):
         ImportResult(
             source="source.json",
-            format="ocel20-json",
+            format=ImportFormat.OCEL20_JSON,
             status=ImportStatus.SYNTAX_INVALID,
             candidate=None,
             import_issues=(issue,),
@@ -236,7 +239,7 @@ def test_import_contracts_are_frozen() -> None:
     issue = _source_issue()
     result = ImportResult(
         source="source.json",
-        format="ocel20-json",
+        format=ImportFormat.OCEL20_JSON,
         status=ImportStatus.SYNTAX_INVALID,
         candidate=None,
         import_issues=(issue,),

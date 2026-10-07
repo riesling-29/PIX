@@ -1,0 +1,2860 @@
+<div id="pix-style-samples" aria-label="PIX 용도별 그래프 스타일 샘플">
+  <style>
+    #pix-style-samples{color-scheme:light dark;font-family:Inter,"Segoe UI","Malgun Gothic",sans-serif;--sg-paper:light-dark(#fff,#17202a);--sg-chrome:light-dark(#f5f7f9,#202a35);--sg-ink:light-dark(#233445,#e8eff6);--sg-muted:light-dark(#546778,#bac8d4);--sg-border:light-dark(#c6d1da,#637381);--sg-rule:light-dark(#e5ebf0,#354350);--sg-edge:light-dark(#5c7183,#afc2d1);--sg-focus:light-dark(#235c80,#b0defa);--sg-order:light-dark(#405eac,#aac0fa);--sg-order-soft:light-dark(#e4ebff,#34476c);--sg-item:light-dark(#137769,#81d8c6);--sg-item-soft:light-dark(#dbf1e9,#224b44);--sg-parcel:light-dark(#95651c,#efc575);color:var(--sg-ink);width:100%;}
+    #pix-style-samples *{box-sizing:border-box}
+    #pix-style-samples .sg-app{background:var(--sg-paper);border:1px solid var(--sg-rule);border-radius:14px;overflow:hidden;}
+    #pix-style-samples .sg-header{display:flex;align-items:center;gap:18px;padding:18px 24px;border-bottom:1px solid var(--sg-rule);}
+    #pix-style-samples .sg-brand{font-size:21px;letter-spacing:.12em;font-weight:500;color:var(--sg-focus);}
+    #pix-style-samples .sg-header-text{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0;}
+    #pix-style-samples .sg-eyebrow{font-size:11px;letter-spacing:.1em;color:var(--sg-muted);}
+    #pix-style-samples .sg-header-title{font-size:15px;font-weight:500;}
+    #pix-style-samples .sg-synthetic{font-size:11px;color:var(--sg-muted);white-space:nowrap;}
+    #pix-style-samples .sg-tabs{display:flex;flex-wrap:wrap;gap:0;padding:0 14px;background:var(--sg-chrome);border-bottom:1px solid var(--sg-rule);}
+    #pix-style-samples button{font-family:inherit;cursor:pointer;}
+    #pix-style-samples .sg-tab{appearance:none;border:0;background:transparent;color:var(--sg-muted);font-size:12px;line-height:1.4;padding:14px 12px;border-bottom:2px solid transparent;}
+    #pix-style-samples .sg-tab[aria-pressed=true]{color:var(--sg-ink);border-bottom-color:var(--sg-focus);font-weight:500;}
+    #pix-style-samples .sg-toolbar{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;padding:19px 24px 13px;}
+    #pix-style-samples .sg-toolbar h3{font-size:17px;line-height:1.5;font-weight:500;margin:0;}
+    #pix-style-samples .sg-subtitle{font-size:12px;line-height:1.5;margin-top:3px;color:var(--sg-muted);}
+    #pix-style-samples .sg-zoom{display:flex;align-items:center;gap:6px;}
+    #pix-style-samples .sg-zoom button{background:var(--sg-paper);color:var(--sg-ink);border:1px solid var(--sg-border);border-radius:6px;min-width:34px;min-height:32px;padding:5px 9px;font-size:12px;}
+    #pix-style-samples .sg-zoom button:hover{background:var(--sg-chrome);}
+    #pix-style-samples .sg-canvas{position:relative;overflow:hidden;min-height:270px;width:100%;background:var(--sg-paper);touch-action:pan-y;cursor:grab;}
+    #pix-style-samples .sg-canvas:active{cursor:grabbing;}
+    #pix-style-samples .sg-svg{position:absolute;inset:0;width:100%;height:100%;display:block;overflow:hidden;}
+    #pix-style-samples .sg-edge{fill:none;stroke-width:1.5;vector-effect:non-scaling-stroke;stroke-linecap:round;}
+    #pix-style-samples .sg-svg text{font-family:inherit;fill:var(--sg-ink);font-weight:400;}
+    #pix-style-samples .sg-edge-label{paint-order:stroke;stroke:var(--sg-paper);stroke-width:4px;stroke-linejoin:round;}
+    #pix-style-samples .sg-node{position:absolute;appearance:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-width:0;margin:0;padding:3px;background:var(--sg-paper);border:1px solid var(--sg-border);border-radius:8px;color:var(--sg-ink);box-shadow:0 1px 2px light-dark(#2334450a,#0000001a);}
+    #pix-style-samples .sg-node-name{font-size:13px;font-weight:500;line-height:1.12;text-align:center;white-space:nowrap;flex:none;}
+    #pix-style-samples .sg-node-value{font-size:11px;color:var(--sg-muted);line-height:1.1;white-space:nowrap;font-variant-numeric:tabular-nums;flex:none;}
+    #pix-style-samples .sg-node:hover{border-color:var(--sg-edge);}
+    #pix-style-samples .sg-node[aria-pressed=true]{outline:2px solid var(--sg-focus);outline-offset:3px;}
+    #pix-style-samples .sg-legend{padding:13px 24px 15px;display:flex;align-items:center;gap:10px 22px;flex-wrap:wrap;color:var(--sg-muted);font-size:12px;line-height:1.5;}
+    #pix-style-samples .sg-legend span{display:inline-flex;align-items:center;gap:7px;}
+    #pix-style-samples .sg-swatch{display:inline-block;width:15px;height:3px;background:var(--sg-edge);}
+    #pix-style-samples .sg-detail{background:var(--sg-chrome);border-top:1px solid var(--sg-rule);padding:14px 24px;display:flex;align-items:baseline;gap:8px 18px;flex-wrap:wrap;min-height:49px;font-size:12px;line-height:1.6;}
+    #pix-style-samples .sg-detail strong{font-weight:500;}
+    #pix-style-samples .sg-detail span{color:var(--sg-muted);overflow-wrap:anywhere;}
+    #pix-style-samples .sg-event-button{position:absolute;border:0;background:transparent;color:var(--sg-ink);padding:0;margin:0;font-size:13px;font-weight:500;line-height:1.2;}
+    #pix-style-samples .sg-event-button:hover{color:var(--sg-focus);}
+    #pix-style-samples .sg-app[data-finish=ink]{--sg-paper:light-dark(#fdfcf9,#21221f);--sg-chrome:light-dark(#f2f2eb,#2a2c27);--sg-ink:light-dark(#282e29,#ecf0e7);--sg-muted:light-dark(#5d675e,#bbc5b8);--sg-border:light-dark(#7d8c80,#849583);--sg-rule:light-dark(#dce2d8,#414b3f);--sg-edge:light-dark(#4e5e51,#b4c8b5);--sg-focus:light-dark(#314b38,#c8e7bf);}
+    #pix-style-samples .sg-app[data-finish=ink] .sg-node{border-radius:2px;box-shadow:none;background:var(--sg-paper);}
+    #pix-style-samples .sg-app[data-finish=ink] .sg-node-name{letter-spacing:.01em;}
+    @media(max-width:540px){#pix-style-samples .sg-header{padding:15px;gap:12px;}#pix-style-samples .sg-synthetic{display:none;}#pix-style-samples .sg-tabs{padding:0 5px;}#pix-style-samples .sg-tab{padding:12px 8px;font-size:11px;min-height:44px;}#pix-style-samples .sg-toolbar{padding:16px 15px 10px;gap:10px;}#pix-style-samples .sg-toolbar h3{font-size:15px;}#pix-style-samples .sg-zoom button{min-height:44px;min-width:44px;}#pix-style-samples .sg-legend,#pix-style-samples .sg-detail{padding-left:15px;padding-right:15px;}}
+  </style>
+  <div class="sg-app" data-finish="neutral">
+    <div class="sg-header"><div class="sg-brand">PIX</div><div class="sg-header-text"><span class="sg-eyebrow">PROCESS EXPLORER</span><span class="sg-header-title">용도별 표현 샘플</span></div><span class="sg-synthetic">합성 로그 · 실제 계산값</span></div>
+    <div class="sg-tabs" role="group" aria-label="샘플 선택">
+      <button type="button" class="sg-tab" aria-pressed="false" data-case="0">01 · 분석용 DFG</button>
+      <button type="button" class="sg-tab" aria-pressed="true" data-case="1">02 · 보고서용 DFG</button>
+      <button type="button" class="sg-tab" aria-pressed="false" data-case="2">03 · 객체형 OCDFG</button>
+      <button type="button" class="sg-tab" aria-pressed="false" data-case="3">04 · Variant Chevron</button>
+    </div>
+    <div class="sg-toolbar"><div><h3 class="sg-title"></h3><div class="sg-subtitle"></div></div><div class="sg-zoom" role="group" aria-label="그래프 보기"><button type="button" data-action="overview">기본</button><button type="button" data-action="readable">읽기</button><button type="button" data-action="minus" aria-label="축소">−</button><button type="button" data-action="plus" aria-label="확대">+</button></div></div>
+    <div class="sg-canvas" aria-label="그래프. 드래그로 이동할 수 있습니다."><svg class="sg-svg" xmlns="http://www.w3.org/2000/svg" role="img"></svg><div class="sg-node-layer"></div></div>
+    <div class="sg-legend"></div>
+    <div class="sg-detail" aria-live="polite"><strong></strong><span></span></div>
+  </div>
+  <script id="pix-style-sample-data" type="application/json">{
+  "schema": "pix.aesthetic-study.samples.v1",
+  "geometryPolicy": "Exact source SVG coordinates and paths; no layout recomputation.",
+  "samples": [
+    {
+      "id": "dfg-approval",
+      "title": "DFG 1 · Approval and rework · synthetic log",
+      "kind": "graph",
+      "width": 1024.0032,
+      "height": 309.00023999999996,
+      "sourcePath": ".artifacts/graphviz-2026-09-16/comparison/dfg-approval.svg",
+      "sourceSha256": "2c3580f2e799c602dde165933ff250c66879adfc71019b9d8ebc51ce38528f30",
+      "panelId": "case-relations",
+      "description": "Recorded trace order. Counting: occurrences. Edge counts are complete. Activity and boundary counts cover the full input.",
+      "provenance": [
+        {
+          "calculation_id": "pix.computation.v1:sha256:d37a4d4f77ed83864864773df735e5cc721e339842d5f3cacf4de2cdc70cd88c",
+          "source_digest": "pix.case-log.v1:sha256:88981689ff0cb4798ab4539ca35d586edd77cf0af84ce0e252f57adfdb7f1e10",
+          "model_digest": null,
+          "operator_id": "pix.case_centric.discover_dfg",
+          "status": "computed",
+          "details": [
+            {
+              "name": "operator_version",
+              "value": "1.0.0"
+            },
+            {
+              "name": "request_type",
+              "value": "pix.case_centric.discovery.RelationDiscoverySpec"
+            },
+            {
+              "name": "request_encoding",
+              "value": "pix.result/1.2.0"
+            },
+            {
+              "name": "request_json",
+              "value": "{\"counting\": \"occurrences\", \"max_event_pairs\": 1000000}"
+            }
+          ],
+          "panel_ids": [
+            "case-relations",
+            "case-relation-coverage"
+          ],
+          "input_path": [
+            0
+          ]
+        },
+        {
+          "calculation_id": "pix.computation.v1:sha256:a5bf7df977e6a63e2c9f08f36d17774065fc1200b91b1beee50ecdf2e32730ae",
+          "source_digest": null,
+          "model_digest": null,
+          "operator_id": null,
+          "status": null,
+          "details": [
+            {
+              "name": "role",
+              "value": "parent"
+            }
+          ],
+          "panel_ids": [
+            "case-relations",
+            "case-relation-coverage"
+          ],
+          "input_path": [
+            0
+          ]
+        }
+      ],
+      "issues": [
+        "source_sequence: Trace/event order is the source sequence; it is not a claim of timestamp or causal order"
+      ],
+      "semanticSourcePath": ".artifacts/graphviz-2026-09-16/comparison/dfg-approval.json",
+      "semanticSourceSha256": "f4313ff47d08e75051ef00792645a43ae175f033a445735b7cce43b4c07b4b06",
+      "nodes": [
+        {
+          "id": "activity:0",
+          "label": "Approve",
+          "kind": "activity",
+          "group": null,
+          "metrics": [
+            {
+              "name": "events",
+              "value": 9,
+              "unit": "events"
+            },
+            {
+              "name": "starts",
+              "value": 0,
+              "unit": "cases"
+            },
+            {
+              "name": "ends",
+              "value": 0,
+              "unit": "cases"
+            }
+          ],
+          "details": [],
+          "x": 413.0,
+          "y": 28.0,
+          "width": 112.0032,
+          "height": 66.00024,
+          "originalStyle": "--pv-color: hsl(4 43% 42%); --pv-tint: hsl(4 43% 96%);"
+        },
+        {
+          "id": "activity:1",
+          "label": "Close",
+          "kind": "activity",
+          "group": null,
+          "metrics": [
+            {
+              "name": "events",
+              "value": 12,
+              "unit": "events"
+            },
+            {
+              "name": "starts",
+              "value": 0,
+              "unit": "cases"
+            },
+            {
+              "name": "ends",
+              "value": 12,
+              "unit": "cases"
+            }
+          ],
+          "details": [],
+          "x": 884.0,
+          "y": 85.0,
+          "width": 112.0032,
+          "height": 66.00024,
+          "originalStyle": "--pv-color: hsl(4 43% 42%); --pv-tint: hsl(4 43% 96%);"
+        },
+        {
+          "id": "activity:2",
+          "label": "Pay",
+          "kind": "activity",
+          "group": null,
+          "metrics": [
+            {
+              "name": "events",
+              "value": 9,
+              "unit": "events"
+            },
+            {
+              "name": "starts",
+              "value": 0,
+              "unit": "cases"
+            },
+            {
+              "name": "ends",
+              "value": 0,
+              "unit": "cases"
+            }
+          ],
+          "details": [],
+          "x": 695.0,
+          "y": 28.0,
+          "width": 112.0032,
+          "height": 66.00024,
+          "originalStyle": "--pv-color: hsl(4 43% 42%); --pv-tint: hsl(4 43% 96%);"
+        },
+        {
+          "id": "activity:3",
+          "label": "Receive",
+          "kind": "activity",
+          "group": null,
+          "metrics": [
+            {
+              "name": "events",
+              "value": 12,
+              "unit": "events"
+            },
+            {
+              "name": "starts",
+              "value": 12,
+              "unit": "cases"
+            },
+            {
+              "name": "ends",
+              "value": 0,
+              "unit": "cases"
+            }
+          ],
+          "details": [],
+          "x": 28.0,
+          "y": 143.0,
+          "width": 112.0032,
+          "height": 66.00024,
+          "originalStyle": "--pv-color: hsl(4 43% 42%); --pv-tint: hsl(4 43% 96%);"
+        },
+        {
+          "id": "activity:4",
+          "label": "Reject",
+          "kind": "activity",
+          "group": null,
+          "metrics": [
+            {
+              "name": "events",
+              "value": 3,
+              "unit": "events"
+            },
+            {
+              "name": "starts",
+              "value": 0,
+              "unit": "cases"
+            },
+            {
+              "name": "ends",
+              "value": 0,
+              "unit": "cases"
+            }
+          ],
+          "details": [],
+          "x": 554.0,
+          "y": 114.0,
+          "width": 112.0032,
+          "height": 66.00024,
+          "originalStyle": "--pv-color: hsl(4 43% 42%); --pv-tint: hsl(4 43% 96%);"
+        },
+        {
+          "id": "activity:5",
+          "label": "Review",
+          "kind": "activity",
+          "group": null,
+          "metrics": [
+            {
+              "name": "events",
+              "value": 16,
+              "unit": "events"
+            },
+            {
+              "name": "starts",
+              "value": 0,
+              "unit": "cases"
+            },
+            {
+              "name": "ends",
+              "value": 0,
+              "unit": "cases"
+            }
+          ],
+          "details": [],
+          "x": 224.0,
+          "y": 143.0,
+          "width": 112.0032,
+          "height": 66.00024,
+          "originalStyle": "--pv-color: hsl(4 43% 42%); --pv-tint: hsl(4 43% 96%);"
+        },
+        {
+          "id": "activity:6",
+          "label": "Revise",
+          "kind": "activity",
+          "group": null,
+          "metrics": [
+            {
+              "name": "events",
+              "value": 4,
+              "unit": "events"
+            },
+            {
+              "name": "starts",
+              "value": 0,
+              "unit": "cases"
+            },
+            {
+              "name": "ends",
+              "value": 0,
+              "unit": "cases"
+            }
+          ],
+          "details": [],
+          "x": 413.0,
+          "y": 215.0,
+          "width": 112.0032,
+          "height": 66.00024,
+          "originalStyle": "--pv-color: hsl(4 43% 42%); --pv-tint: hsl(4 43% 96%);"
+        }
+      ],
+      "edges": [
+        {
+          "id": "relation:0",
+          "source": "activity:0",
+          "target": "activity:2",
+          "label": "9",
+          "kind": "directly_follows",
+          "directed": true,
+          "metrics": [
+            {
+              "name": "selected count",
+              "value": 9,
+              "unit": "occurrences"
+            },
+            {
+              "name": "case count",
+              "value": 9,
+              "unit": "cases"
+            }
+          ],
+          "details": [],
+          "path": "M 525.3216 61.00012 C 571.3416000000001 61.00012 636.9116 61.00012 685.3516000000001 61.00012",
+          "arrowPoints": "685.2816,58.20012 693.2816,61.00012 685.2816,63.80012",
+          "labelX": 610.0016,
+          "labelY": 55.00012,
+          "originalStyle": "--pv-color: hsl(358 43% 42%);"
+        },
+        {
+          "id": "relation:1",
+          "source": "activity:2",
+          "target": "activity:1",
+          "label": "9",
+          "kind": "directly_follows",
+          "directed": true,
+          "metrics": [
+            {
+              "name": "selected count",
+              "value": 9,
+              "unit": "occurrences"
+            },
+            {
+              "name": "case count",
+              "value": 9,
+              "unit": "cases"
+            }
+          ],
+          "details": [],
+          "path": "M 807.3516000000001 77.87012 C 828.5516 84.33012 852.9116 91.76012 874.8716000000001 98.45012",
+          "arrowPoints": "875.5116,95.72012000000001 882.3516000000001,100.73012 873.8816,101.08012",
+          "labelX": 845.5016,
+          "labelY": 81.79112,
+          "originalStyle": "--pv-color: hsl(358 43% 42%);"
+        },
+        {
+          "id": "relation:2",
+          "source": "activity:3",
+          "target": "activity:5",
+          "label": "12",
+          "kind": "directly_follows",
+          "directed": true,
+          "metrics": [
+            {
+              "name": "selected count",
+              "value": 12,
+              "unit": "occurrences"
+            },
+            {
+              "name": "case count",
+              "value": 12,
+              "unit": "cases"
+            }
+          ],
+          "details": [],
+          "path": "M 140.3316 176.00012 C 163.3716 176.00012 190.2816 176.00012 214.2316 176.00012",
+          "arrowPoints": "214.0816,173.20012 222.0816,176.00012 214.0816,178.80012000000002",
+          "labelX": 182.0016,
+          "labelY": 170.00012,
+          "originalStyle": "--pv-color: hsl(358 43% 42%);"
+        },
+        {
+          "id": "relation:3",
+          "source": "activity:4",
+          "target": "activity:1",
+          "label": "3",
+          "kind": "directly_follows",
+          "directed": true,
+          "metrics": [
+            {
+              "name": "selected count",
+              "value": 3,
+              "unit": "occurrences"
+            },
+            {
+              "name": "case count",
+              "value": 3,
+              "unit": "cases"
+            }
+          ],
+          "details": [],
+          "path": "M 666.2716 142.11012 C 723.7516 137.03012 813.6716 129.08012 874.3916 123.71011999999999",
+          "arrowPoints": "873.7816,120.96011999999999 882.0016,123.04012 874.2716,126.53012000000001",
+          "labelX": 751.0016,
+          "labelY": 124.02512000000002,
+          "originalStyle": "--pv-color: hsl(358 43% 42%);"
+        },
+        {
+          "id": "relation:4",
+          "source": "activity:5",
+          "target": "activity:0",
+          "label": "9",
+          "kind": "directly_follows",
+          "directed": true,
+          "metrics": [
+            {
+              "name": "selected count",
+              "value": 9,
+              "unit": "occurrences"
+            },
+            {
+              "name": "case count",
+              "value": 9,
+              "unit": "cases"
+            }
+          ],
+          "details": [],
+          "path": "M 330.9216 142.70012 C 342.0616 135.44012 353.8816 127.87012000000001 365.0016 121.00012000000001 C 377.6816 113.16012 391.3916 104.98012 404.53159999999997 97.28012000000001",
+          "arrowPoints": "403.0016,94.93012000000002 411.3216,93.31012000000001 405.8216,99.76012",
+          "labelX": 374.5016,
+          "labelY": 104.85012,
+          "originalStyle": "--pv-color: hsl(358 43% 42%);"
+        },
+        {
+          "id": "relation:5",
+          "source": "activity:5",
+          "target": "activity:4",
+          "label": "3",
+          "kind": "directly_follows",
+          "directed": true,
+          "metrics": [
+            {
+              "name": "selected count",
+              "value": 3,
+              "unit": "occurrences"
+            },
+            {
+              "name": "case count",
+              "value": 3,
+              "unit": "cases"
+            }
+          ],
+          "details": [],
+          "path": "M 336.2716 171.11012000000002 C 393.7516 166.03012 483.6716 158.08012000000002 544.3916 152.71012",
+          "arrowPoints": "543.7816,149.96012 552.0016,152.04012 544.2716,155.53012",
+          "labelX": 374.5016,
+          "labelY": 160.97012,
+          "originalStyle": "--pv-color: hsl(358 43% 42%);"
+        },
+        {
+          "id": "relation:6",
+          "source": "activity:5",
+          "target": "activity:6",
+          "label": "4",
+          "kind": "directly_follows",
+          "directed": true,
+          "metrics": [
+            {
+              "name": "selected count",
+              "value": 4,
+              "unit": "occurrences"
+            },
+            {
+              "name": "case count",
+              "value": 4,
+              "unit": "cases"
+            }
+          ],
+          "details": [],
+          "path": "M 336.3516 197.31012 C 357.6416 205.51012 382.1316 214.94012 404.1616 223.42012",
+          "arrowPoints": "404.9216,220.71012000000002 411.3816,226.20012 402.9116,225.94012",
+          "labelX": 374.5016,
+          "labelY": 203.84012,
+          "originalStyle": "--pv-color: hsl(358 43% 42%);"
+        },
+        {
+          "id": "relation:7",
+          "source": "activity:6",
+          "target": "activity:5",
+          "label": "4",
+          "kind": "directly_follows",
+          "directed": true,
+          "metrics": [
+            {
+              "name": "selected count",
+              "value": 4,
+              "unit": "occurrences"
+            },
+            {
+              "name": "case count",
+              "value": 4,
+              "unit": "cases"
+            }
+          ],
+          "details": [],
+          "path": "M 412.7316 249.49012000000002 C 396.9116 248.39012 379.9216 245.69012 365.0016 240.00012 C 349.9616 234.27012000000002 335.3616 224.94012 322.6716 215.16012",
+          "arrowPoints": "321.1116,217.50012 316.6116,210.32012 324.6016,213.12012000000001",
+          "labelX": 374.5016,
+          "labelY": 234.00012,
+          "originalStyle": "--pv-color: hsl(358 43% 42%);"
+        }
+      ]
+    },
+    {
+      "id": "dfg-agent-loop",
+      "title": "DFG 2 · Agent verification loop · synthetic log",
+      "kind": "graph",
+      "width": 1350.5032,
+      "height": 347.70012,
+      "sourcePath": ".artifacts/graphviz-2026-09-16/comparison/dfg-agent-loop.svg",
+      "sourceSha256": "58174bb014a02459d367f526400b75385170228f9ad7e9a6ae298b15cb230c8e",
+      "panelId": "case-relations",
+      "description": "Recorded trace order. Counting: occurrences. Edge counts are complete. Activity and boundary counts cover the full input.",
+      "provenance": [
+        {
+          "calculation_id": "pix.computation.v1:sha256:28f9c7c4308af7209b0a45ea7b693a62b30d799af655d7e85ce7c6313269f79f",
+          "source_digest": "pix.case-log.v1:sha256:76c577387681661a2443a2a07212db0030d70c98a3f639cb42162edb43181b28",
+          "model_digest": null,
+          "operator_id": "pix.case_centric.discover_dfg",
+          "status": "computed",
+          "details": [
+            {
+              "name": "operator_version",
+              "value": "1.0.0"
+            },
+            {
+              "name": "request_type",
+              "value": "pix.case_centric.discovery.RelationDiscoverySpec"
+            },
+            {
+              "name": "request_encoding",
+              "value": "pix.result/1.2.0"
+            },
+            {
+              "name": "request_json",
+              "value": "{\"counting\": \"occurrences\", \"max_event_pairs\": 1000000}"
+            }
+          ],
+          "panel_ids": [
+            "case-relations",
+            "case-relation-coverage"
+          ],
+          "input_path": [
+            0
+          ]
+        },
+        {
+          "calculation_id": "pix.computation.v1:sha256:88b53bbf438e6f004d823d07890e5dd05b1b4d448a0600377c62f053014dca91",
+          "source_digest": null,
+          "model_digest": null,
+          "operator_id": null,
+          "status": null,
+          "details": [
+            {
+              "name": "role",
+              "value": "parent"
+            }
+          ],
+          "panel_ids": [
+            "case-relations",
+            "case-relation-coverage"
+          ],
+          "input_path": [
+            0
+          ]
+        }
+      ],
+      "issues": [
+        "source_sequence: Trace/event order is the source sequence; it is not a claim of timestamp or causal order"
+      ],
+      "semanticSourcePath": ".artifacts/graphviz-2026-09-16/comparison/dfg-agent-loop.json",
+      "semanticSourceSha256": "89657a2b55111701e18b2a9a350dbbfc7e74314bf4974c3d252ea2cfa4d23277",
+      "nodes": [
+        {
+          "id": "activity:0",
+          "label": "Cancel",
+          "kind": "activity",
+          "group": null,
+          "metrics": [
+            {
+              "name": "events",
+              "value": 1,
+              "unit": "events"
+            },
+            {
+              "name": "starts",
+              "value": 0,
+              "unit": "cases"
+            },
+            {
+              "name": "ends",
+              "value": 1,
+              "unit": "cases"
+            }
+          ],
+          "details": [],
+          "x": 629.48,
+          "y": 95.69788,
+          "width": 112.0032,
+          "height": 66.00024,
+          "originalStyle": "--pv-color: hsl(4 43% 42%); --pv-tint: hsl(4 43% 96%);"
+        },
+        {
+          "id": "activity:1",
+          "label": "Complete",
+          "kind": "activity",
+          "group": null,
+          "metrics": [
+            {
+              "name": "events",
+              "value": 14,
+              "unit": "events"
+            },
+            {
+              "name": "starts",
+              "value": 0,
+              "unit": "cases"
+            },
+            {
+              "name": "ends",
+              "value": 14,
+              "unit": "cases"
+            }
+          ],
+          "details": [],
+          "x": 1210.5,
+          "y": 111.69988000000001,
+          "width": 112.0032,
+          "height": 66.00024,
+          "originalStyle": "--pv-color: hsl(4 43% 42%); --pv-tint: hsl(4 43% 96%);"
+        },
+        {
+          "id": "activity:2",
+          "label": "Human review",
+          "kind": "activity",
+          "group": null,
+          "metrics": [
+            {
+              "name": "events",
+              "value": 2,
+              "unit": "events"
+            },
+            {
+              "name": "starts",
+              "value": 0,
+              "unit": "cases"
+            },
+            {
+              "name": "ends",
+              "value": 0,
+              "unit": "cases"
+            }
+          ],
+          "details": [],
+          "x": 413.0016,
+          "y": 175.69988,
+          "width": 132.48000000000002,
+          "height": 66.00024,
+          "originalStyle": "--pv-color: hsl(4 43% 42%); --pv-tint: hsl(4 43% 96%);"
+        },
+        {
+          "id": "activity:3",
+          "label": "Plan",
+          "kind": "activity",
+          "group": null,
+          "metrics": [
+            {
+              "name": "events",
+              "value": 15,
+              "unit": "events"
+            },
+            {
+              "name": "starts",
+              "value": 0,
+              "unit": "cases"
+            },
+            {
+              "name": "ends",
+              "value": 0,
+              "unit": "cases"
+            }
+          ],
+          "details": [],
+          "x": 224.0,
+          "y": 253.69988,
+          "width": 112.0032,
+          "height": 66.00024,
+          "originalStyle": "--pv-color: hsl(4 43% 42%); --pv-tint: hsl(4 43% 96%);"
+        },
+        {
+          "id": "activity:4",
+          "label": "Request",
+          "kind": "activity",
+          "group": null,
+          "metrics": [
+            {
+              "name": "events",
+              "value": 15,
+              "unit": "events"
+            },
+            {
+              "name": "starts",
+              "value": 15,
+              "unit": "cases"
+            },
+            {
+              "name": "ends",
+              "value": 0,
+              "unit": "cases"
+            }
+          ],
+          "details": [],
+          "x": 28.0,
+          "y": 253.69988,
+          "width": 112.0032,
+          "height": 66.00024,
+          "originalStyle": "--pv-color: hsl(4 43% 42%); --pv-tint: hsl(4 43% 96%);"
+        },
+        {
+          "id": "activity:5",
+          "label": "Revise",
+          "kind": "activity",
+          "group": null,
+          "metrics": [
+            {
+              "name": "events",
+              "value": 5,
+              "unit": "events"
+            },
+            {
+              "name": "starts",
+              "value": 0,
+              "unit": "cases"
+            },
+            {
+              "name": "ends",
+              "value": 0,
+              "unit": "cases"
+            }
+          ],
+          "details": [],
+          "x": 629.48,
+          "y": 196.69988,
+          "width": 112.0032,
+          "height": 66.00024,
+          "originalStyle": "--pv-color: hsl(4 43% 42%); --pv-tint: hsl(4 43% 96%);"
+        },
+        {
+          "id": "activity:6",
+          "label": "Tool call",
+          "kind": "activity",
+          "group": null,
+          "metrics": [
+            {
+              "name": "events",
+              "value": 21,
+              "unit": "events"
+            },
+            {
+              "name": "starts",
+              "value": 0,
+              "unit": "cases"
+            },
+            {
+              "name": "ends",
+              "value": 0,
+              "unit": "cases"
+            }
+          ],
+          "details": [],
+          "x": 818.48,
+          "y": 250.69988,
+          "width": 112.0032,
+          "height": 66.00024,
+          "originalStyle": "--pv-color: hsl(4 43% 42%); --pv-tint: hsl(4 43% 96%);"
+        },
+        {
+          "id": "activity:7",
+          "label": "Validate",
+          "kind": "activity",
+          "group": null,
+          "metrics": [
+            {
+              "name": "events",
+              "value": 19,
+              "unit": "events"
+            },
+            {
+              "name": "starts",
+              "value": 0,
+              "unit": "cases"
+            },
+            {
+              "name": "ends",
+              "value": 0,
+              "unit": "cases"
+            }
+          ],
+          "details": [],
+          "x": 1014.5,
+          "y": 111.69988000000001,
+          "width": 112.0032,
+          "height": 66.00024,
+          "originalStyle": "--pv-color: hsl(4 43% 42%); --pv-tint: hsl(4 43% 96%);"
+        }
+      ],
+      "edges": [
+        {
+          "id": "relation:0",
+          "source": "activity:2",
+          "target": "activity:0",
+          "label": "1",
+          "kind": "directly_follows",
+          "directed": true,
+          "metrics": [
+            {
+              "name": "selected count",
+              "value": 1,
+              "unit": "occurrences"
+            },
+            {
+              "name": "case count",
+              "value": 1,
+              "unit": "cases"
+            }
+          ],
+          "details": [],
+          "path": "M 545.7116000000001 183.06 C 569.6116000000001 173.69 596.6016000000001 163.12 620.3816 153.81",
+          "arrowPoints": "619.1016000000001,151.3 627.5716000000001,150.99 621.1416,156.51",
+          "labelX": 587.4816000000001,
+          "labelY": 157.91,
+          "originalStyle": "--pv-color: hsl(358 43% 42%);"
+        },
+        {
+          "id": "relation:1",
+          "source": "activity:2",
+          "target": "activity:5",
+          "label": "1",
+          "kind": "directly_follows",
+          "directed": true,
+          "metrics": [
+            {
+              "name": "selected count",
+              "value": 1,
+              "unit": "occurrences"
+            },
+            {
+              "name": "case count",
+              "value": 1,
+              "unit": "cases"
+            }
+          ],
+          "details": [],
+          "path": "M 545.7116000000001 215.43 C 569.4016 217.87 596.1216000000001 220.61 619.7516 223.04",
+          "arrowPoints": "619.8016,220.23000000000002 627.4816000000001,223.84 619.2316000000001,225.8",
+          "labelX": 587.4816000000001,
+          "labelY": 212.57,
+          "originalStyle": "--pv-color: hsl(358 43% 42%);"
+        },
+        {
+          "id": "relation:2",
+          "source": "activity:3",
+          "target": "activity:2",
+          "label": "1",
+          "kind": "directly_follows",
+          "directed": true,
+          "metrics": [
+            {
+              "name": "selected count",
+              "value": 1,
+              "unit": "occurrences"
+            },
+            {
+              "name": "case count",
+              "value": 1,
+              "unit": "cases"
+            }
+          ],
+          "details": [],
+          "path": "M 336.4716 264.76 C 357.3916 256.49 381.5416 246.94 403.9116 238.09",
+          "arrowPoints": "402.84159999999997,235.51 411.3116,235.17000000000002 404.9016,240.71",
+          "labelX": 374.5016,
+          "labelY": 241.70000000000002,
+          "originalStyle": "--pv-color: hsl(358 43% 42%);"
+        },
+        {
+          "id": "relation:3",
+          "source": "activity:3",
+          "target": "activity:6",
+          "label": "14",
+          "kind": "directly_follows",
+          "directed": true,
+          "metrics": [
+            {
+              "name": "selected count",
+              "value": 14,
+              "unit": "occurrences"
+            },
+            {
+              "name": "case count",
+              "value": 14,
+              "unit": "cases"
+            }
+          ],
+          "details": [],
+          "path": "M 336.4716 286.42 C 446.5516 285.86 692.0216 284.62 809.0416 284.02",
+          "arrowPoints": "808.7316000000001,281.23 816.7516,283.99 808.7616,286.83",
+          "labelX": 587.4816000000001,
+          "labelY": 279.09,
+          "originalStyle": "--pv-color: hsl(358 43% 42%);"
+        },
+        {
+          "id": "relation:4",
+          "source": "activity:4",
+          "target": "activity:3",
+          "label": "15",
+          "kind": "directly_follows",
+          "directed": true,
+          "metrics": [
+            {
+              "name": "selected count",
+              "value": 15,
+              "unit": "occurrences"
+            },
+            {
+              "name": "case count",
+              "value": 15,
+              "unit": "cases"
+            }
+          ],
+          "details": [],
+          "path": "M 140.3316 286.7 C 163.3716 286.7 190.2816 286.7 214.2316 286.7",
+          "arrowPoints": "214.0816,283.9 222.0816,286.7 214.0816,289.5",
+          "labelX": 182.0016,
+          "labelY": 280.7,
+          "originalStyle": "--pv-color: hsl(358 43% 42%);"
+        },
+        {
+          "id": "relation:5",
+          "source": "activity:5",
+          "target": "activity:6",
+          "label": "5",
+          "kind": "directly_follows",
+          "directed": true,
+          "metrics": [
+            {
+              "name": "selected count",
+              "value": 5,
+              "unit": "occurrences"
+            },
+            {
+              "name": "case count",
+              "value": 5,
+              "unit": "cases"
+            }
+          ],
+          "details": [],
+          "path": "M 741.8316000000001 245.68 C 763.0316 251.8 787.3916 258.84 809.3516000000001 265.18",
+          "arrowPoints": "809.9116,262.43 816.8216000000001,267.34 808.3616000000001,267.81",
+          "labelX": 779.9816000000001,
+          "labelY": 249.08,
+          "originalStyle": "--pv-color: hsl(358 43% 42%);"
+        },
+        {
+          "id": "relation:6",
+          "source": "activity:6",
+          "target": "activity:6",
+          "label": "2",
+          "kind": "directly_follows",
+          "directed": true,
+          "metrics": [
+            {
+              "name": "selected count",
+              "value": 2,
+              "unit": "occurrences"
+            },
+            {
+              "name": "case count",
+              "value": 2,
+              "unit": "cases"
+            }
+          ],
+          "details": [],
+          "path": "M 857.5516 250.46 C 854.5316 232.32 860.1816 215.70000000000002 874.4816000000001 215.70000000000002 C 886.3316000000001 215.70000000000002 892.2316000000001 227.1 892.2016000000001 241.32",
+          "arrowPoints": "895.0216,241.22 891.5416,248.95000000000002 889.4416000000001,240.74",
+          "labelX": 874.4816000000001,
+          "labelY": 209.70000000000002,
+          "originalStyle": "--pv-color: hsl(358 43% 42%);"
+        },
+        {
+          "id": "relation:7",
+          "source": "activity:6",
+          "target": "activity:7",
+          "label": "19",
+          "kind": "directly_follows",
+          "directed": true,
+          "metrics": [
+            {
+              "name": "selected count",
+              "value": 19,
+              "unit": "occurrences"
+            },
+            {
+              "name": "case count",
+              "value": 14,
+              "unit": "cases"
+            }
+          ],
+          "details": [],
+          "path": "M 921.9516000000001 250.4 C 950.0416 230.28 985.9816000000001 204.53 1015.3516000000001 183.48000000000002",
+          "arrowPoints": "1013.6916000000001,181.23000000000002 1021.8316000000001,178.84 1016.9516000000001,185.78",
+          "labelX": 972.4816000000001,
+          "labelY": 199.88,
+          "originalStyle": "--pv-color: hsl(358 43% 42%);"
+        },
+        {
+          "id": "relation:8",
+          "source": "activity:7",
+          "target": "activity:1",
+          "label": "14",
+          "kind": "directly_follows",
+          "directed": true,
+          "metrics": [
+            {
+              "name": "selected count",
+              "value": 14,
+              "unit": "occurrences"
+            },
+            {
+              "name": "case count",
+              "value": 14,
+              "unit": "cases"
+            }
+          ],
+          "details": [],
+          "path": "M 1126.8116 144.7 C 1149.8516 144.7 1176.7616 144.7 1200.7116 144.7",
+          "arrowPoints": "1200.5616,141.9 1208.5616,144.7 1200.5616,147.5",
+          "labelX": 1168.5016,
+          "labelY": 138.698,
+          "originalStyle": "--pv-color: hsl(358 43% 42%);"
+        },
+        {
+          "id": "relation:9",
+          "source": "activity:7",
+          "target": "activity:2",
+          "label": "1",
+          "kind": "directly_follows",
+          "directed": true,
+          "metrics": [
+            {
+              "name": "selected count",
+              "value": 1,
+              "unit": "occurrences"
+            },
+            {
+              "name": "case count",
+              "value": 1,
+              "unit": "cases"
+            }
+          ],
+          "details": [],
+          "path": "M 1014.1316 119.00999999999999 C 928.8716000000001 83.21000000000001 761.4516000000001 28 629.4816000000001 77.69999999999999 C 581.4916000000001 95.77 538.8816 137.07 511.6016 168.5",
+          "arrowPoints": "513.9816000000001,170.03 506.6616,174.3 509.7216,166.39",
+          "labelX": 779.9816000000001,
+          "labelY": 52.62,
+          "originalStyle": "--pv-color: hsl(358 43% 42%);"
+        },
+        {
+          "id": "relation:10",
+          "source": "activity:7",
+          "target": "activity:5",
+          "label": "4",
+          "kind": "directly_follows",
+          "directed": true,
+          "metrics": [
+            {
+              "name": "selected count",
+              "value": 4,
+              "unit": "occurrences"
+            },
+            {
+              "name": "case count",
+              "value": 4,
+              "unit": "cases"
+            }
+          ],
+          "details": [],
+          "path": "M 1014.0116 155.52 C 963.0516 165.60999999999999 885.5116 181.38 818.4816000000001 196.70000000000002 C 796.4216 201.74 772.3816 207.63 750.9316 213.03",
+          "arrowPoints": "751.8216000000001,215.69 743.3816,214.94 750.4516000000001,210.26",
+          "labelX": 874.4816000000001,
+          "labelY": 166.71,
+          "originalStyle": "--pv-color: hsl(358 43% 42%);"
+        }
+      ]
+    },
+    {
+      "id": "ocdfg-fulfillment",
+      "title": "Synthetic OCDFG · Shared fulfillment",
+      "kind": "graph",
+      "width": 1492.0032,
+      "height": 477.03,
+      "sourcePath": ".artifacts/graphviz-2026-09-16/comparison/ocdfg-fulfillment.svg",
+      "sourceSha256": "23ca2fea624d1a2ce88777338e0e2bbd2ef79332596cb828e895e02e0e663130",
+      "panelId": "oc-dfg",
+      "description": "SYNTHETIC OCEL SAMPLE. Three orders, five items, two parcels. Orders 1 and 2 share a parcel; inspection triggers repacking. One item from order 3 is returned. Parallel colored edges are distinct object types, not duplicate lines. Activity nodes share source events across types. Parallel edges retain object type. Distinct event pairs, distinct objects and trace occurrences are separate units. Directly-follows does not establish causality.",
+      "provenance": [
+        {
+          "calculation_id": "pix.computation.v1:sha256:aff833cdefb54e0036cde6f1b42e1d3e93945585f8f96b8c4dfe17cdc93fa5cf",
+          "source_digest": "pix.ocel.canonical.v1:sha256:0759158ccab88a5aff3da345c8685213e63d3fb2f3cf2637869d0eaac7412152",
+          "model_digest": null,
+          "operator_id": "pix.discover_ocdfg",
+          "status": "computed",
+          "details": [
+            {
+              "name": "operator_version",
+              "value": "1.0.0"
+            },
+            {
+              "name": "request_type",
+              "value": "pix.contracts.analysis.OCDFGSpec"
+            },
+            {
+              "name": "request_encoding",
+              "value": "pix.result/1.2.0"
+            },
+            {
+              "name": "request_json",
+              "value": "{\"object_types\": [\"Item\", \"Order\", \"Parcel\"], \"qualifiers\": null, \"tie_policy\": \"reject\"}"
+            }
+          ],
+          "panel_ids": [
+            "oc-dfg",
+            "oc-dfg-witnesses",
+            "oc-dfg-boundaries"
+          ],
+          "input_path": [
+            0
+          ]
+        },
+        {
+          "calculation_id": "pix.computation.v1:sha256:1c337a034c0dd4e1464b3756bb2cdf7b4454795f2430d525dbb5c95626b632dc",
+          "source_digest": null,
+          "model_digest": null,
+          "operator_id": null,
+          "status": null,
+          "details": [
+            {
+              "name": "role",
+              "value": "parent"
+            }
+          ],
+          "panel_ids": [
+            "oc-dfg",
+            "oc-dfg-witnesses",
+            "oc-dfg-boundaries"
+          ],
+          "input_path": [
+            0
+          ]
+        },
+        {
+          "calculation_id": "pix.computation.v1:sha256:f0bb540572d1262a94479acacb25699d0329ca0a0ef98612fd40f53bf2ca96a0",
+          "source_digest": null,
+          "model_digest": null,
+          "operator_id": null,
+          "status": null,
+          "details": [
+            {
+              "name": "role",
+              "value": "parent"
+            }
+          ],
+          "panel_ids": [
+            "oc-dfg",
+            "oc-dfg-witnesses",
+            "oc-dfg-boundaries"
+          ],
+          "input_path": [
+            0
+          ]
+        },
+        {
+          "calculation_id": "pix.computation.v1:sha256:4d72dda6296e2bc2f6f930fb35fcf0353c0c3680c9b41735deb35385d36212cd",
+          "source_digest": null,
+          "model_digest": null,
+          "operator_id": null,
+          "status": null,
+          "details": [
+            {
+              "name": "role",
+              "value": "parent"
+            }
+          ],
+          "panel_ids": [
+            "oc-dfg",
+            "oc-dfg-witnesses",
+            "oc-dfg-boundaries"
+          ],
+          "input_path": [
+            0
+          ]
+        }
+      ],
+      "issues": [],
+      "semanticSourcePath": ".artifacts/graphviz-2026-09-16/comparison/ocdfg-fulfillment.json",
+      "semanticSourceSha256": "0e2411dcf21273900a1eb39703268e48d1bc42006141fdc1b6ddc7ccae320bf3",
+      "nodes": [
+        {
+          "id": "oc-activity-235e7a62ca7f4cf2b830ba83834a44eb47c3c0afc6ba991493433001d888b210",
+          "label": "Create",
+          "kind": "activity",
+          "group": null,
+          "metrics": [
+            {
+              "name": "events",
+              "value": 3,
+              "unit": "distinct_events"
+            },
+            {
+              "name": "objects",
+              "value": 8,
+              "unit": "distinct_objects"
+            },
+            {
+              "name": "occurrences",
+              "value": 8,
+              "unit": "object_trace_occurrences"
+            }
+          ],
+          "details": [
+            {
+              "name": "event_ids",
+              "value": "[\"event-01\",\"event-02\",\"event-03\"]"
+            },
+            {
+              "name": "object_ids",
+              "value": "[\"item-1\",\"item-2\",\"item-3\",\"item-4\",\"item-5\",\"order-1\",\"order-2\",\"order-3\"]"
+            }
+          ],
+          "x": 28.0,
+          "y": 217.25987999999998,
+          "width": 112.0032,
+          "height": 66.00024,
+          "originalStyle": "--pv-color: hsl(4 43% 42%); --pv-tint: hsl(4 43% 96%);"
+        },
+        {
+          "id": "oc-activity-0aa71f0fca018403541740bd5fef5f831991aabf1d2306ad9a24272fde807555",
+          "label": "Deliver",
+          "kind": "activity",
+          "group": null,
+          "metrics": [
+            {
+              "name": "events",
+              "value": 2,
+              "unit": "distinct_events"
+            },
+            {
+              "name": "objects",
+              "value": 10,
+              "unit": "distinct_objects"
+            },
+            {
+              "name": "occurrences",
+              "value": 10,
+              "unit": "object_trace_occurrences"
+            }
+          ],
+          "details": [
+            {
+              "name": "event_ids",
+              "value": "[\"event-15\",\"event-16\"]"
+            },
+            {
+              "name": "object_ids",
+              "value": "[\"item-1\",\"item-2\",\"item-3\",\"item-4\",\"item-5\",\"order-1\",\"order-2\",\"order-3\",\"parcel-1\",\"parcel-2\"]"
+            }
+          ],
+          "x": 1129.0,
+          "y": 43.25488,
+          "width": 112.0032,
+          "height": 66.00024,
+          "originalStyle": "--pv-color: hsl(4 43% 42%); --pv-tint: hsl(4 43% 96%);"
+        },
+        {
+          "id": "oc-activity-5a8443ff12c836e83154b82849229ec9b84b456212f2ff571e258b2e6e16cfdb",
+          "label": "Inspect",
+          "kind": "activity",
+          "group": null,
+          "metrics": [
+            {
+              "name": "events",
+              "value": 3,
+              "unit": "distinct_events"
+            },
+            {
+              "name": "objects",
+              "value": 10,
+              "unit": "distinct_objects"
+            },
+            {
+              "name": "occurrences",
+              "value": 16,
+              "unit": "object_trace_occurrences"
+            }
+          ],
+          "details": [
+            {
+              "name": "event_ids",
+              "value": "[\"event-09\",\"event-11\",\"event-12\"]"
+            },
+            {
+              "name": "object_ids",
+              "value": "[\"item-1\",\"item-2\",\"item-3\",\"item-4\",\"item-5\",\"order-1\",\"order-2\",\"order-3\",\"parcel-1\",\"parcel-2\"]"
+            }
+          ],
+          "x": 683.0,
+          "y": 217.25987999999998,
+          "width": 112.0032,
+          "height": 66.00024,
+          "originalStyle": "--pv-color: hsl(4 43% 42%); --pv-tint: hsl(4 43% 96%);"
+        },
+        {
+          "id": "oc-activity-0ea48286fd6505d657ef27927d03074e77270abb6117c71aa19a0f372a714b88",
+          "label": "Pack",
+          "kind": "activity",
+          "group": null,
+          "metrics": [
+            {
+              "name": "events",
+              "value": 2,
+              "unit": "distinct_events"
+            },
+            {
+              "name": "objects",
+              "value": 10,
+              "unit": "distinct_objects"
+            },
+            {
+              "name": "occurrences",
+              "value": 10,
+              "unit": "object_trace_occurrences"
+            }
+          ],
+          "details": [
+            {
+              "name": "event_ids",
+              "value": "[\"event-07\",\"event-08\"]"
+            },
+            {
+              "name": "object_ids",
+              "value": "[\"item-1\",\"item-2\",\"item-3\",\"item-4\",\"item-5\",\"order-1\",\"order-2\",\"order-3\",\"parcel-1\",\"parcel-2\"]"
+            }
+          ],
+          "x": 460.0,
+          "y": 217.25987999999998,
+          "width": 112.0032,
+          "height": 66.00024,
+          "originalStyle": "--pv-color: hsl(4 43% 42%); --pv-tint: hsl(4 43% 96%);"
+        },
+        {
+          "id": "oc-activity-da3ca93f457f41a9b2c08edb6aa8a180c6cd18cfebac137de3d59bb3dd42dfdc",
+          "label": "Pick",
+          "kind": "activity",
+          "group": null,
+          "metrics": [
+            {
+              "name": "events",
+              "value": 3,
+              "unit": "distinct_events"
+            },
+            {
+              "name": "objects",
+              "value": 8,
+              "unit": "distinct_objects"
+            },
+            {
+              "name": "occurrences",
+              "value": 8,
+              "unit": "object_trace_occurrences"
+            }
+          ],
+          "details": [
+            {
+              "name": "event_ids",
+              "value": "[\"event-04\",\"event-05\",\"event-06\"]"
+            },
+            {
+              "name": "object_ids",
+              "value": "[\"item-1\",\"item-2\",\"item-3\",\"item-4\",\"item-5\",\"order-1\",\"order-2\",\"order-3\"]"
+            }
+          ],
+          "x": 244.0,
+          "y": 217.25987999999998,
+          "width": 112.0032,
+          "height": 66.00024,
+          "originalStyle": "--pv-color: hsl(4 43% 42%); --pv-tint: hsl(4 43% 96%);"
+        },
+        {
+          "id": "oc-activity-a7542dd2e5286a0cf48aa67a31ae9785538ce6dabefbe18a15690e9331a657a3",
+          "label": "Repack",
+          "kind": "activity",
+          "group": null,
+          "metrics": [
+            {
+              "name": "events",
+              "value": 1,
+              "unit": "distinct_events"
+            },
+            {
+              "name": "objects",
+              "value": 6,
+              "unit": "distinct_objects"
+            },
+            {
+              "name": "occurrences",
+              "value": 6,
+              "unit": "object_trace_occurrences"
+            }
+          ],
+          "details": [
+            {
+              "name": "event_ids",
+              "value": "[\"event-10\"]"
+            },
+            {
+              "name": "object_ids",
+              "value": "[\"item-1\",\"item-2\",\"item-3\",\"order-1\",\"order-2\",\"parcel-1\"]"
+            }
+          ],
+          "x": 906.0,
+          "y": 304.25988,
+          "width": 112.0032,
+          "height": 66.00024,
+          "originalStyle": "--pv-color: hsl(4 43% 42%); --pv-tint: hsl(4 43% 96%);"
+        },
+        {
+          "id": "oc-activity-c9ca5e2bf0d399632418bb446b971257a617520b8caa32b2f547c7381513a849",
+          "label": "Return",
+          "kind": "activity",
+          "group": null,
+          "metrics": [
+            {
+              "name": "events",
+              "value": 1,
+              "unit": "distinct_events"
+            },
+            {
+              "name": "objects",
+              "value": 3,
+              "unit": "distinct_objects"
+            },
+            {
+              "name": "occurrences",
+              "value": 3,
+              "unit": "object_trace_occurrences"
+            }
+          ],
+          "details": [
+            {
+              "name": "event_ids",
+              "value": "[\"event-17\"]"
+            },
+            {
+              "name": "object_ids",
+              "value": "[\"item-4\",\"order-3\",\"parcel-2\"]"
+            }
+          ],
+          "x": 1352.0,
+          "y": 43.25488,
+          "width": 112.0032,
+          "height": 66.00024,
+          "originalStyle": "--pv-color: hsl(4 43% 42%); --pv-tint: hsl(4 43% 96%);"
+        },
+        {
+          "id": "oc-activity-819c88632aa2b8052e4f4a50c594a352b9e6593c92d4ad77623154de3efe1873",
+          "label": "Ship",
+          "kind": "activity",
+          "group": null,
+          "metrics": [
+            {
+              "name": "events",
+              "value": 2,
+              "unit": "distinct_events"
+            },
+            {
+              "name": "objects",
+              "value": 10,
+              "unit": "distinct_objects"
+            },
+            {
+              "name": "occurrences",
+              "value": 10,
+              "unit": "object_trace_occurrences"
+            }
+          ],
+          "details": [
+            {
+              "name": "event_ids",
+              "value": "[\"event-13\",\"event-14\"]"
+            },
+            {
+              "name": "object_ids",
+              "value": "[\"item-1\",\"item-2\",\"item-3\",\"item-4\",\"item-5\",\"order-1\",\"order-2\",\"order-3\",\"parcel-1\",\"parcel-2\"]"
+            }
+          ],
+          "x": 906.0,
+          "y": 43.25488,
+          "width": 112.0032,
+          "height": 66.00024,
+          "originalStyle": "--pv-color: hsl(4 43% 42%); --pv-tint: hsl(4 43% 96%);"
+        }
+      ],
+      "edges": [
+        {
+          "id": "oc-ocdfg-96563e36b5f4b4eb3173a5afbd91c1a5f70be3564cb7e7046e2ecda095bb6584",
+          "source": "oc-activity-235e7a62ca7f4cf2b830ba83834a44eb47c3c0afc6ba991493433001d888b210",
+          "target": "oc-activity-da3ca93f457f41a9b2c08edb6aa8a180c6cd18cfebac137de3d59bb3dd42dfdc",
+          "label": "Item",
+          "kind": "object_directly_follows",
+          "directed": true,
+          "metrics": [
+            {
+              "name": "event_pairs",
+              "value": 3,
+              "unit": "distinct_event_pairs"
+            },
+            {
+              "name": "objects",
+              "value": 5,
+              "unit": "distinct_objects"
+            },
+            {
+              "name": "occurrences",
+              "value": 5,
+              "unit": "object_trace_occurrences"
+            }
+          ],
+          "details": [
+            {
+              "name": "object_type",
+              "value": "Item"
+            }
+          ],
+          "path": "M 140.3916 250.26 C 169.2316 250.26 204.6616 250.26 234.70159999999998 250.26",
+          "arrowPoints": "234.3316,247.45 242.3316,250.26 234.3316,253.05",
+          "labelX": 192.0016,
+          "labelY": 244.26,
+          "originalStyle": "--pv-color: hsl(70 43% 42%);",
+          "objectType": "Item"
+        },
+        {
+          "id": "oc-ocdfg-03c08b9c89fc6ed59d1de4883e11aace98bd9b626c34dcd7c554f10bd88aad3f",
+          "source": "oc-activity-0aa71f0fca018403541740bd5fef5f831991aabf1d2306ad9a24272fde807555",
+          "target": "oc-activity-c9ca5e2bf0d399632418bb446b971257a617520b8caa32b2f547c7381513a849",
+          "label": "Item",
+          "kind": "object_directly_follows",
+          "directed": true,
+          "metrics": [
+            {
+              "name": "event_pairs",
+              "value": 1,
+              "unit": "distinct_event_pairs"
+            },
+            {
+              "name": "objects",
+              "value": 1,
+              "unit": "distinct_objects"
+            },
+            {
+              "name": "occurrences",
+              "value": 1,
+              "unit": "object_trace_occurrences"
+            }
+          ],
+          "details": [
+            {
+              "name": "object_type",
+              "value": "Item"
+            }
+          ],
+          "path": "M 1241.2816 61.92 C 1250.8016 59.980000000000004 1260.6416000000002 58.3 1270.0016 57.260000000000005 C 1293.4116000000001 54.64 1299.5916 54.64 1323.0016 57.260000000000005 C 1329.4416 57.97 1336.1016 58.989999999999995 1342.7316 60.19",
+          "arrowPoints": "1342.9116000000001,57.370000000000005 1350.2316,61.64 1341.8516,62.87",
+          "labelX": 1296.5016,
+          "labelY": 49.294,
+          "originalStyle": "--pv-color: hsl(70 43% 42%);",
+          "objectType": "Item"
+        },
+        {
+          "id": "oc-ocdfg-733a90d60855646ebf62a37e144318113521412b5f194ba3797a83003f427e5c",
+          "source": "oc-activity-5a8443ff12c836e83154b82849229ec9b84b456212f2ff571e258b2e6e16cfdb",
+          "target": "oc-activity-a7542dd2e5286a0cf48aa67a31ae9785538ce6dabefbe18a15690e9331a657a3",
+          "label": "Item",
+          "kind": "object_directly_follows",
+          "directed": true,
+          "metrics": [
+            {
+              "name": "event_pairs",
+              "value": 1,
+              "unit": "distinct_event_pairs"
+            },
+            {
+              "name": "objects",
+              "value": 3,
+              "unit": "distinct_objects"
+            },
+            {
+              "name": "occurrences",
+              "value": 3,
+              "unit": "object_trace_occurrences"
+            }
+          ],
+          "details": [
+            {
+              "name": "object_type",
+              "value": "Item"
+            }
+          ],
+          "path": "M 795.2716 228.63 C 821.1816 221.92 851.8116 219.08 877.0016 231.26 C 904.7016000000001 244.65 926.0616 272.11 940.3016 295.72",
+          "arrowPoints": "942.6816,294.25 944.2816,302.57 937.8416000000001,297.06",
+          "labelX": 850.5016,
+          "labelY": 216.87,
+          "originalStyle": "--pv-color: hsl(70 43% 42%);",
+          "objectType": "Item"
+        },
+        {
+          "id": "oc-ocdfg-832601d85226a07add28c5b3180392ebb23a6743f69b7be5efbc7d46fcdc520c",
+          "source": "oc-activity-5a8443ff12c836e83154b82849229ec9b84b456212f2ff571e258b2e6e16cfdb",
+          "target": "oc-activity-819c88632aa2b8052e4f4a50c594a352b9e6593c92d4ad77623154de3efe1873",
+          "label": "Item",
+          "kind": "object_directly_follows",
+          "directed": true,
+          "metrics": [
+            {
+              "name": "event_pairs",
+              "value": 2,
+              "unit": "distinct_event_pairs"
+            },
+            {
+              "name": "objects",
+              "value": 5,
+              "unit": "distinct_objects"
+            },
+            {
+              "name": "occurrences",
+              "value": 5,
+              "unit": "object_trace_occurrences"
+            }
+          ],
+          "details": [
+            {
+              "name": "object_type",
+              "value": "Item"
+            }
+          ],
+          "path": "M 752.4416000000001 217 C 765.6416 186.2 789.3916 141.34 824.0016 115.26 C 844.9316 99.49 872.0016 90.09 896.5516 84.49000000000001",
+          "arrowPoints": "895.9316,81.75999999999999 904.3416000000001,82.84 897.0916000000001,87.24000000000001",
+          "labelX": 850.5016,
+          "labelY": 84.029,
+          "originalStyle": "--pv-color: hsl(70 43% 42%);",
+          "objectType": "Item"
+        },
+        {
+          "id": "oc-ocdfg-c383a0b54640a77e7e4c59cb62f148be9be994ce5c44bd7e855096a22a9fbb7f",
+          "source": "oc-activity-0ea48286fd6505d657ef27927d03074e77270abb6117c71aa19a0f372a714b88",
+          "target": "oc-activity-5a8443ff12c836e83154b82849229ec9b84b456212f2ff571e258b2e6e16cfdb",
+          "label": "Item",
+          "kind": "object_directly_follows",
+          "directed": true,
+          "metrics": [
+            {
+              "name": "event_pairs",
+              "value": 2,
+              "unit": "distinct_event_pairs"
+            },
+            {
+              "name": "objects",
+              "value": 5,
+              "unit": "distinct_objects"
+            },
+            {
+              "name": "occurrences",
+              "value": 5,
+              "unit": "object_trace_occurrences"
+            }
+          ],
+          "details": [
+            {
+              "name": "object_type",
+              "value": "Item"
+            }
+          ],
+          "path": "M 572.0816000000001 255.5 C 581.7116000000001 256.23 591.6416 256.87 601.0016 257.26 C 624.5416 258.23 630.4616000000001 258.23 654.0016 257.26 C 660.4316 256.99 667.1416 256.61 673.8316000000001 256.15999999999997",
+          "arrowPoints": "673.2316000000001,253.39 681.4116,255.61 673.6316,258.98",
+          "labelX": 627.5016,
+          "labelY": 251.26,
+          "originalStyle": "--pv-color: hsl(70 43% 42%);",
+          "objectType": "Item"
+        },
+        {
+          "id": "oc-ocdfg-d9d75da8060617e108f6d8d70e1172045715c324849cc03e9a624d4a86d63b34",
+          "source": "oc-activity-da3ca93f457f41a9b2c08edb6aa8a180c6cd18cfebac137de3d59bb3dd42dfdc",
+          "target": "oc-activity-0ea48286fd6505d657ef27927d03074e77270abb6117c71aa19a0f372a714b88",
+          "label": "Item",
+          "kind": "object_directly_follows",
+          "directed": true,
+          "metrics": [
+            {
+              "name": "event_pairs",
+              "value": 3,
+              "unit": "distinct_event_pairs"
+            },
+            {
+              "name": "objects",
+              "value": 5,
+              "unit": "distinct_objects"
+            },
+            {
+              "name": "occurrences",
+              "value": 5,
+              "unit": "object_trace_occurrences"
+            }
+          ],
+          "details": [
+            {
+              "name": "object_type",
+              "value": "Item"
+            }
+          ],
+          "path": "M 356.3916 250.26 C 385.2316 250.26 420.6616 250.26 450.7016 250.26",
+          "arrowPoints": "450.3316,247.45 458.3316,250.26 450.3316,253.05",
+          "labelX": 408.0016,
+          "labelY": 244.26,
+          "originalStyle": "--pv-color: hsl(70 43% 42%);",
+          "objectType": "Item"
+        },
+        {
+          "id": "oc-ocdfg-823d21251871af673443bdbb287ad19624f596624d9212bdcc5aa0576f15a935",
+          "source": "oc-activity-a7542dd2e5286a0cf48aa67a31ae9785538ce6dabefbe18a15690e9331a657a3",
+          "target": "oc-activity-5a8443ff12c836e83154b82849229ec9b84b456212f2ff571e258b2e6e16cfdb",
+          "label": "Item",
+          "kind": "object_directly_follows",
+          "directed": true,
+          "metrics": [
+            {
+              "name": "event_pairs",
+              "value": 1,
+              "unit": "distinct_event_pairs"
+            },
+            {
+              "name": "objects",
+              "value": 3,
+              "unit": "distinct_objects"
+            },
+            {
+              "name": "occurrences",
+              "value": 3,
+              "unit": "object_trace_occurrences"
+            }
+          ],
+          "details": [
+            {
+              "name": "object_type",
+              "value": "Item"
+            }
+          ],
+          "path": "M 905.8016 367.07 C 879.9116 376.9 849.2616 382.35 824.0016 369.26 C 792.7716 353.07 770.6716 319.34 757.0116 291.91",
+          "arrowPoints": "754.6316,293.41 753.6916000000001,284.99 759.6816,290.99",
+          "labelX": 850.5016,
+          "labelY": 363.26,
+          "originalStyle": "--pv-color: hsl(70 43% 42%);",
+          "objectType": "Item"
+        },
+        {
+          "id": "oc-ocdfg-5760559916e62e082299045da098e532124d6bc17dd1b873ced1d20af32117c6",
+          "source": "oc-activity-819c88632aa2b8052e4f4a50c594a352b9e6593c92d4ad77623154de3efe1873",
+          "target": "oc-activity-0aa71f0fca018403541740bd5fef5f831991aabf1d2306ad9a24272fde807555",
+          "label": "Item",
+          "kind": "object_directly_follows",
+          "directed": true,
+          "metrics": [
+            {
+              "name": "event_pairs",
+              "value": 2,
+              "unit": "distinct_event_pairs"
+            },
+            {
+              "name": "objects",
+              "value": 5,
+              "unit": "distinct_objects"
+            },
+            {
+              "name": "occurrences",
+              "value": 5,
+              "unit": "object_trace_occurrences"
+            }
+          ],
+          "details": [
+            {
+              "name": "object_type",
+              "value": "Item"
+            }
+          ],
+          "path": "M 1018.0816000000001 81.5 C 1027.7116 82.22999999999999 1037.6416 82.87 1047.0016 83.25999999999999 C 1070.5416 84.22999999999999 1076.4616 84.22999999999999 1100.0016 83.25999999999999 C 1106.4316000000001 82.99000000000001 1113.1416000000002 82.61 1119.8316 82.16",
+          "arrowPoints": "1119.2316,79.39 1127.4116000000001,81.61 1119.6316000000002,84.97999999999999",
+          "labelX": 1073.5016,
+          "labelY": 77.255,
+          "originalStyle": "--pv-color: hsl(70 43% 42%);",
+          "objectType": "Item"
+        },
+        {
+          "id": "oc-ocdfg-f9378265f6096dc9911516dd4cd0a8af77c58093741ce9d675161ab72101ca83",
+          "source": "oc-activity-235e7a62ca7f4cf2b830ba83834a44eb47c3c0afc6ba991493433001d888b210",
+          "target": "oc-activity-da3ca93f457f41a9b2c08edb6aa8a180c6cd18cfebac137de3d59bb3dd42dfdc",
+          "label": "Order",
+          "kind": "object_directly_follows",
+          "directed": true,
+          "metrics": [
+            {
+              "name": "event_pairs",
+              "value": 3,
+              "unit": "distinct_event_pairs"
+            },
+            {
+              "name": "objects",
+              "value": 3,
+              "unit": "distinct_objects"
+            },
+            {
+              "name": "occurrences",
+              "value": 3,
+              "unit": "object_trace_occurrences"
+            }
+          ],
+          "details": [
+            {
+              "name": "object_type",
+              "value": "Order"
+            }
+          ],
+          "path": "M 140.48160000000001 269.98 C 149.8916 272.59000000000003 159.64159999999998 274.84000000000003 169.0016 276.26 C 189.2116 279.31 194.7916 279.31 215.0016 276.26 C 221.4316 275.28 228.0516 273.90999999999997 234.6216 272.3",
+          "arrowPoints": "233.6116,269.68 242.0516,270.36 235.0216,275.09000000000003",
+          "labelX": 192.0016,
+          "labelY": 270.26,
+          "originalStyle": "--pv-color: hsl(335 43% 42%);",
+          "objectType": "Order"
+        },
+        {
+          "id": "oc-ocdfg-35391b1f0f2f070568482889d9cb34f020cf5413d43e648ccc3885f63138509d",
+          "source": "oc-activity-0aa71f0fca018403541740bd5fef5f831991aabf1d2306ad9a24272fde807555",
+          "target": "oc-activity-c9ca5e2bf0d399632418bb446b971257a617520b8caa32b2f547c7381513a849",
+          "label": "Order",
+          "kind": "object_directly_follows",
+          "directed": true,
+          "metrics": [
+            {
+              "name": "event_pairs",
+              "value": 1,
+              "unit": "distinct_event_pairs"
+            },
+            {
+              "name": "objects",
+              "value": 1,
+              "unit": "distinct_objects"
+            },
+            {
+              "name": "occurrences",
+              "value": 1,
+              "unit": "object_trace_occurrences"
+            }
+          ],
+          "details": [
+            {
+              "name": "object_type",
+              "value": "Order"
+            }
+          ],
+          "path": "M 1241.0816 81.5 C 1250.7116 82.22999999999999 1260.6416000000002 82.87 1270.0016 83.25999999999999 C 1293.5416 84.22999999999999 1299.4616 84.22999999999999 1323.0016 83.25999999999999 C 1329.4316000000001 82.99000000000001 1336.1416000000002 82.61 1342.8316 82.16",
+          "arrowPoints": "1342.2316,79.39 1350.4116000000001,81.61 1342.6316000000002,84.97999999999999",
+          "labelX": 1296.5016,
+          "labelY": 77.255,
+          "originalStyle": "--pv-color: hsl(335 43% 42%);",
+          "objectType": "Order"
+        },
+        {
+          "id": "oc-ocdfg-aaeb0fe7962f3cb0052a5d7226c87191344a131f9bda36a770709fdcfc3b3558",
+          "source": "oc-activity-5a8443ff12c836e83154b82849229ec9b84b456212f2ff571e258b2e6e16cfdb",
+          "target": "oc-activity-a7542dd2e5286a0cf48aa67a31ae9785538ce6dabefbe18a15690e9331a657a3",
+          "label": "Order",
+          "kind": "object_directly_follows",
+          "directed": true,
+          "metrics": [
+            {
+              "name": "event_pairs",
+              "value": 1,
+              "unit": "distinct_event_pairs"
+            },
+            {
+              "name": "objects",
+              "value": 2,
+              "unit": "distinct_objects"
+            },
+            {
+              "name": "occurrences",
+              "value": 2,
+              "unit": "object_trace_occurrences"
+            }
+          ],
+          "details": [
+            {
+              "name": "object_type",
+              "value": "Order"
+            }
+          ],
+          "path": "M 795.3816 262.76 C 820.7416000000001 269.31 850.9016 278.27 877.0016 289.26 C 884.1216000000001 292.25 891.4016 295.72 898.5416 299.4",
+          "arrowPoints": "899.7416000000001,296.87 905.5116,303.08 897.1316,301.82",
+          "labelX": 850.5016,
+          "labelY": 265.1,
+          "originalStyle": "--pv-color: hsl(335 43% 42%);",
+          "objectType": "Order"
+        },
+        {
+          "id": "oc-ocdfg-08b364022190aa36d07be6ba42d7a10b98cd72c931cd6d2b9d95606be88ba7ff",
+          "source": "oc-activity-5a8443ff12c836e83154b82849229ec9b84b456212f2ff571e258b2e6e16cfdb",
+          "target": "oc-activity-819c88632aa2b8052e4f4a50c594a352b9e6593c92d4ad77623154de3efe1873",
+          "label": "Order",
+          "kind": "object_directly_follows",
+          "directed": true,
+          "metrics": [
+            {
+              "name": "event_pairs",
+              "value": 2,
+              "unit": "distinct_event_pairs"
+            },
+            {
+              "name": "objects",
+              "value": 3,
+              "unit": "distinct_objects"
+            },
+            {
+              "name": "occurrences",
+              "value": 3,
+              "unit": "object_trace_occurrences"
+            }
+          ],
+          "details": [
+            {
+              "name": "object_type",
+              "value": "Order"
+            }
+          ],
+          "path": "M 743.5516 216.97 C 750.3516000000001 171.84 769.7516 92.81 824.0016 57.260000000000005 C 845.2916 43.31 872.4316 44.16 896.9316 49.96",
+          "arrowPoints": "897.3316000000001,47.17 904.3616000000001,51.91 895.9116,52.58",
+          "labelX": 850.5016,
+          "labelY": 40.0,
+          "originalStyle": "--pv-color: hsl(335 43% 42%);",
+          "objectType": "Order"
+        },
+        {
+          "id": "oc-ocdfg-551f5b9ae7799bbc8ce88526dcab422de495d7d7083e840c9a864864acf5991d",
+          "source": "oc-activity-0ea48286fd6505d657ef27927d03074e77270abb6117c71aa19a0f372a714b88",
+          "target": "oc-activity-5a8443ff12c836e83154b82849229ec9b84b456212f2ff571e258b2e6e16cfdb",
+          "label": "Order",
+          "kind": "object_directly_follows",
+          "directed": true,
+          "metrics": [
+            {
+              "name": "event_pairs",
+              "value": 2,
+              "unit": "distinct_event_pairs"
+            },
+            {
+              "name": "objects",
+              "value": 3,
+              "unit": "distinct_objects"
+            },
+            {
+              "name": "occurrences",
+              "value": 3,
+              "unit": "object_trace_occurrences"
+            }
+          ],
+          "details": [
+            {
+              "name": "object_type",
+              "value": "Order"
+            }
+          ],
+          "path": "M 572.2816 235.92 C 581.8016 233.98 591.6416 232.3 601.0016 231.26 C 624.4116 228.64 630.5916000000001 228.64 654.0016 231.26 C 660.4416000000001 231.97 667.1016000000001 232.99 673.7316000000001 234.19",
+          "arrowPoints": "673.9116,231.37 681.2316000000001,235.64 672.8516000000001,236.87",
+          "labelX": 627.5016,
+          "labelY": 223.29,
+          "originalStyle": "--pv-color: hsl(335 43% 42%);",
+          "objectType": "Order"
+        },
+        {
+          "id": "oc-ocdfg-f5cfe3335b0a6afe1bb29c5966b90bb841cd86368f8f4fa8d3529ff6f0d11cdd",
+          "source": "oc-activity-da3ca93f457f41a9b2c08edb6aa8a180c6cd18cfebac137de3d59bb3dd42dfdc",
+          "target": "oc-activity-0ea48286fd6505d657ef27927d03074e77270abb6117c71aa19a0f372a714b88",
+          "label": "Order",
+          "kind": "object_directly_follows",
+          "directed": true,
+          "metrics": [
+            {
+              "name": "event_pairs",
+              "value": 3,
+              "unit": "distinct_event_pairs"
+            },
+            {
+              "name": "objects",
+              "value": 3,
+              "unit": "distinct_objects"
+            },
+            {
+              "name": "occurrences",
+              "value": 3,
+              "unit": "object_trace_occurrences"
+            }
+          ],
+          "details": [
+            {
+              "name": "object_type",
+              "value": "Order"
+            }
+          ],
+          "path": "M 356.4816 269.98 C 365.8916 272.59000000000003 375.6416 274.84000000000003 385.0016 276.26 C 405.2116 279.31 410.7916 279.31 431.0016 276.26 C 437.4316 275.28 444.0516 273.90999999999997 450.6216 272.3",
+          "arrowPoints": "449.6116,269.68 458.0516,270.36 451.0216,275.09000000000003",
+          "labelX": 408.0016,
+          "labelY": 270.26,
+          "originalStyle": "--pv-color: hsl(335 43% 42%);",
+          "objectType": "Order"
+        },
+        {
+          "id": "oc-ocdfg-8aa349d7b0abde3e731c3fb1cc1701523b2ece6f7643337a83e4fc4976aa05a1",
+          "source": "oc-activity-a7542dd2e5286a0cf48aa67a31ae9785538ce6dabefbe18a15690e9331a657a3",
+          "target": "oc-activity-5a8443ff12c836e83154b82849229ec9b84b456212f2ff571e258b2e6e16cfdb",
+          "label": "Order",
+          "kind": "object_directly_follows",
+          "directed": true,
+          "metrics": [
+            {
+              "name": "event_pairs",
+              "value": 1,
+              "unit": "distinct_event_pairs"
+            },
+            {
+              "name": "objects",
+              "value": 2,
+              "unit": "distinct_objects"
+            },
+            {
+              "name": "occurrences",
+              "value": 2,
+              "unit": "object_trace_occurrences"
+            }
+          ],
+          "details": [
+            {
+              "name": "object_type",
+              "value": "Order"
+            }
+          ],
+          "path": "M 929.2016000000001 370.7 C 900.9116 396.23 858.7616 423.83 824.0016 403.26 C 783.8516000000001 379.5 761.6116000000001 328.98 750.2616 292.48",
+          "arrowPoints": "747.6316,293.45 748.0416,284.98 753.0016,291.85",
+          "labelX": 850.5016,
+          "labelY": 397.26,
+          "originalStyle": "--pv-color: hsl(335 43% 42%);",
+          "objectType": "Order"
+        },
+        {
+          "id": "oc-ocdfg-3dcdce684e6ea59d71cef90baf32ad8398da7b5aab0fadbfb05741e2a5a697d3",
+          "source": "oc-activity-819c88632aa2b8052e4f4a50c594a352b9e6593c92d4ad77623154de3efe1873",
+          "target": "oc-activity-0aa71f0fca018403541740bd5fef5f831991aabf1d2306ad9a24272fde807555",
+          "label": "Order",
+          "kind": "object_directly_follows",
+          "directed": true,
+          "metrics": [
+            {
+              "name": "event_pairs",
+              "value": 2,
+              "unit": "distinct_event_pairs"
+            },
+            {
+              "name": "objects",
+              "value": 3,
+              "unit": "distinct_objects"
+            },
+            {
+              "name": "occurrences",
+              "value": 3,
+              "unit": "object_trace_occurrences"
+            }
+          ],
+          "details": [
+            {
+              "name": "object_type",
+              "value": "Order"
+            }
+          ],
+          "path": "M 1018.2816 61.92 C 1027.8016 59.980000000000004 1037.6416 58.3 1047.0016 57.260000000000005 C 1070.4116000000001 54.64 1076.5916 54.64 1100.0016 57.260000000000005 C 1106.4416 57.97 1113.1016 58.989999999999995 1119.7316 60.19",
+          "arrowPoints": "1119.9116000000001,57.370000000000005 1127.2316,61.64 1118.8516,62.87",
+          "labelX": 1073.5016,
+          "labelY": 49.294,
+          "originalStyle": "--pv-color: hsl(335 43% 42%);",
+          "objectType": "Order"
+        },
+        {
+          "id": "oc-ocdfg-95b65b54cc1892ae2cbb4b87da3ecc95509219c4e84d3ffb6cdddf4cc28e9dcc",
+          "source": "oc-activity-0aa71f0fca018403541740bd5fef5f831991aabf1d2306ad9a24272fde807555",
+          "target": "oc-activity-c9ca5e2bf0d399632418bb446b971257a617520b8caa32b2f547c7381513a849",
+          "label": "Parcel",
+          "kind": "object_directly_follows",
+          "directed": true,
+          "metrics": [
+            {
+              "name": "event_pairs",
+              "value": 1,
+              "unit": "distinct_event_pairs"
+            },
+            {
+              "name": "objects",
+              "value": 1,
+              "unit": "distinct_objects"
+            },
+            {
+              "name": "occurrences",
+              "value": 1,
+              "unit": "object_trace_occurrences"
+            }
+          ],
+          "details": [
+            {
+              "name": "object_type",
+              "value": "Parcel"
+            }
+          ],
+          "path": "M 1241.1116 102.03 C 1250.5616 105.44 1260.4316000000001 108.39 1270.0016 110.26 C 1293.1216 114.76 1299.8816000000002 114.76 1323.0016 110.26 C 1329.5816 108.97 1336.3016 107.18 1342.9316000000001 105.07",
+          "arrowPoints": "1341.9816,102.44 1350.4616,102.51 1343.7816,107.74",
+          "labelX": 1296.5016,
+          "labelY": 104.255,
+          "originalStyle": "--pv-color: hsl(176 43% 42%);",
+          "objectType": "Parcel"
+        },
+        {
+          "id": "oc-ocdfg-d2841c627e6e3b4dd7a63fc9e8d3ead590c4b49608e9082483037f0cb9512ab3",
+          "source": "oc-activity-5a8443ff12c836e83154b82849229ec9b84b456212f2ff571e258b2e6e16cfdb",
+          "target": "oc-activity-a7542dd2e5286a0cf48aa67a31ae9785538ce6dabefbe18a15690e9331a657a3",
+          "label": "Parcel",
+          "kind": "object_directly_follows",
+          "directed": true,
+          "metrics": [
+            {
+              "name": "event_pairs",
+              "value": 1,
+              "unit": "distinct_event_pairs"
+            },
+            {
+              "name": "objects",
+              "value": 1,
+              "unit": "distinct_objects"
+            },
+            {
+              "name": "occurrences",
+              "value": 1,
+              "unit": "object_trace_occurrences"
+            }
+          ],
+          "details": [
+            {
+              "name": "object_type",
+              "value": "Parcel"
+            }
+          ],
+          "path": "M 775.0616 283.72 C 789.2416000000001 295.47 806.4016 307.63 824.0016 315.26 C 846.5416 325.02 872.8616000000001 330.5 896.3716000000001 333.55",
+          "arrowPoints": "896.4516000000001,330.74 904.0616,334.47 895.7916,336.3",
+          "labelX": 850.5016,
+          "labelY": 309.26,
+          "originalStyle": "--pv-color: hsl(176 43% 42%);",
+          "objectType": "Parcel"
+        },
+        {
+          "id": "oc-ocdfg-e3b814be34c5bdcc72f6c81dfd595565eab0bdb5715b8991e3b01e6f93cd51b9",
+          "source": "oc-activity-5a8443ff12c836e83154b82849229ec9b84b456212f2ff571e258b2e6e16cfdb",
+          "target": "oc-activity-819c88632aa2b8052e4f4a50c594a352b9e6593c92d4ad77623154de3efe1873",
+          "label": "Parcel",
+          "kind": "object_directly_follows",
+          "directed": true,
+          "metrics": [
+            {
+              "name": "event_pairs",
+              "value": 2,
+              "unit": "distinct_event_pairs"
+            },
+            {
+              "name": "objects",
+              "value": 2,
+              "unit": "distinct_objects"
+            },
+            {
+              "name": "occurrences",
+              "value": 2,
+              "unit": "object_trace_occurrences"
+            }
+          ],
+          "details": [
+            {
+              "name": "object_type",
+              "value": "Parcel"
+            }
+          ],
+          "path": "M 782.3516000000001 216.91 C 819.2816 187.84 872.8716000000001 145.64 911.7216000000001 115.06",
+          "arrowPoints": "909.5916000000001,113.17 917.6016000000001,110.42 913.0516,117.57",
+          "labelX": 850.5016,
+          "labelY": 136.55,
+          "originalStyle": "--pv-color: hsl(176 43% 42%);",
+          "objectType": "Parcel"
+        },
+        {
+          "id": "oc-ocdfg-dd01a8cd0a261212c8a0ea0d48775b402b655123f93f66b0bb5b2bc627c25b54",
+          "source": "oc-activity-0ea48286fd6505d657ef27927d03074e77270abb6117c71aa19a0f372a714b88",
+          "target": "oc-activity-5a8443ff12c836e83154b82849229ec9b84b456212f2ff571e258b2e6e16cfdb",
+          "label": "Parcel",
+          "kind": "object_directly_follows",
+          "directed": true,
+          "metrics": [
+            {
+              "name": "event_pairs",
+              "value": 2,
+              "unit": "distinct_event_pairs"
+            },
+            {
+              "name": "objects",
+              "value": 2,
+              "unit": "distinct_objects"
+            },
+            {
+              "name": "occurrences",
+              "value": 2,
+              "unit": "object_trace_occurrences"
+            }
+          ],
+          "details": [
+            {
+              "name": "object_type",
+              "value": "Parcel"
+            }
+          ],
+          "path": "M 572.1116000000001 276.03 C 581.5616 279.44 591.4316 282.39 601.0016 284.26 C 624.1216000000001 288.76 630.8816 288.76 654.0016 284.26 C 660.5816000000001 282.97 667.3016 281.18 673.9316 279.07",
+          "arrowPoints": "672.9816000000001,276.44 681.4616000000001,276.51 674.7816,281.74",
+          "labelX": 627.5016,
+          "labelY": 278.26,
+          "originalStyle": "--pv-color: hsl(176 43% 42%);",
+          "objectType": "Parcel"
+        },
+        {
+          "id": "oc-ocdfg-bfd7aa78b00d8da5c6e88955e0e6c7a48d921312741ac644f5aeb006c432ed4a",
+          "source": "oc-activity-a7542dd2e5286a0cf48aa67a31ae9785538ce6dabefbe18a15690e9331a657a3",
+          "target": "oc-activity-5a8443ff12c836e83154b82849229ec9b84b456212f2ff571e258b2e6e16cfdb",
+          "label": "Parcel",
+          "kind": "object_directly_follows",
+          "directed": true,
+          "metrics": [
+            {
+              "name": "event_pairs",
+              "value": 1,
+              "unit": "distinct_event_pairs"
+            },
+            {
+              "name": "objects",
+              "value": 1,
+              "unit": "distinct_objects"
+            },
+            {
+              "name": "occurrences",
+              "value": 1,
+              "unit": "object_trace_occurrences"
+            }
+          ],
+          "details": [
+            {
+              "name": "object_type",
+              "value": "Parcel"
+            }
+          ],
+          "path": "M 943.1416 370.67 C 928.7116000000001 393.82 906.0516 422.81 877.0016 436.26 C 855.6216000000001 446.15 843.7916 449.03 824.0016 436.26 C 775.0916000000001 404.68 754.3616000000001 337.01 745.7816 292.59",
+          "arrowPoints": "743.0816000000001,293.35 744.4016,284.97 748.5916000000001,292.35",
+          "labelX": 850.5016,
+          "labelY": 430.26,
+          "originalStyle": "--pv-color: hsl(176 43% 42%);",
+          "objectType": "Parcel"
+        },
+        {
+          "id": "oc-ocdfg-f9b98fdb3769c38ef248c781ba13ff00c24798de5221dbfa47e95d248cdc72eb",
+          "source": "oc-activity-819c88632aa2b8052e4f4a50c594a352b9e6593c92d4ad77623154de3efe1873",
+          "target": "oc-activity-0aa71f0fca018403541740bd5fef5f831991aabf1d2306ad9a24272fde807555",
+          "label": "Parcel",
+          "kind": "object_directly_follows",
+          "directed": true,
+          "metrics": [
+            {
+              "name": "event_pairs",
+              "value": 2,
+              "unit": "distinct_event_pairs"
+            },
+            {
+              "name": "objects",
+              "value": 2,
+              "unit": "distinct_objects"
+            },
+            {
+              "name": "occurrences",
+              "value": 2,
+              "unit": "object_trace_occurrences"
+            }
+          ],
+          "details": [
+            {
+              "name": "object_type",
+              "value": "Parcel"
+            }
+          ],
+          "path": "M 1018.1116000000001 102.03 C 1027.5616 105.44 1037.4316 108.39 1047.0016 110.26 C 1070.1216 114.76 1076.8816000000002 114.76 1100.0016 110.26 C 1106.5816 108.97 1113.3016 107.18 1119.9316000000001 105.07",
+          "arrowPoints": "1118.9816,102.44 1127.4616,102.51 1120.7816,107.74",
+          "labelX": 1073.5016,
+          "labelY": 104.255,
+          "originalStyle": "--pv-color: hsl(176 43% 42%);",
+          "objectType": "Parcel"
+        }
+      ]
+    },
+    {
+      "id": "variant-chevron",
+      "title": "Variant 2 — 2/3 executions",
+      "kind": "chevron",
+      "width": 841.0,
+      "height": 327.0,
+      "sourcePath": ".artifacts/graphviz-2026-09-16/qa/variant-2.svg",
+      "sourceSha256": "07f3ad7834c1e82ace329b4d54e200339bfa1d637e927428f808492dbfbf2353",
+      "panelId": "variant-2/chevrons",
+      "description": "One lane per in-scope object instance. Shared events retain one ID and identical positions across participating lanes. Start is longest-path depth; inclusive end is the earliest successor start minus one (sink: start). Positions are precedence layers, not durations; equal positions do not prove concurrency. Boundary objects and excluded qualifiers are evidence, not additional lanes.",
+      "provenance": [
+        {
+          "calculation_id": "pix.computation.v1:sha256:7185a5f391ee1d9d58aa8fda347ff80a0ecb510e43500f8dcccaf9b99a9df781",
+          "source_digest": "pix.ocel.canonical.v1:sha256:db23a6ad5f03d7b1541b816e3bc7d3d92dd90d6f8bd9fd2688c6e5241ad311bc",
+          "model_digest": null,
+          "operator_id": "pix.discover_executions",
+          "status": "computed",
+          "details": [
+            {
+              "name": "operator_version",
+              "value": "1.0.0"
+            },
+            {
+              "name": "request_type",
+              "value": "pix.contracts.execution.ExecutionSpec"
+            },
+            {
+              "name": "request_encoding",
+              "value": "pix.result/1.2.0"
+            },
+            {
+              "name": "request_json",
+              "value": "{\"leading_object_type\": null, \"method\": \"connected_components\", \"object_types\": null, \"qualifiers\": null, \"tie_policy\": \"reject\"}"
+            }
+          ],
+          "panel_ids": [
+            "variant-frequencies",
+            "variant-1/chevrons",
+            "variant-2/chevrons",
+            "variant-incidence-evidence",
+            "variant-boundary-objects",
+            "variant-order-evidence",
+            "variant-unlaned-events"
+          ],
+          "input_path": [
+            0
+          ]
+        },
+        {
+          "calculation_id": "pix.computation.v1:sha256:9e98fb2a4e056d53a561b42372f82b01a7093f91476686a812a214b846950f4b",
+          "source_digest": "pix.ocel.canonical.v1:sha256:db23a6ad5f03d7b1541b816e3bc7d3d92dd90d6f8bd9fd2688c6e5241ad311bc",
+          "model_digest": null,
+          "operator_id": "pix.discover_variants",
+          "status": "computed",
+          "details": [
+            {
+              "name": "operator_version",
+              "value": "1.0.0"
+            },
+            {
+              "name": "request_type",
+              "value": "pix.contracts.execution.VariantSpec"
+            },
+            {
+              "name": "request_encoding",
+              "value": "pix.result/1.2.0"
+            },
+            {
+              "name": "request_json",
+              "value": "{\"equivalence\": \"event_object_incidence\", \"max_search_states\": 100000}"
+            }
+          ],
+          "panel_ids": [
+            "variant-frequencies",
+            "variant-1/chevrons",
+            "variant-2/chevrons",
+            "variant-incidence-evidence",
+            "variant-boundary-objects",
+            "variant-order-evidence",
+            "variant-unlaned-events"
+          ],
+          "input_path": [
+            1
+          ]
+        },
+        {
+          "calculation_id": "pix.computation.v1:sha256:7185a5f391ee1d9d58aa8fda347ff80a0ecb510e43500f8dcccaf9b99a9df781",
+          "source_digest": null,
+          "model_digest": null,
+          "operator_id": null,
+          "status": null,
+          "details": [
+            {
+              "name": "role",
+              "value": "parent"
+            }
+          ],
+          "panel_ids": [
+            "variant-frequencies",
+            "variant-1/chevrons",
+            "variant-2/chevrons",
+            "variant-incidence-evidence",
+            "variant-boundary-objects",
+            "variant-order-evidence",
+            "variant-unlaned-events"
+          ],
+          "input_path": [
+            1
+          ]
+        }
+      ],
+      "issues": [],
+      "frequency": 2,
+      "population": 3,
+      "variantId": "pix:variant:sha256:972342e9d5463887fc7485c4bc4b7ab61012a14cb767e2fb5071a98fd7b6e2d0",
+      "lanes": [
+        {
+          "id": "Item_3",
+          "label": "Item: Item_3",
+          "object_type": "Item",
+          "object_id": "Item_3",
+          "details": [
+            {
+              "name": "leading_object",
+              "value": false
+            }
+          ],
+          "x": 0.0,
+          "y": 66.0,
+          "width": 841.0,
+          "height": 72.0,
+          "labelX": 34.0,
+          "labelY": 98.0,
+          "originalFill": "hsl(70 43% 97%)"
+        },
+        {
+          "id": "Item_4",
+          "label": "Item: Item_4",
+          "object_type": "Item",
+          "object_id": "Item_4",
+          "details": [
+            {
+              "name": "leading_object",
+              "value": false
+            }
+          ],
+          "x": 0.0,
+          "y": 138.0,
+          "width": 841.0,
+          "height": 72.0,
+          "labelX": 34.0,
+          "labelY": 170.0,
+          "originalFill": "hsl(70 43% 95%)"
+        },
+        {
+          "id": "Order_2",
+          "label": "Order: Order_2",
+          "object_type": "Order",
+          "object_id": "Order_2",
+          "details": [
+            {
+              "name": "leading_object",
+              "value": false
+            }
+          ],
+          "x": 0.0,
+          "y": 210.0,
+          "width": 841.0,
+          "height": 72.0,
+          "labelX": 34.0,
+          "labelY": 242.0,
+          "originalFill": "hsl(335 43% 97%)"
+        }
+      ],
+      "events": [
+        {
+          "id": "execution-2:fork",
+          "label": "Fork",
+          "start": 0,
+          "end": 0,
+          "lane_ids": [
+            "Item_3",
+            "Item_4",
+            "Order_2"
+          ],
+          "details": [
+            {
+              "name": "execution_id",
+              "value": "pix.execution:sha256:0a09fae78fc8616977c9851f7f837bd46f24e59e2ff93f6fce38c85f7dcea4ff"
+            },
+            {
+              "name": "observed_timestamp",
+              "value": "2026-09-16T11:00:00+00:00"
+            },
+            {
+              "name": "coordinate_unit",
+              "value": "precedence layers (inclusive)"
+            },
+            {
+              "name": "qualified_incidence",
+              "value": "[[\"Item_3\",\"flow\"],[\"Item_4\",\"flow\"],[\"Order_2\",\"flow\"]]"
+            }
+          ]
+        },
+        {
+          "id": "execution-2:check",
+          "label": "Check",
+          "start": 1,
+          "end": 2,
+          "lane_ids": [
+            "Item_4"
+          ],
+          "details": [
+            {
+              "name": "execution_id",
+              "value": "pix.execution:sha256:0a09fae78fc8616977c9851f7f837bd46f24e59e2ff93f6fce38c85f7dcea4ff"
+            },
+            {
+              "name": "observed_timestamp",
+              "value": "2026-09-16T11:02:00+00:00"
+            },
+            {
+              "name": "coordinate_unit",
+              "value": "precedence layers (inclusive)"
+            },
+            {
+              "name": "qualified_incidence",
+              "value": "[[\"Item_4\",\"flow\"]]"
+            }
+          ]
+        },
+        {
+          "id": "execution-2:inspect",
+          "label": "Inspect",
+          "start": 1,
+          "end": 1,
+          "lane_ids": [
+            "Item_3"
+          ],
+          "details": [
+            {
+              "name": "execution_id",
+              "value": "pix.execution:sha256:0a09fae78fc8616977c9851f7f837bd46f24e59e2ff93f6fce38c85f7dcea4ff"
+            },
+            {
+              "name": "observed_timestamp",
+              "value": "2026-09-16T11:01:00+00:00"
+            },
+            {
+              "name": "coordinate_unit",
+              "value": "precedence layers (inclusive)"
+            },
+            {
+              "name": "qualified_incidence",
+              "value": "[[\"Item_3\",\"flow\"]]"
+            }
+          ]
+        },
+        {
+          "id": "execution-2:pack",
+          "label": "Pack",
+          "start": 2,
+          "end": 2,
+          "lane_ids": [
+            "Item_3"
+          ],
+          "details": [
+            {
+              "name": "execution_id",
+              "value": "pix.execution:sha256:0a09fae78fc8616977c9851f7f837bd46f24e59e2ff93f6fce38c85f7dcea4ff"
+            },
+            {
+              "name": "observed_timestamp",
+              "value": "2026-09-16T11:03:00+00:00"
+            },
+            {
+              "name": "coordinate_unit",
+              "value": "precedence layers (inclusive)"
+            },
+            {
+              "name": "qualified_incidence",
+              "value": "[[\"Item_3\",\"flow\"]]"
+            }
+          ]
+        },
+        {
+          "id": "execution-2:join",
+          "label": "Join",
+          "start": 3,
+          "end": 3,
+          "lane_ids": [
+            "Item_3",
+            "Item_4",
+            "Order_2"
+          ],
+          "details": [
+            {
+              "name": "execution_id",
+              "value": "pix.execution:sha256:0a09fae78fc8616977c9851f7f837bd46f24e59e2ff93f6fce38c85f7dcea4ff"
+            },
+            {
+              "name": "observed_timestamp",
+              "value": "2026-09-16T11:04:00+00:00"
+            },
+            {
+              "name": "coordinate_unit",
+              "value": "precedence layers (inclusive)"
+            },
+            {
+              "name": "qualified_incidence",
+              "value": "[[\"Item_3\",\"flow\"],[\"Item_4\",\"audit\"],[\"Item_4\",\"flow\"],[\"Order_2\",\"flow\"]]"
+            }
+          ]
+        }
+      ],
+      "appearances": [
+        {
+          "eventId": "execution-2:fork",
+          "laneId": "Item_3",
+          "points": "195,76 326,76 339,101.5 326,127 195,127 208,101.5",
+          "labelX": 269.0,
+          "labelY": 101.0,
+          "label": "Fork",
+          "originalFill": "url(#pv-chevron-1-3-0)",
+          "originalStroke": "hsl(70 43% 36%)"
+        },
+        {
+          "eventId": "execution-2:fork",
+          "laneId": "Item_4",
+          "points": "195,148 326,148 339,173.5 326,199 195,199 208,173.5",
+          "labelX": 269.0,
+          "labelY": 173.0,
+          "label": "Fork",
+          "originalFill": "url(#pv-chevron-1-3-0)",
+          "originalStroke": "hsl(70 43% 36%)"
+        },
+        {
+          "eventId": "execution-2:fork",
+          "laneId": "Order_2",
+          "points": "195,220 326,220 339,245.5 326,271 195,271 208,245.5",
+          "labelX": 269.0,
+          "labelY": 245.0,
+          "label": "Fork",
+          "originalFill": "url(#pv-chevron-1-3-0)",
+          "originalStroke": "hsl(335 43% 36%)"
+        },
+        {
+          "eventId": "execution-2:check",
+          "laneId": "Item_4",
+          "points": "349,148 634,148 647,173.5 634,199 349,199 362,173.5",
+          "labelX": 500.0,
+          "labelY": 173.0,
+          "label": "Check",
+          "originalFill": "hsl(70 43% 83%)",
+          "originalStroke": "hsl(70 43% 36%)"
+        },
+        {
+          "eventId": "execution-2:inspect",
+          "laneId": "Item_3",
+          "points": "349,76 480,76 493,101.5 480,127 349,127 362,101.5",
+          "labelX": 423.0,
+          "labelY": 101.0,
+          "label": "Inspect",
+          "originalFill": "hsl(70 43% 88%)",
+          "originalStroke": "hsl(70 43% 36%)"
+        },
+        {
+          "eventId": "execution-2:pack",
+          "laneId": "Item_3",
+          "points": "503,76 634,76 647,101.5 634,127 503,127 516,101.5",
+          "labelX": 577.0,
+          "labelY": 101.0,
+          "label": "Pack",
+          "originalFill": "hsl(70 43% 88%)",
+          "originalStroke": "hsl(70 43% 36%)"
+        },
+        {
+          "eventId": "execution-2:join",
+          "laneId": "Item_3",
+          "points": "657,76 788,76 801,101.5 788,127 657,127 670,101.5",
+          "labelX": 731.0,
+          "labelY": 101.0,
+          "label": "Join",
+          "originalFill": "url(#pv-chevron-1-3-4)",
+          "originalStroke": "hsl(70 43% 36%)"
+        },
+        {
+          "eventId": "execution-2:join",
+          "laneId": "Item_4",
+          "points": "657,148 788,148 801,173.5 788,199 657,199 670,173.5",
+          "labelX": 731.0,
+          "labelY": 173.0,
+          "label": "Join",
+          "originalFill": "url(#pv-chevron-1-3-4)",
+          "originalStroke": "hsl(70 43% 36%)"
+        },
+        {
+          "eventId": "execution-2:join",
+          "laneId": "Order_2",
+          "points": "657,220 788,220 801,245.5 788,271 657,271 670,245.5",
+          "labelX": 731.0,
+          "labelY": 245.0,
+          "label": "Join",
+          "originalFill": "url(#pv-chevron-1-3-4)",
+          "originalStroke": "hsl(335 43% 36%)"
+        }
+      ],
+      "slots": [
+        {
+          "label": "0",
+          "x": 267.0,
+          "y": 44.0
+        },
+        {
+          "label": "1",
+          "x": 421.0,
+          "y": 44.0
+        },
+        {
+          "label": "2",
+          "x": 575.0,
+          "y": 44.0
+        },
+        {
+          "label": "3",
+          "x": 729.0,
+          "y": 44.0
+        }
+      ]
+    }
+  ]
+}
+</script>
+  <script>
+    (()=>{
+      const root=document.getElementById('pix-style-samples'),app=root.querySelector('.sg-app');
+      const samples=JSON.parse(document.getElementById('pix-style-sample-data').textContent).samples;
+      const canvas=root.querySelector('.sg-canvas'),art=root.querySelector('.sg-svg'),layer=root.querySelector('.sg-node-layer');
+      const designs=[{title:'승인 · 반려 · 재작업',sub:'중립색 노드 · 활동명과 수치의 위계',finish:'neutral'},{title:'Agent 검증과 재시도',sub:'잉크색 곡선 · 간결한 보고서 표현',finish:'ink'},{title:'주문 · 상품 · 택배의 관계',sub:'공유 활동은 중립색 · 객체형은 간선 색으로',finish:'neutral'},{title:'공유 이벤트와 객체별 실행',sub:'객체별 행 · 공유 이벤트의 동일한 위치',finish:'neutral'}];
+      const choices={finish:'auto',metrics:true};let current=1,selected=null,scale=1,px=0,py=0,drag=null,lastWidth=0;
+      const measureHost=document.createElement('div'),measureCache=new Map();measureHost.setAttribute('aria-hidden','true');measureHost.setAttribute('inert','');measureHost.style.cssText='position:absolute;left:0;top:0;visibility:hidden;pointer-events:none';app.append(measureHost);
+      const ns='http://www.w3.org/2000/svg';
+      const make=(tag,attrs={})=>{const e=document.createElementNS(ns,tag);Object.entries(attrs).forEach(([k,v])=>e.setAttribute(k,v));return e;};
+      const typeColor=t=>`var(--sg-${({Order:'order',Item:'item',Parcel:'parcel'})[t]||'edge'})`;
+      const typeFill=t=>`var(--sg-${({Order:'order',Item:'item'})[t]||'item'}-soft)`;
+      const text=(x,y,value,size=12,attrs={})=>{const e=make('text',{x,y,'font-size':size/scale,...attrs});e.textContent=value;return e;};
+      function applyFinish(){app.dataset.finish=choices.finish==='auto'?designs[current].finish:choices.finish;}
+      function nodeContent(n){const content=document.createDocumentFragment(),name=document.createElement('span');name.className='sg-node-name';name.textContent=n.label;content.append(name);if(choices.metrics){const m=n.metrics.find(m=>m.name==='events')||n.metrics[0];if(m){const value=document.createElement('span');value.className='sg-node-value';value.textContent=`${m.value} ${m.unit==='distinct_events'?'events':m.unit}`;content.append(value);}}return content;}
+      function minimumScale(s){if(s.kind!=='graph')return .65;const key=`${s.id}|${app.dataset.finish}|${choices.metrics}`;if(measureCache.has(key))return measureCache.get(key);let floor=.65;for(const n of s.nodes){const probe=document.createElement('button');probe.type='button';probe.className='sg-node';probe.style.cssText='position:static;display:inline-flex;width:max-content;height:auto;max-width:none';probe.append(nodeContent(n));measureHost.append(probe);const bounds=probe.getBoundingClientRect();floor=Math.max(floor,(Math.ceil(bounds.width)+2)/n.width,(Math.ceil(bounds.height)+4)/n.height);probe.remove();}measureCache.set(key,floor);return floor;}
+      function center(readable=false){applyFinish();const s=samples[current],w=canvas.clientWidth,floor=minimumScale(s);scale=readable?Math.max(1,floor):Math.max(floor,Math.min(1,(w-36)/s.width));px=s.width*scale<=w?(w-s.width*scale)/2:18;py=24;draw();}
+      function select(value){selected=selected===value?null:value;draw();}
+      function detail(){const s=samples[current],box=root.querySelector('.sg-detail');let label,description;
+        if(selected&&s.kind==='graph'){const n=s.nodes.find(n=>n.id===selected);label=n.label;description=n.metrics.map(m=>`${m.name}: ${m.value} ${m.unit}`).join(' · ');}
+        else if(selected){const e=s.events.find(e=>e.id===selected);label=e.label;description=`${e.lane_ids.length}개 객체 · 단계 ${e.start}–${e.end} · ${e.id}`;}
+        else if(s.kind==='graph'){label=`${s.nodes.length} activities · ${s.edges.length} relations`;description=canvas.clientWidth<s.width*scale?'좌우로 드래그해 전체 관계 확인 · 노드를 선택하면 상세 수치 표시':'노드를 선택하면 상세 수치 표시 · 관계와 계산값은 동일';}
+        else{label=`Variant · ${s.frequency}/${s.population} executions`;description=`${s.lanes.length}개 객체 · ${s.events.length}개 이벤트 · 공유 이벤트를 선택하면 모든 참여 행 강조`;}
+        box.querySelector('strong').textContent=label;box.querySelector('span').textContent=description;
+      }
+      function graph(s,g){
+        const selectedEdges=new Set(selected?s.edges.filter(e=>e.source===selected||e.target===selected).map(e=>e.id):[]);
+        for(const e of s.edges){const color=e.objectType?typeColor(e.objectType):'var(--sg-edge)';const path=make('path',{d:e.path,class:'sg-edge',stroke:color});if(selectedEdges.has(e.id))path.setAttribute('stroke-width','2.4');g.append(path);if(e.arrowPoints)g.append(make('polygon',{points:e.arrowPoints,fill:color}));if(e.label!==null&&e.label!==''&&e.labelX!==null){g.append(text(e.labelX,e.labelY,e.label,11,{'text-anchor':'middle',class:'sg-edge-label'}));}}
+        for(const n of s.nodes){const b=document.createElement('button');b.type='button';b.className='sg-node';b.style.cssText=`left:${px+n.x*scale}px;top:${py+n.y*scale}px;width:${n.width*scale}px;height:${n.height*scale}px`;b.setAttribute('aria-pressed',String(selected===n.id));b.setAttribute('aria-label',`${n.label}. ${n.metrics.map(m=>`${m.name} ${m.value} ${m.unit}`).join('. ')}`);b.append(nodeContent(n));b.addEventListener('click',()=>select(n.id));layer.append(b);}
+      }
+      function chevrons(s,g){
+        const defs=make('defs');g.append(defs);const lanes=new Map(s.lanes.map(l=>[l.id,l]));
+        for(const l of s.lanes){g.append(make('rect',{x:l.x,y:l.y,width:l.width,height:l.height,fill:`color-mix(in srgb, ${typeFill(l.object_type)} 38%, var(--sg-paper))`}));g.append(make('rect',{x:15,y:l.y+22,width:4,height:27,rx:2,fill:typeColor(l.object_type)}));g.append(text(l.labelX,l.labelY,l.object_id,12,{'font-weight':500}));g.append(text(l.labelX,l.labelY+18,l.object_type,11,{fill:'var(--sg-muted)'}));}
+        g.append(text(20,28,'객체',12,{'font-weight':500}));g.append(text(190,25,'선행 단계',12,{'font-weight':500}));
+        for(const slot of s.slots)g.append(text(slot.x,slot.y,slot.label,11,{'text-anchor':'middle',fill:'var(--sg-muted)'}));
+        for(let i=0;i<s.events.length;i++){const e=s.events[i],types=[...new Set(e.lane_ids.map(id=>lanes.get(id).object_type))].sort();if(types.length>1){const gradient=make('linearGradient',{id:`sg-shared-${i}`,x1:'0%',x2:'100%'});types.forEach((t,j)=>{gradient.append(make('stop',{offset:`${100*j/types.length}%`,'stop-color':typeFill(t)}),make('stop',{offset:`${100*(j+1)/types.length}%`,'stop-color':typeFill(t)}));});defs.append(gradient);}
+          for(const a of s.appearances.filter(a=>a.eventId===e.id)){const lane=lanes.get(a.laneId),fill=types.length>1?`url(#sg-shared-${i})`:typeFill(lane.object_type);const poly=make('polygon',{points:a.points,fill,stroke:typeColor(lane.object_type),'stroke-width':selected===e.id?2.6:1,'vector-effect':'non-scaling-stroke','stroke-linejoin':'round'});g.append(poly);const pts=a.points.split(' ').map(p=>p.split(',').map(Number)),xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]);const b=document.createElement('button');b.type='button';b.className='sg-event-button';b.style.cssText=`left:${px+Math.min(...xs)*scale}px;top:${py+Math.min(...ys)*scale}px;width:${(Math.max(...xs)-Math.min(...xs))*scale}px;height:${(Math.max(...ys)-Math.min(...ys))*scale}px`;b.textContent=e.label;b.setAttribute('aria-label',`${e.label}, ${lane.object_id}, 공유 이벤트 ${e.id}`);b.setAttribute('aria-pressed',String(selected===e.id));b.addEventListener('click',()=>select(e.id));layer.append(b);}
+        }
+      }
+      function legend(s){const e=root.querySelector('.sg-legend');e.replaceChildren();const add=(label,color)=>{const v=document.createElement('span');if(color){const sw=document.createElement('i');sw.className='sg-swatch';sw.style.background=color;v.append(sw);}v.append(document.createTextNode(label));e.append(v);};
+        if(s.kind==='chevron'){[...new Set(s.lanes.map(l=>l.object_type))].sort().forEach(t=>add(t,typeColor(t)));add('폭: 선행 단계 · 소요시간 아님');add('분할 색: 공유 이벤트의 참여 객체형');}
+        else{const types=[...new Set(s.edges.map(e=>e.objectType).filter(Boolean))].sort();types.forEach(t=>add(t,typeColor(t)));if(!types.length)add('간선 수치: 전이 횟수');else add('활동 노드는 여러 객체형이 공유');add('선 굵기: 빈도 미반영');}
+      }
+      function draw(){const s=samples[current],d=designs[current];applyFinish();const floor=minimumScale(s);if(scale<floor){const cx=canvas.clientWidth/2;px=cx-(cx-px)*floor/scale;py=24+(py-24)*floor/scale;scale=floor;}const height=Math.max(270,Math.min(520,s.height*scale+52));canvas.style.height=height+'px';art.replaceChildren();layer.replaceChildren();art.setAttribute('viewBox',`0 0 ${canvas.clientWidth} ${height}`);art.setAttribute('aria-label',`${d.title}. ${s.kind==='graph'?s.nodes.length+' activities, '+s.edges.length+' relations':s.events.length+' events in '+s.lanes.length+' object lanes'}`);const g=make('g',{transform:`translate(${px} ${py}) scale(${scale})`});art.append(g);if(s.kind==='graph')graph(s,g);else chevrons(s,g);root.querySelector('[data-action="minus"]').disabled=scale<=floor+.00001;root.querySelector('[data-action="plus"]').disabled=scale>=Math.max(1.6,floor)-.00001;legend(s);detail();}
+      function change(index){current=index;selected=null;root.querySelectorAll('.sg-tab').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.case)===index)));root.querySelector('.sg-title').textContent=designs[index].title;root.querySelector('.sg-subtitle').textContent=designs[index].sub;center();}
+      root.querySelectorAll('[data-case]').forEach(b=>b.addEventListener('click',()=>change(Number(b.dataset.case))));
+      root.querySelectorAll('[data-action]').forEach(b=>b.addEventListener('click',()=>{const a=b.dataset.action;if(a==='overview'||a==='readable'){center(a==='readable');return;}const floor=minimumScale(samples[current]),next=Math.max(floor,Math.min(Math.max(1.6,floor),scale*(a==='plus'?1.2:1/1.2)));const cx=canvas.clientWidth/2,cy=canvas.clientHeight/2;px=cx-(cx-px)*next/scale;py=cy-(cy-py)*next/scale;scale=next;draw();}));
+      canvas.addEventListener('pointerdown',e=>{if(e.target.closest('button'))return;drag={x:e.clientX,y:e.clientY,px,py};canvas.setPointerCapture(e.pointerId);});canvas.addEventListener('pointermove',e=>{if(!drag)return;px=drag.px+e.clientX-drag.x;py=drag.py+e.clientY-drag.y;draw();});const stop=()=>{drag=null;};canvas.addEventListener('pointerup',stop);canvas.addEventListener('pointercancel',stop);
+      change(1);new ResizeObserver(()=>{if(canvas.clientWidth!==lastWidth){lastWidth=canvas.clientWidth;center();}}).observe(canvas);
+      if(document.fonts){const refresh=()=>{measureCache.clear();draw();};document.fonts.ready.then(refresh);document.fonts.addEventListener('loadingdone',refresh);}
+      if(globalThis.Tweak){const tweak=new Tweak({container:root,onChange:draw});tweak.addSelect(choices,'finish',{label:'표현',options:[{label:'샘플별 추천',value:'auto'},{label:'중립색 분석',value:'neutral'},{label:'잉크색 보고서',value:'ink'}]});tweak.addToggle(choices,'metrics',{label:'노드 수치 표시'});}
+    })();
+  </script>
+</div>

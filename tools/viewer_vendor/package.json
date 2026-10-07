@@ -1,0 +1,13 @@
+{
+  "name": "pix-viewer-vendor",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Reproduce PIX's offline ELK layout dependency; not a PIX Python runtime dependency.",
+  "scripts": {
+    "vendor": "node vendor.cjs",
+    "check": "node vendor.cjs --check"
+  },
+  "dependencies": {
+    "elkjs": "0.12.0"
+  }
+}
