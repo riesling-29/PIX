@@ -21,9 +21,10 @@
 | `ChartPanel` | `id, title, chart_type, series, x_type, x_label, y_label, x_unit, y_unit, description` | 막대·선·산점도. |
 | `TimelinePanel` | `id, title, lanes, items, axis_type, unit, description` | 객체·케이스별 실제 시각 또는 상대 순서. |
 | `ChevronPanel` | `id, title, lanes, events, variant_id, frequency, population, description` | 객체 instance별 OC execution의 선행관계 슬롯과 공유 사건. |
+| `TraceComparisonPanel` | `id, title, groups, candidates, alignments, reference_group_id, source_case_count, unassigned_case_ids, description` | 2026-10-07 추가. 그룹 대표 후보와 사전 계산한 방향별 편집 witness를 한 패널에서 선택·비교. |
 | `TablePanel` | `id, title, columns, rows, description` | 타입을 유지한 원시 근거와 상세 값. |
 
-패널의 `kind`는 생성자가 설정한다. 각각 `graph`, `matrix`, `chart`, `timeline`, `chevron`, `table`이며 임의로 다른 종류를 선언할 수 없다. 문서의 `status`는 `ok`, `partial`, `unsupported`, `error` 중 하나다. 이는 시각화 문서의 표시 상태다. 원본 계산의 상태는 `VisualProvenance.status`에 원래 문자열 그대로 보존하며, `ok`가 계산의 정확성을 인증하지 않는다.
+패널의 `kind`는 생성자가 설정한다. 각각 `graph`, `matrix`, `chart`, `timeline`, `chevron`, `table`, `trace_comparison`이며 임의로 다른 종류를 선언할 수 없다. 문서의 `status`는 `ok`, `partial`, `unsupported`, `error` 중 하나다. 이는 시각화 문서의 표시 상태다. 원본 계산의 상태는 `VisualProvenance.status`에 원래 문자열 그대로 보존하며, `ok`가 계산의 정확성을 인증하지 않는다.
 
 `VisualProvenance.panel_ids`는 해당 출처에 속하는 패널 ID의 튜플이다. 중복과 빈 ID는 허용하지 않고, 명시한 모든 ID는 문서에 실제로 존재해야 한다. `input_path`는 합성 문서 안에서 입력이 온 위치를 나타내는 0 이상의 정수 튜플이며, bool은 허용하지 않는다. 예를 들어 `(1, 0)`은 두 번째 입력 안의 첫 번째 입력이다. 합성 시 패널 ID에 prefix를 붙이면 이 참조도 함께 변경하고, 중첩 입력 경로도 유지해야 한다. 이 두 필드는 기존 `details` 뒤에 추가되어 기존 위치 인자 호출을 유지한다.
 
@@ -123,3 +124,17 @@ JSON 디코딩은 고정된 계약 클래스 목록만 사용한다. 입력의 �
 위 숫자는 2026-09-16 Graphviz 기본값·ChevronPanel 확장 전의 역사 기록이다. 새 필드·슬롯·shared-event 표시·출처 결합·브라우저와 wheel 검사는 변경 후 별도 실행 증거로 판정한다.
 
 계약의 유효 범위는 위 schema와 현재 생성자다. schema, 패널 의미, 숫자·시간 정책을 바꾸면 이 문서와 왕복·오류 테스트를 함께 갱신해야 한다. 타입 손실, 동일 ID의 오병합, 미계산 값을 0으로 대체하는 사례, 또는 미지원 필드를 묵살하는 입력이 발견되면 해당 보존 주장을 철회하고 회귀 사례를 추가한다. PM4Py/OCPA의 모든 visualization을 동일하게 재현했다는 주장은 이 계약과 테스트만으로 할 수 없다.
+
+## 그룹별 대표 비교의 추가 계약 (2026-10-07)
+
+`trace_comparison`은 CaseLog의 명시적 그룹과 정확한 sequence variant를 사용한다.
+후보의 case/event identity, 그룹 및 variant membership, 기본 선택과 모든 다른 그룹
+후보 간 방향별 alignment outcome을 보존한다. codec은 membership partition, 후보 참조,
+원 sequence와 event ID를 재구성하는 witness, move 비용 합계를 검증한다.
+optimal 표시는 계산이 공급한 상태이며 codec이 최적해를 재계산해 인증하지 않는다.
+새 panel kind를 모르는 기존 reader는 명시적으로 거부한다. 기존 kind의 스키마는 유지한다.
+
+화면 상태는 원 문서를 변경하지 않는다. 기준 변경·대표 변경·그룹 표시·차이 필터는
+사전 계산 evidence의 선택이다. SVG에는 선택한 그룹/대표/기준/필터를 기록한다.
+기준 앞·사이·뒤의 삽입 슬롯은 순서만 보존하며 대상 그룹끼리의 대응을 주장하지 않는다.
+자세한 사용 및 한도는 [그룹 비교 가이드](../user-guide/TRACE_GROUP_COMPARISON_GUIDE.md)에 있다.

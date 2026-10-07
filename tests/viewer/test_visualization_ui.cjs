@@ -420,3 +420,81 @@ test('failed input without associated panels is not global or leaked into anothe
   const empty = container(), emptySource = documentFor(); emptySource.provenance = [failure]; const emptyViewer = UI.mount(empty, emptySource); await emptyViewer.ready;
   assert.match(find(empty, '.pv-inspector').textContent, /pix.failed_input/); assert.match(find(empty, '.pv-inspector').textContent, /Associated panel IDsNo associated panels/); assert.doesNotMatch(find(empty, '.pv-inspector').textContent, /All panels/);
 });
+
+function comparisonFixture() {
+  const candidate = (id, group_id, activities) => ({id, group_id, case_id:id, activities, event_ids:activities.map((_,i)=>`${id}:${i}`), member_case_ids:[id], rank:1, selection:'frequency'});
+  const n=candidate('n','normal',['A','B']), b=candidate('b','problem',['A','X','B']), c=candidate('c','problem',['A','C']), e=candidate('e','empty-trace',[]);
+  c.rank=2;
+  const move=(kind,l,li,r,ri)=>({kind, log_activity:li===null?null:l.activities[li],log_event_id:li===null?null:l.event_ids[li],model_activity:ri===null?null:r.activities[ri],reference_event_id:ri===null?null:r.event_ids[ri],cost:kind==='synchronous'?0:1});
+  const pair=(l,r,moves)=>({candidate_id:l.id,reference_id:r.id,status:'optimal',cost:moves.reduce((sum,m)=>sum+m.cost,0),moves});
+  const pairs=[
+    pair(b,n,[move('synchronous',b,0,n,0),move('log',b,1,n,null),move('synchronous',b,2,n,1)]),
+    pair(n,b,[move('synchronous',n,0,b,0),move('model',n,null,b,1),move('synchronous',n,1,b,2)]),
+    pair(c,n,[move('synchronous',c,0,n,0),move('substitution',c,1,n,1)]),
+    pair(n,c,[move('synchronous',n,0,c,0),move('substitution',n,1,c,1)]),
+  ];
+  for (const x of [n,b,c]) {
+    pairs.push(pair(x,e,x.activities.map((_,i)=>move('log',x,i,e,null))));
+    pairs.push(pair(e,x,x.activities.map((_,i)=>move('model',e,null,x,i))));
+  }
+  return {kind:'trace_comparison',id:'comparison',title:'Group trace comparison',description:'Pairwise alignments to a chosen reference; columns are not elapsed time.',groups:[
+    {id:'normal',name:'Normal',case_ids:['n'],variant_count:1,candidate_ids:['n'],selected_candidate_id:'n'},
+    {id:'problem',name:'Problem',case_ids:['b','c'],variant_count:2,candidate_ids:['b','c'],selected_candidate_id:'b'},
+    {id:'empty-trace',name:'Empty trace',case_ids:['e'],variant_count:1,candidate_ids:['e'],selected_candidate_id:'e'},
+  ],candidates:[n,b,c,e],alignments:pairs,reference_group_id:'normal',source_case_count:4,unassigned_case_ids:[]};
+}
+const control = (host, label) => host.querySelectorAll('select').concat(host.querySelectorAll('input')).find(n=>n.getAttribute('aria-label')===label);
+const comparisonMarks = (host, kind) => host.querySelectorAll('[data-comparison-kind]').filter(n=>n.getAttribute('data-comparison-kind')===kind);
+
+test('group comparison displays three groups together and changes representatives without new tabs', async()=>{
+  const panel=comparisonFixture(), source=documentFor(panel), before=structuredClone(source), host=container(), viewer=UI.mount(host,source); await viewer.ready;
+  assert.equal(host.querySelectorAll('[data-comparison-group]').length,3);
+  assert.equal(host.querySelectorAll('nav')[0].children.length,1);
+  assert.equal(comparisonMarks(host,'log').length,1);
+  assert.match(host.textContent,/1\/2 cases \(50%\)/);
+  const select=control(host,'Representative for Problem'); select.value='c'; select.dispatch('change');
+  assert.equal(comparisonMarks(host,'log').length,0);
+  assert.equal(comparisonMarks(host,'substitution').length,1);
+  assert.match(viewer.exportSVG(),/Problem: c;/);
+  const reference=control(host,'Reference group'); reference.value='problem'; reference.dispatch('change');
+  assert.match(viewer.exportSVG(),/Reference group: Problem; case: c/);
+  assert.equal(host.querySelectorAll('[data-comparison-group]')[0].getAttribute('data-comparison-group'),'problem');
+  assert.deepEqual(source,before); finiteSVG(host);
+});
+
+test('comparison controls hide groups, preserve exact source and export selected state', async()=>{
+  const host=container(), source=documentFor(comparisonFixture()), viewer=UI.mount(host,source); await viewer.ready;
+  const empty=control(host,'Show group Empty trace'); empty.checked=false; empty.dispatch('change');
+  const diff=control(host,'Differences only'); diff.checked=true; diff.dispatch('change');
+  assert.equal(host.querySelectorAll('[data-comparison-group]').length,2);
+  assert.equal(comparisonMarks(host,'synchronous').length,0);
+  assert.equal(comparisonMarks(host,'log').length,1);
+  assert.match(viewer.exportSVG(),/Only differing columns displayed/);
+  assert.equal(source.panels[0].groups.length,3);
+  const mark=comparisonMarks(host,'log')[0]; mark.click();
+  assert.match(find(host,'.pv-inspector').textContent,/Additional activity/);
+  assert.match(find(host,'.pv-inspector').textContent,/b:1/);
+});
+
+test('comparison exposes limited pairs and empty groups without inventing aligned values', async()=>{
+  const panel=comparisonFixture();
+  panel.alignments=panel.alignments.map(a=>a.candidate_id==='b'&&a.reference_id==='n'?{...a,status:'cell_limit',cost:null,moves:[]}:a);
+  panel.groups.push({id:'none',name:'No cases',case_ids:[],variant_count:0,candidate_ids:[],selected_candidate_id:null});
+  const host=container(), viewer=UI.mount(host,documentFor(panel)); await viewer.ready;
+  assert.match(host.textContent,/Not computed: alignment cell limit/);
+  assert.match(host.textContent,/Empty group: no representative/);
+  assert.equal(comparisonMarks(host,'log').length,0);
+  assert.match(viewer.exportSVG(),/cell_limit; cost unknown/);
+  assert.match(viewer.exportSVG(),/empty_group; cost unknown/);
+});
+
+test('comparison rejects corrupted witnesses, exposes display limits and preserves hostile labels as text', async()=>{
+  const bad=comparisonFixture(); bad.alignments.find(a=>a.candidate_id==='b'&&a.reference_id==='n').moves.pop();
+  const broken=UI.mount(container(),documentFor(bad)); await assert.rejects(broken.ready,/reconstruct/);
+  const host=container(), viewer=UI.mount(host,documentFor(comparisonFixture()),{limits:{comparisonCells:1}}); await viewer.ready;
+  assert.match(host.textContent,/displayed-cell limit/); assert.equal(viewer.exportSVG(),null);
+  const hostile=comparisonFixture(); hostile.groups[1].name='<img onerror="bad">';
+  const safe=container(), safeViewer=UI.mount(safe,documentFor(hostile)); await safeViewer.ready;
+  assert.equal(safe.querySelectorAll('img').length,0);
+  assert.match(safeViewer.exportSVG(),/&lt;img/);
+});

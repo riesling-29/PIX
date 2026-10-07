@@ -13,6 +13,13 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import TypeAlias
 
+from pix.case_centric.trace_comparison import (
+    RepresentativeAlignment,
+    TraceComparisonGroup,
+    TraceGroupComparison,
+    TraceRepresentative,
+)
+
 VisualScalar: TypeAlias = str | int | float | bool | None
 
 _CHART_TIMESTAMP = re.compile(
@@ -373,6 +380,33 @@ class TimelinePanel:
 
 
 @dataclass(frozen=True, slots=True)
+class TraceComparisonPanel:
+    """Precomputed group candidates and pairwise witnesses in one display."""
+
+    id: str
+    title: str
+    groups: tuple[TraceComparisonGroup, ...]
+    candidates: tuple[TraceRepresentative, ...]
+    alignments: tuple[RepresentativeAlignment, ...]
+    reference_group_id: str
+    source_case_count: int
+    unassigned_case_ids: tuple[str, ...] = ()
+    description: str = ""
+    kind: str = field(default="trace_comparison", init=False)
+
+    def __post_init__(self):
+        _panel(self.id, self.title, self.description)
+        TraceGroupComparison(
+            self.groups,
+            self.candidates,
+            self.alignments,
+            self.reference_group_id,
+            self.source_case_count,
+            self.unassigned_case_ids,
+        )
+
+
+@dataclass(frozen=True, slots=True)
 class ChevronLane:
     """One object instance, never an aggregation of an object type."""
 
@@ -487,7 +521,13 @@ class TablePanel:
 
 
 VisualPanel: TypeAlias = (
-    GraphPanel | MatrixPanel | ChartPanel | TimelinePanel | ChevronPanel | TablePanel
+    GraphPanel
+    | MatrixPanel
+    | ChartPanel
+    | TimelinePanel
+    | TraceComparisonPanel
+    | ChevronPanel
+    | TablePanel
 )
 
 
@@ -539,6 +579,7 @@ class VisualizationDocument:
                 MatrixPanel,
                 ChartPanel,
                 TimelinePanel,
+                TraceComparisonPanel,
                 ChevronPanel,
                 TablePanel,
             )
