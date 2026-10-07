@@ -174,7 +174,12 @@ def _parse_date(value: str) -> datetime:
                 "invalid_date", "XML timezone offset must be within -14:00..+14:00"
             )
     try:
-        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+        # Precision was checked above. Normalize only the parser input so
+        # Python 3.10 also accepts short fractions and exact zero suffixes.
+        normalized = re.sub(
+            r"\.([0-9]+)", lambda m: "." + m[1][:6].ljust(6, "0"), value
+        )
+        return datetime.fromisoformat(normalized.replace("Z", "+00:00"))
     except ValueError as exc:
         raise CaseFormatError("invalid_date", str(exc)) from exc
 
