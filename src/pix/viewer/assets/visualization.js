@@ -2,8 +2,8 @@
 (function (root) {
   "use strict";
   const NS = "http://www.w3.org/2000/svg";
-  const KINDS = {graph: "Graph", matrix: "Matrix", chart: "Chart", timeline: "Timeline", chevron: "Chevron", table: "Table"};
-  const DEFAULT_LIMITS = {graphNodes: 1500, graphEdges: 6000, matrixCells: 12000, chartPoints: 15000, timelineItems: 10000, chevronAppearances: 10000, tablePageSize: 50};
+  const KINDS = {graph: "Graph", matrix: "Matrix", chart: "Chart", timeline: "Timeline", chevron: "Chevron", table: "Table", trace_comparison: "Trace comparison"};
+  const DEFAULT_LIMITS = {graphNodes: 1500, graphEdges: 6000, matrixCells: 12000, chartPoints: 15000, timelineItems: 10000, chevronAppearances: 10000, comparisonCells: 12000, tablePageSize: 50};
   let nextId = 0;
   const display = value => String(value).replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\ufffe\uffff]/gu, character => `\\u${character.charCodeAt(0).toString(16).padStart(4, "0")}`);
   const scalar = value => value === null || value === undefined ? "Unknown" : typeof value === "boolean" ? (value ? "True" : "False") : String(value);
@@ -133,9 +133,12 @@
     const inspector = html("aside", {class: "pv-inspector", "aria-label": "Selection details"});
     const description = html("p", {class: "pv-description"});
     const interpretation = html("section", {class: "pv-interpretation", "aria-label": "Analysis interpretation"});
+    const comparisonControls = html("section", {class: "pv-comparison-controls", "aria-label": "Trace comparison choices"});
+    comparisonControls.hidden = true;
+    const comparisonViews = new Map();
     const legend = html("div", {class: "pv-legend", "aria-label": "Legend"});
     const status = html("div", {class: "pv-status", role: "status", "aria-live": "polite"});
-    workspace.append(interpretation, canvas, description, legend, status); main.append(workspace, inspector);
+    workspace.append(interpretation, comparisonControls, canvas, description, legend, status); main.append(workspace, inspector);
     app.append(header, navigation, toolbar, warning, main); container.replaceChildren(app);
 
     for (const panel of source.panels) {
@@ -492,6 +495,145 @@
       }
       return span >= 172800 ? iso.slice(0, 10) : span >= 3600 ? iso.slice(5, 16).replace("T", " ") : iso.slice(11, 23);
     }
+    function renderTraceComparison(panel) {
+      const groups = new Map(panel.groups.map(g => [g.id, g]));
+      const candidates = new Map(panel.candidates.map(c => [c.id, c]));
+      const key = (a, b) => JSON.stringify([a, b]);
+      const pairs = new Map(panel.alignments.map(a => [key(a.candidate_id, a.reference_id), a]));
+      if (!comparisonViews.has(panel.id)) comparisonViews.set(panel.id, {
+        reference: panel.reference_group_id,
+        selected: new Map(panel.groups.map(g => [g.id, g.selected_candidate_id])),
+        visible: new Set(panel.groups.map(g => g.id)), differences: false,
+      });
+      const state = comparisonViews.get(panel.id);
+      if (!groups.has(state.reference)) throw new Error("Unknown comparison reference group.");
+      state.visible.add(state.reference);
+      comparisonControls.hidden = false; comparisonControls.replaceChildren();
+      canvas.replaceChildren(); legend.replaceChildren(); currentSVG = null;
+      marks = []; selected = null; currentNotes = []; overview();
+      const refresh = () => {
+        try { renderTraceComparison(panel); applySearch(); }
+        catch (error) { currentSVG = null; canvas.replaceChildren(html("div", {class: "pv-empty pv-error", role: "alert"}, error.message)); setStatus("Comparison unavailable. Supplied evidence was not replaced."); }
+        [fitButton, readableButton, zoomOut, zoomIn, save].forEach(node => { node.disabled = !currentSVG; });
+      };
+      const settings = html("div", {class: "pv-comparison-settings"});
+      const referenceLabel = html("label", {}, "Reference group ");
+      const referenceSelect = html("select", {"aria-label": "Reference group"});
+      for (const g of panel.groups) {
+        const option = html("option", {value: g.id}, g.name);
+        option.disabled = !g.candidate_ids.length; referenceSelect.append(option);
+      }
+      referenceSelect.value = state.reference;
+      referenceSelect.addEventListener("change", () => { state.reference = referenceSelect.value; refresh(); });
+      referenceLabel.append(referenceSelect);
+      const diffLabel = html("label", {class: "pv-comparison-toggle"});
+      const diff = html("input", {type: "checkbox", "aria-label": "Differences only"}); diff.checked = state.differences;
+      diff.addEventListener("change", () => { state.differences = diff.checked; refresh(); });
+      diffLabel.append(diff, html("span", {}, "Differences only")); settings.append(referenceLabel, diffLabel);
+      settings.append(html("span", {class: "pv-comparison-population"}, `${panel.source_case_count} source cases · ${panel.unassigned_case_ids.length} unassigned`));
+      const cards = html("div", {class: "pv-comparison-groups"});
+      for (const g of panel.groups) {
+        const card = html("div", {class: "pv-comparison-card"});
+        const heading = html("label", {class: "pv-comparison-group-name"});
+        const visible = html("input", {type: "checkbox", "aria-label": `Show group ${g.name}`});
+        visible.checked = state.visible.has(g.id); visible.disabled = g.id === state.reference;
+        visible.addEventListener("change", () => { visible.checked ? state.visible.add(g.id) : state.visible.delete(g.id); refresh(); });
+        heading.append(visible, html("strong", {}, g.name), html("span", {}, g.id === state.reference ? "Reference" : ""));
+        const select = html("select", {"aria-label": `Representative for ${g.name}`});
+        for (const id of g.candidate_ids) {
+          const c = candidates.get(id);
+          if (!c || c.group_id !== g.id) throw new Error("Representative group membership differs.");
+          const share = g.case_ids.length ? number(100 * c.member_case_ids.length / g.case_ids.length) : "?";
+          select.append(html("option", {value: id}, `#${c.rank} · ${c.case_id} · ${c.member_case_ids.length}/${g.case_ids.length} (${share}%)${c.selection === "manual" ? " · manual" : ""}`));
+        }
+        select.value = state.selected.get(g.id) || ""; select.disabled = !g.candidate_ids.length;
+        select.addEventListener("change", () => { state.selected.set(g.id, select.value); refresh(); });
+        const retained = g.candidate_ids.reduce((sum, id) => sum + candidates.get(id).member_case_ids.length, 0);
+        card.append(heading, select, html("p", {}, `${g.case_ids.length} cases · ${g.variant_count} variants · ${g.candidate_ids.length} shown (${retained} cases covered)`)); cards.append(card);
+      }
+      comparisonControls.append(settings, cards);
+      const reference = candidates.get(state.selected.get(state.reference));
+      if (!reference) { canvas.append(html("div", {class: "pv-empty"}, "The reference group has no representative. Select a nonempty reference group.")); setStatus("Reference unavailable: empty group. Original group membership is preserved."); return; }
+      const orderedGroups = [groups.get(state.reference), ...panel.groups.filter(g => g.id !== state.reference && state.visible.has(g.id))];
+      const n = reference.activities.length, widths = Array(n + 1).fill(0), rows = [];
+      for (const g of orderedGroups) {
+        const c = candidates.get(state.selected.get(g.id));
+        const row = {group: g, candidate: c, gaps: Array.from({length: n + 1}, () => []), spine: [], outcome: "reference", cost: 0};
+        if (!c) { row.outcome = "empty_group"; row.cost = null; rows.push(row); continue; }
+        if (g.id === state.reference) {
+          row.spine = c.activities.map((activity, index) => ({activity, event: c.event_ids[index], kind: "reference", cost: 0}));
+        } else {
+          const pair = pairs.get(key(c.id, reference.id));
+          if (!pair) throw new Error("Missing precomputed representative comparison.");
+          row.outcome = pair.status; row.cost = pair.cost;
+          if (pair.status === "cell_limit") { rows.push(row); continue; }
+          if (pair.status !== "optimal") throw new Error("Unsupported comparison outcome.");
+          let position = 0;
+          const consumed = [], eventIds = [], referenceActivities = [], referenceIds = [];
+          for (const move of pair.moves) {
+            const cell = {activity: move.log_activity, event: move.log_event_id, referenceEvent: move.reference_event_id, referenceActivity: move.model_activity, kind: move.kind, cost: move.cost};
+            if (move.kind === "log") row.gaps[position].push(cell);
+            else { row.spine[position] = cell; position += 1; }
+            if (move.log_activity !== null) { consumed.push(move.log_activity); eventIds.push(move.log_event_id); }
+            if (move.model_activity !== null) { referenceActivities.push(move.model_activity); referenceIds.push(move.reference_event_id); }
+          }
+          if (position !== n || JSON.stringify(consumed) !== JSON.stringify(c.activities) || JSON.stringify(eventIds) !== JSON.stringify(c.event_ids) || JSON.stringify(referenceActivities) !== JSON.stringify(reference.activities) || JSON.stringify(referenceIds) !== JSON.stringify(reference.event_ids)) throw new Error("Comparison witness does not reconstruct its representatives.");
+          row.gaps.forEach((gap, i) => { widths[i] = Math.max(widths[i], gap.length); });
+        }
+        rows.push(row);
+      }
+      const columns = [];
+      for (let i = 0; i <= n; i++) {
+        for (let j = 0; j < widths[i]; j++) columns.push({gap: i, offset: j, label: `Insert before ${i + 1}`});
+        if (i < n) columns.push({anchor: i, label: `Reference ${i + 1}`});
+      }
+      const cellAt = (row, column) => column.anchor !== undefined ? row.spine[column.anchor] : row.gaps[column.gap][column.offset];
+      const shownColumns = state.differences ? columns.filter(col => rows.slice(1).some(row => { const cell = cellAt(row, col); return cell && cell.kind !== "synchronous"; })) : columns;
+      if (rows.length * Math.max(1, shownColumns.length) > limits.comparisonCells) { limitMessage(`Comparison exceeds the ${limits.comparisonCells} displayed-cell limit. Choose fewer groups or Differences only; no rows were silently dropped.`); return; }
+      const left = 300, top = 84, cellWidth = 156, rowHeight = 100;
+      const svg = makeSVG(Math.max(850, left + shownColumns.length * cellWidth + 35), Math.max(300, top + rows.length * rowHeight + 80), panel.title);
+      const colors = {reference: ["#e8f0fa", "#54749a"], synchronous: ["#f1f4f7", "#a5b1bd"], substitution: ["#fff2d4", "#b47d1b"], log: ["#e0f4ef", "#32856f"], model: ["#fbe9e7", "#b55f57"]};
+      const names = {reference: "Reference", synchronous: "Match", substitution: "Substitution", log: "Additional activity", model: "Missing activity"};
+      for (const kind of Object.keys(colors)) legendItem(names[kind], colors[kind][1]);
+      shownColumns.forEach((col, index) => {
+        const x = left + index * cellWidth;
+        svg.append(svgNode("text", {x: x + 8, y: 40, class: "pv-tick"}, col.label));
+        svg.append(svgNode("line", {x1: x - 5, x2: x - 5, y1: top - 20, y2: top + rows.length * rowHeight - 15, class: "pv-grid", "stroke-dasharray": col.gap === undefined ? "0" : "3 4"}));
+      });
+      let unavailable = 0;
+      rows.forEach((row, index) => {
+        const y = top + index * rowHeight, g = row.group, c = row.candidate;
+        const label = svgNode("g", {"data-comparison-group": g.id});
+        label.append(svgNode("text", {x: 20, y: y + 10, class: "pv-node-label"}, shorten(g.name, 32)));
+        const share = c ? `${c.member_case_ids.length}/${g.case_ids.length} cases (${number(100 * c.member_case_ids.length / g.case_ids.length)}%)` : "No cases";
+        label.append(svgNode("text", {x: 20, y: y + 32, class: "pv-tick"}, share));
+        label.append(svgNode("text", {x: 20, y: y + 52, class: "pv-tick"}, c ? `${shorten(c.case_id, 20)} · ${row.outcome === "reference" ? "reference" : row.cost === null ? "cost unknown" : `edit cost ${row.cost}`}` : "No representative"));
+        selectable(label, {title: g.name, fields: [{name: "Representative case", value: c?.case_id ?? null}, {name: "Group cases", value: g.case_ids.length}, {name: "Variant frequency", value: c?.member_case_ids.length ?? null}, {name: "Selection", value: c?.selection ?? null}, {name: "Outcome", value: row.outcome}, {name: "Edit cost", value: row.cost}, {name: "Full sequence", value: c?.activities ?? null}, {name: "Variant member case IDs", value: c?.member_case_ids ?? []}]}); svg.append(label);
+        if (["cell_limit", "empty_group"].includes(row.outcome)) {
+          unavailable += 1;
+          svg.append(svgNode("text", {x: left + 8, y: y + 30, class: "pv-tick"}, row.outcome === "cell_limit" ? "Not computed: alignment cell limit. Cost is unknown." : "Empty group: no representative.")); return;
+        }
+        shownColumns.forEach((col, columnIndex) => {
+          const cell = cellAt(row, col), x = left + columnIndex * cellWidth;
+          if (!cell) return; // Padding is not a missing observed event.
+          const [fill, stroke] = colors[cell.kind] || colors.synchronous;
+          const mark = svgNode("g", {"data-comparison-kind": cell.kind, "data-comparison-column": columnIndex});
+          mark.append(svgNode("rect", {x, y: y - 8, width: cellWidth - 12, height: 64, rx: 7, fill, stroke, "stroke-dasharray": cell.kind === "model" ? "4 3" : "0"}));
+          const activity = cell.activity === null ? "∅" : cell.activity;
+          const wrap = root.PIXNativeGeometry?.wrapLabel;
+          let lines = wrap ? wrap(activity, 17, 2) : [shorten(activity, 17)];
+          if (!Array.isArray(lines)) lines = lines.lines;
+          lines.forEach((line, lineIndex) => mark.append(svgNode("text", {x: x + 10, y: y + 13 + lineIndex * 17}, line)));
+          const icon = {reference: "●", synchronous: "=", substitution: "↔", log: "+", model: "−"}[cell.kind];
+          mark.append(svgNode("text", {x: x + cellWidth - 24, y: y + 44, "text-anchor": "end", class: "pv-tick"}, icon));
+          selectable(mark, {title: cell.activity === null ? "Missing activity" : cell.activity, fields: [{name: "Group", value: g.name}, {name: "Case", value: c.case_id}, {name: "Change", value: names[cell.kind]}, {name: "Activity", value: cell.activity}, {name: "Event ID", value: cell.event}, {name: "Reference activity", value: cell.kind === "reference" ? cell.activity : (cell.referenceActivity ?? null)}, {name: "Reference event ID", value: cell.referenceEvent ?? (cell.kind === "reference" ? cell.event : null)}, {name: "Move cost", value: cell.cost}]}); svg.append(mark);
+        });
+      });
+      if (!shownColumns.length) svg.append(svgNode("text", {x: left + 8, y: 55, class: "pv-tick"}, state.differences ? "No differing columns among the computed visible pairs." : "Representatives contain no activities."));
+      currentNotes = [`Reference group: ${groups.get(state.reference).name}; case: ${reference.case_id}`, ...rows.map(row => `${row.group.name}: ${row.candidate?.case_id ?? "none"}; ${row.candidate?.member_case_ids.length ?? 0}/${row.group.case_ids.length} cases; ${row.outcome}; cost ${row.cost ?? "unknown"}`), state.differences ? "Only differing columns displayed" : "All alignment columns displayed"];
+      svg.append(svgNode("text", {x: 20, y: top + rows.length * rowHeight + 30, class: "pv-axis-label"}, "Aligned sequence positions · not elapsed time"));
+      setStatus(`${rows.length}/${panel.groups.length} groups visible · ${unavailable} unavailable comparisons · ${shownColumns.length}/${columns.length} columns`);
+    }
     function renderTimeline(panel) {
       if (panel.items.length > limits.timelineItems) { limitMessage(`This timeline has ${panel.items.length} items; the display limit is ${limits.timelineItems}. Use a smaller view or explicitly raise the limit.`); return; }
       const left = 190, right = 1130, top = 60, tracks = new Map(), laneSizes = new Map(), laneOffsets = new Map();
@@ -675,6 +817,8 @@
       interpretation.replaceChildren(...interpretationLines().map(line => html("p", {}, line)));
       interpretation.hidden = interpretation.children.length === 0;
       app.classList.toggle("pv-chevron-neutral", panel.kind === "chevron" && chevronStyle === "neutral");
+      app.classList.toggle("pv-comparison-screen", panel.kind === "trace_comparison");
+      comparisonControls.hidden = true; comparisonControls.replaceChildren();
       search.value = ""; searchStatus.textContent = ""; canvas.replaceChildren(); legend.replaceChildren(); status.textContent = "";
       description.textContent = panel.description || (panel.kind === "chevron" && chevronStyle === "neutral" ? "One lane per object instance. Shared event IDs keep their aligned appearances. Spans encode precedence slots, not elapsed time." : ""); panelTitle.replaceChildren(html("span", {class: "pv-panel-kind"}, KINDS[panel.kind] || panel.kind), html("strong", {}, panel.title));
       for (const [tabId, tab] of tabs) { tab.setAttribute("aria-selected", String(tabId === id)); tab.setAttribute("tabindex", tabId === id ? "0" : "-1"); }
@@ -685,6 +829,7 @@
         else if (panel.kind === "matrix") renderMatrix(panel);
         else if (panel.kind === "chart") renderChart(panel);
         else if (panel.kind === "timeline") renderTimeline(panel);
+        else if (panel.kind === "trace_comparison") renderTraceComparison(panel);
         else if (panel.kind === "chevron") renderChevron(panel);
         else if (panel.kind === "table") renderTable(panel);
         else throw new Error(`Unsupported panel kind: ${panel.kind}`);
