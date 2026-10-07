@@ -289,7 +289,14 @@ def _summary(values) -> NumericSummary:
     if not values:
         return NumericSummary(0, None, None, None, None, None, None, None, None)
     avg = mean(values)
-    std = pstdev(values)
+    try:
+        std = pstdev(values)
+    except OverflowError:
+        # Python 3.10 converts variance to float before sqrt, which overflows
+        # for large finite samples even when their standard deviation fits.
+        # Scale exact ratios so the intermediate variance stays in [0, 1].
+        scale = max(abs(value) for value in values)
+        std = pstdev(Fraction(value) / Fraction(scale) for value in values) * scale
     try:
         total = math.fsum(values)
     except OverflowError:
