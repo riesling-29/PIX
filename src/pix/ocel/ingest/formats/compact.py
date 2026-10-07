@@ -44,6 +44,7 @@ from pix.ocel.ingest.formats.common import (
     ValueEncoding,
     _map_time,
     _MappingContext,
+    _normalize_iso_fractions,
     map_document,
     mapping_failure,
     schema_failure,
@@ -571,12 +572,15 @@ def _accepts(value: Any, value_type: str) -> bool:
     if value_type == "time":
         if not isinstance(value, str) or not _TIME.fullmatch(value):
             return False
-        # Check calendar ranges without truncating the eventual mapped value.
+        # Check only calendar ranges here. Keep the original fraction for the
+        # mapping/precision check; 3.10 must not infer a lossy time as a string.
         try:
-            datetime.fromisoformat(
-                value[:-1] + "+00:00" if value.endswith("Z") else value
+            calendar = re.sub(r"[.,][0-9]+", "", value)
+            normalized = _normalize_iso_fractions(
+                calendar[:-1] + "+00:00" if calendar.endswith("Z") else calendar, ()
             )
-        except ValueError:
+            datetime.fromisoformat(normalized)
+        except (ValueError, AdapterFailure):
             return False
     return True
 
