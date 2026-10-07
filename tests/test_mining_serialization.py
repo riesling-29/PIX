@@ -66,6 +66,7 @@ from pix.case_centric import (
     statistics,
     stream_adapters,
     streaming,
+    trace_comparison,
     trace_fit,
     transformations,
     transformer_embeddings,
@@ -491,6 +492,16 @@ CASE_FACTORIES = (
     (
         "sequence_alignment",
         lambda log, net: sequence_alignment.align_log_to_log(log, log),
+    ),
+    (
+        "trace_comparison",
+        lambda log, net: trace_comparison.compare_trace_groups(
+            log,
+            (
+                trace_comparison.TraceGroup("A", ("case-0",)),
+                trace_comparison.TraceGroup("B", ("case-1",)),
+            ),
+        ),
     ),
     ("simulation", lambda log, net: simulation.playout_petri_net(net)),
     ("split_miner", lambda log, net: split_miner.discover_split_miner(log)),
