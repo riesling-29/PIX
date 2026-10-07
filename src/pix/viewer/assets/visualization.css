@@ -33,3 +33,20 @@
 .pv-interpretation { padding: .6rem 1rem; border-bottom: 1px solid #dce1e5; color: #34414b; background: #f7f8f9; overflow-wrap: anywhere; font-size: .85rem; }
 .pv-interpretation p { margin: .25rem 0; }
 .pv-interpretation[hidden] { display: none; }
+
+/* One shared canvas for selected representatives; controls never recompute mining. */
+.pv-comparison-controls{padding:18px 24px;border-bottom:1px solid #dce5eb;background:#fff}
+.pv-comparison-controls[hidden]{display:none}
+.pv-comparison-settings{display:flex;align-items:center;gap:20px;flex-wrap:wrap;font-size:12px;margin-bottom:15px}
+.pv-comparison-settings label{display:flex;align-items:center;gap:8px}
+.pv-comparison-controls select{min-width:0;max-width:100%;padding:8px;border:1px solid #cdd9e1;border-radius:6px;background:#fff;color:#314e5f;font:inherit}
+.pv-comparison-groups{display:grid;grid-template-columns:repeat(auto-fit,minmax(245px,1fr));gap:12px}
+.pv-comparison-card{padding:12px 14px;border:1px solid #dce5eb;border-radius:8px;background:#f8fafc;min-width:0}
+.pv-comparison-group-name{display:flex;align-items:center;gap:8px;overflow-wrap:anywhere;font-size:13px;margin-bottom:10px}
+.pv-comparison-group-name span{font-size:10px;color:#607c96;margin-left:auto}
+.pv-comparison-card select{width:100%;font-size:12px}.pv-comparison-card p,.pv-comparison-population{font-size:11px;color:#657c8c;line-height:1.6;margin:8px 0 0}
+.pv-comparison-screen .pv-main{display:block}.pv-comparison-screen .pv-canvas{height:460px;min-height:350px}
+.pv-comparison-screen .pv-inspector{border-left:0;border-top:1px solid #dce5ea;max-height:400px}
+.pv-comparison-screen .pv-fields{display:grid;grid-template-columns:minmax(110px,190px) 1fr;gap:8px 18px}
+.pv-comparison-screen .pv-fields dt,.pv-comparison-screen .pv-fields dd{margin:0}
+@media(max-width:680px){.pv-comparison-controls{padding:15px}.pv-comparison-groups{grid-template-columns:1fr}.pv-comparison-screen .pv-fields{grid-template-columns:1fr}.pv-comparison-screen .pv-canvas{height:420px}}
