@@ -39,3 +39,14 @@ reading. The suite verifies that Readable gives a 1:1 SVG/CSS scale and centres
 the selected model node without altering graph data or positions. Screenshots
 capture both overview and readable views, not simultaneous readability of every
 node in every viewport.
+
+## Group representative comparison
+
+`test_trace_comparison_browser.py` generates its HTML through the production
+calculator and exporter, then checks three groups on one canvas, representative
+and reference changes, group visibility, differences-only filtering, SVG download,
+and a 390 px viewport. Set `PIX_PLAYWRIGHT_MODULE` to an installed Node Playwright
+package and opt in with `PIX_RUN_BROWSER=1`. Optional `PIX_BROWSER_LAUNCH_OPTIONS`
+is a JSON object of local Playwright launch options (for example an explicitly
+installed `executablePath`). No browser download is performed by the test.
+`PIX_COMPARISON_BROWSER_ARTIFACTS` chooses the evidence/screenshot directory.
