@@ -92,6 +92,12 @@ OC timed-token 결과는 `performance:<metric 이름>:mean` 형식으로 명시�
 
 지원되지 않은 metric을 계산해 만들어 주거나, 탐색 한도로 누락된 전이 횟수를 확정적인 0으로 채우지 않는다. 상세 입력 조건은 [주석 테스트](../../tests/viewer/test_visual_annotations.py)에 사례로 고정되어 있다.
 
+## 라벨별 대표 Trace를 한 화면에서 비교하기
+
+정상/비정상 또는 여러 그룹의 대표 후보와 기준 그룹을 바꾸며 한 캔버스에서 비교하려면
+[그룹별 대표 Trace 비교 가이드](TRACE_GROUP_COMPARISON_GUIDE.md)를 사용한다.
+`compare_trace_groups` 계산 결과를 `build_visualization`에 전달하면 전용 비교 패널 하나가 생성된다.
+
 ## 명시적으로 두 결과 비교·결합하기
 
 ```python

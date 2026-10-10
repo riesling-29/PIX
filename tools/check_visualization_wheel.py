@@ -163,6 +163,14 @@ def check_visualization_pipeline(output: Path) -> dict:
         "model-artifact": viewer.build_visualization(model_artifact),
         "discovery-wrapper": viewer.build_visualization(wrapped_model),
     }
+    catalog = cc.catalog_trace_variants(cases)
+    require(catalog.status is ComputeStatus.COMPUTED, "Catalog incomplete")
+    require(
+        [v.frequency for v in catalog.value.variants] == [2, 1]
+        and len(catalog.value.groups[0].selected_variant_ids) == 1,
+        "Catalog must select ceil(20% of two variants)",
+    )
+    documents["trace-variant-catalog"] = viewer.build_visualization(catalog)
     chevron_rows = (
         ("a", "Start", ("x", "y")),
         ("b", "Short", ("y",)),

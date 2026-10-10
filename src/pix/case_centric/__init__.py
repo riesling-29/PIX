@@ -12,6 +12,8 @@ from pix.event_log import CaseLog, case_traces
 
 _MODULES = (
     "trace_fit",
+    "trace_catalog",
+    "trace_comparison",
     "dfg_relations",
     "business_time",
     "path_performance",
@@ -87,6 +89,8 @@ _MODULES = (
     "tree_alignment",
 )
 _FUNCTIONS = {
+    "catalog_trace_variants": "trace_catalog",
+    "compare_trace_groups": "trace_comparison",
     "discover_dfg": "discovery",
     "discover_efg": "discovery",
     "discover_footprints": "discovery",

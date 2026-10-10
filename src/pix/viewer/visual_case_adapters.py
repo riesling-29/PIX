@@ -8,7 +8,9 @@ in ``visual_model_adapters``. Labels are data; escaping belongs to renderers.
 from __future__ import annotations
 
 import json
+from dataclasses import asdict
 from datetime import timezone
+from hashlib import sha256
 
 from pix.case_centric.advanced import DecisionTree
 from pix.case_centric.alignment_search import SearchAlignmentSet
@@ -31,6 +33,8 @@ from pix.case_centric.statistics import (
     PerformanceSpectrumSpec,
     StatisticsSpec,
 )
+from pix.case_centric.trace_catalog import TraceVariantCatalog
+from pix.case_centric.trace_comparison import TraceGroupComparison
 from pix.case_centric.tree_alignment import TreeAlignmentSet
 from pix.contracts.conformance import AlignmentSet
 from pix.contracts.replay import ReplaySet
@@ -48,6 +52,8 @@ from .visual_contracts import (
     TimelineItem,
     TimelineLane,
     TimelinePanel,
+    TraceCatalogPanel,
+    TraceComparisonPanel,
     VisualEdge,
     VisualField,
     VisualMetric,
@@ -1325,6 +1331,50 @@ def case_panels(value, *, source=None):
             raise TypeError("source must be the original ComputationResult")
         if source.value != value:
             raise ValueError("source value does not match visualization input")
+    if isinstance(value, TraceVariantCatalog):
+        identity = {
+            "value": asdict(value),
+            "source_digest": source.source_digest if source else None,
+            "computation_id": source.computation_id if source else None,
+        }
+        catalog_id = (
+            "pix:catalog:sha256:"
+            + sha256(
+                json.dumps(identity, sort_keys=True, ensure_ascii=False).encode()
+            ).hexdigest()
+        )
+        return (
+            TraceCatalogPanel(
+                "trace-variant-catalog",
+                "Trace variant frequencies",
+                catalog_id,
+                value.groups,
+                value.variants,
+                value.source_case_count,
+                value.unassigned_case_ids,
+                value.top_variant_percent,
+                "Top percentages select a count of distinct variants, rounded up. Case coverage is separate. "
+                "Rows show original sequences, not alignment, time or causation. Event IDs belong to one actual example case.",
+            ),
+        )
+    if isinstance(value, TraceGroupComparison):
+        return (
+            TraceComparisonPanel(
+                "trace-group-comparison",
+                "Group representative trace comparison",
+                value.groups,
+                value.candidates,
+                value.alignments,
+                value.reference_group_id,
+                value.source_case_count,
+                value.unassigned_case_ids,
+                "Observed case representatives, grouped by exact activity sequence. "
+                "Each row is aligned independently to the selected reference. "
+                "Insertion slots preserve order but do not establish correspondence "
+                "between non-reference groups. Columns are sequence positions, not time. "
+                "Labels do not establish causation or automatically detect anomalies.",
+            ),
+        )
     if isinstance(value, CaseRelationGraph):
         return _relation_graph(value, source)
     if isinstance(value, IntervalEventuallyFollows):
