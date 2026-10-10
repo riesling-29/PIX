@@ -529,3 +529,14 @@ test('catalog pagination and render limits preserve full selection',async()=>{
   assert.match(host.textContent,/1–2 of 5/);clickNamed(host,'Next variants');assert.match(host.textContent,/3–4 of 5/);
   clickNamed(host,'Top 100% variants');assert.equal(ui.exportCatalogSelection().groups[0].selected_variant_ids.length,5);
 });
+test('repeated diagnostics are summarized without discarding export evidence',async()=>{
+  const source=documentFor(catalogFixture());source.issues=Array(200).fill('unknown timestamp');source.provenance=[{panel_ids:['catalog'],input_path:[],details:[{name:'issues_json',value:JSON.stringify(Array.from({length:200},(_,i)=>({code:'unknown_timestamp',message:'Missing time',at:[i]})))}]}];
+  const host=container(),ui=UI.mount(host,source,{layoutEngine:'native'});await ui.ready;
+  assert.match(find(host,'.pv-warning').textContent,/\[200 occurrences\]/);
+  assert.equal(find(host,'.pv-warning').querySelectorAll('p').length,1);
+  assert.match(find(host,'.pv-interpretation').textContent,/\[200 occurrences\]/);
+  assert.ok(find(host,'.pv-provenance-disclosure'));
+  const meta=find(host,'metadata');assert.equal(meta,undefined);
+  const svg=ui.exportSVG();assert.match(svg,/200 occurrences/);const data=JSON.parse(svg.match(/<metadata>(.*?)<\/metadata>/s)[1].replaceAll('&quot;','"').replaceAll('&lt;','<').replaceAll('&gt;','>').replaceAll('&amp;','&'));
+  assert.equal(data.issues.length,200);assert.deepEqual(JSON.parse(data.provenance[0].details[0].value)[199].at,[199]);
+});

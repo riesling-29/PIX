@@ -10,6 +10,11 @@
   const number = value => Number.isFinite(value) ? new Intl.NumberFormat("en", {maximumSignificantDigits: 6}).format(value) : "Unknown";
   const shorten = (value, length = 48) => { const chars = Array.from(display(value)); return chars.length > length ? chars.slice(0, length - 1).join("") + "…" : chars.join(""); };
   const textOf = value => typeof value === "object" && value !== null || typeof value === "string" && /[\\\u0000-\u001f\ufffe\uffff]/u.test(value) ? JSON.stringify(value) : scalar(value);
+  function summarizeMessages(messages) {
+    const counts = new Map();
+    for (const message of messages) counts.set(message, (counts.get(message) || 0) + 1);
+    return [...counts].map(([message, count]) => count === 1 ? message : `${message} [${count} occurrences]`);
+  }
   function html(tag, attrs = {}, text) {
     const node = document.createElement(tag);
     for (const [key, value] of Object.entries(attrs)) node.setAttribute(key, display(value));
@@ -125,7 +130,7 @@
     tools.append(search, searchStatus, fitButton, readableButton, zoomOut, zoomIn, save);
     toolbar.append(panelTitle, tools);
     const warning = html("div", {class: "pv-warning", role: "status"});
-    if ((source.issues || []).length) warning.append(html("strong", {}, "Analysis notes"), ...source.issues.map(issue => html("p", {}, issue)));
+    if ((source.issues || []).length) warning.append(html("strong", {}, "Analysis notes"), ...summarizeMessages(source.issues).map(issue => html("p", {}, issue)));
     else warning.hidden = true;
     const main = html("div", {class: "pv-main"});
     const workspace = html("section", {class: "pv-workspace", role: "tabpanel", tabindex: "0", id: `pv-panel-${instance}`});
@@ -186,7 +191,7 @@
           if (field.name === "issues_json") {
             try {
               const issues = JSON.parse(field.value);
-              for (const issue of issues) lines.push(`Diagnostic: ${issue.code}: ${issue.message}`);
+              lines.push(...summarizeMessages(issues.map(issue => `Diagnostic: ${issue.code}: ${issue.message}`)));
             } catch (_) { lines.push("Calculation diagnostics could not be read."); }
           }
         }
@@ -199,7 +204,7 @@
       if (current) fields(inspector, [{name: "View", value: KINDS[current.kind] || current.kind}, {name: "Panel ID", value: current.id}]);
       const provenance = panelSources();
       let provenanceHost = inspector;
-      if (current?.kind === "chevron" && chevronStyle === "neutral" && provenance.length) {
+      if ((current?.kind === "trace_catalog" || current?.kind === "chevron" && chevronStyle === "neutral") && provenance.length) {
         provenanceHost = html("details", {class: "pv-provenance-disclosure"});
         provenanceHost.append(html("summary", {}, "Calculation provenance")); inspector.append(provenanceHost);
       } else if (provenance.length) inspector.append(html("h3", {}, "Calculation provenance"));
@@ -970,7 +975,7 @@
     function exportSVG() {
       if (!currentSVG) return null;
       const clone = currentSVG.cloneNode(true), width = Math.max(700, bounds.width);
-      const notes = [{text: `${source.title} / ${current.title}`}, {text: `Analysis status: ${source.status || "ok"}`}, ...(current.description ? [{text: current.description}] : []), ...Array.from(legend.children).map(item => ({text: item.textContent, color: item.querySelectorAll(".pv-swatch")[0]?.style.backgroundColor})), {text: status.textContent}, ...(source.issues || []).map(issue => ({text: `Analysis note: ${issue}`}))];
+      const notes = [{text: `${source.title} / ${current.title}`}, {text: `Analysis status: ${source.status || "ok"}`}, ...(current.description ? [{text: current.description}] : []), ...Array.from(legend.children).map(item => ({text: item.textContent, color: item.querySelectorAll(".pv-swatch")[0]?.style.backgroundColor})), {text: status.textContent}, ...summarizeMessages(source.issues || []).map(issue => ({text: `Analysis note: ${issue}`}))];
       notes.push(...interpretationLines().map(text => ({text})));
       const lines = notes.flatMap(note => {
         const chars = Array.from(display(note.text)), result = [], length = Math.max(35, Math.floor((width - 70) / 7));

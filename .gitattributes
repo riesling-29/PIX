@@ -1,0 +1,3 @@
+# Vendored bytes are authenticated by provenance manifests. Preserve them on
+# every checkout, including Windows with core.autocrlf enabled.
+src/pix/viewer/assets/vendor/* -text

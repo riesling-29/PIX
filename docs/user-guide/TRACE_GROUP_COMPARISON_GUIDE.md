@@ -116,3 +116,5 @@ sequence의 실제 빈도는 유지하며, 선택 방식은 `manual`로 표시�
 판단의 유효 범위는 해당 source digest, 그룹 membership, classifier와 정렬 비용이다.
 이들 중 하나가 바뀌면 비교를 다시 계산해야 한다. 처리량·업무 원인·그룹의 실제
 정상 여부는 이 화면만으로 알 수 없다.
+
+빈도순 목록에서 상위 20/80% **variant 개수**를 선택해 여러 sequence를 함께 보려면 [Trace catalog](TRACE_VARIANT_CATALOG_GUIDE.md)를 사용한다.

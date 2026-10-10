@@ -24,3 +24,5 @@ whenever a release changes any of the following:
 Every example should be covered by an automated test or by a recorded fixture
 verification. Release notes and version baselines should link to the affected
 guide rather than duplicating the full instructions.
+
+- [Trace 빈도와 여러 sequence 함께 보기](TRACE_VARIANT_CATALOG_GUIDE.md): 상위 variant 개수 비중·복수 선택·저장/복원.

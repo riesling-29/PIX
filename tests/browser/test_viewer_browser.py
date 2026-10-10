@@ -279,6 +279,7 @@ def test_count_units_and_original_event_object_qualifier_evidence(open_view):
         page.get_by_label("Edge counting unit", exact=True).select_option(unit)
         assert selected.locator(".pix-edge-label tspan").last.text_content() == count
         assert page.evaluate("window.pixViewer.getViewState().unit") == unit
+    # Clicking the label center includes the gap between its two text lines.
     selected.locator(".pix-edge-label").click()
     inspector = page.locator(".pix-inspector")
     assert inspector.locator("tbody tr").count() == 3

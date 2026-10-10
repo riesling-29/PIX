@@ -5,11 +5,13 @@ interpretation engine.
 
 ## Status
 
-For the current OCPM development baseline (not `main`), start with the
-[GitHub validation handoff](docs/reports/2026-10-04_PIX_GITHUB_VALIDATION_HANDOFF.md)
-and [next work packages](docs/requirements/2026-10-04_PIX_PARALLEL_DEVELOPMENT_PLAN.md).
-They identify the fixed code commit, actual test results, unexecuted environments,
-and task-based branches for local/cloud handoffs.
+The current usage work adds grouped trace comparison and a frequency-ranked
+[trace variant catalog](docs/user-guide/TRACE_VARIANT_CATALOG_GUIDE.md).
+Top 20% selects 20% of distinct variants by count, rounded up; case coverage is
+reported separately. Multiple sequences can be inspected in one offline view.
+See the [current patch plan](docs/requirements/2026-10-10_PIX_USAGE_AND_HANDOFF_PATCH_PLAN.md)
+and [implementation/handoff](docs/reports/2026-10-10_PIX_VARIANT_CATALOG_HANDOFF.md)
+for tested scope and remaining work. Historical reports retain their original evidence.
 
 The [integrated execution index](docs/requirements/2026-10-06_PIX_INTEGRATED_EXECUTION_PLAN.md)
 preserves the review charter and OCPM/UX source documents, maps all 38 additional

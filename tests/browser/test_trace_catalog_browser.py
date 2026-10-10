@@ -133,6 +133,7 @@ def test_variant_count_selection_in_real_browser(tmp_path):
         evidence["checks"].append("SVG retains actual view and selection metadata")
         page.get_by_label("Show catalog group 비정상 · 재작업", exact=True).check()
         page.get_by_role("button", name="Top 80% variants", exact=True).click()
+        assert page.evaluate("document.documentElement.scrollHeight") < 3000
         page.screenshot(path=folder / "catalog-desktop.png", full_page=True)
         page.set_viewport_size({"width": 390, "height": 844})
         assert page.evaluate("document.documentElement.scrollWidth - innerWidth") <= 1
