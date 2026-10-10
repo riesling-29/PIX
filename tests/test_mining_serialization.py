@@ -66,6 +66,7 @@ from pix.case_centric import (
     statistics,
     stream_adapters,
     streaming,
+    trace_catalog,
     trace_comparison,
     trace_fit,
     transformations,
@@ -286,6 +287,7 @@ def _interleavings_ocel_result(log):
 
 
 CASE_FACTORIES = (
+    ("trace_catalog", lambda log, net: trace_catalog.catalog_trace_variants(log)),
     (
         "trace_fit",
         lambda log, net: trace_fit.check_trace_fit(

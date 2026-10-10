@@ -498,3 +498,34 @@ test('comparison rejects corrupted witnesses, exposes display limits and preserv
   assert.equal(safe.querySelectorAll('img').length,0);
   assert.match(safeViewer.exportSVG(),/&lt;img/);
 });
+
+function catalogFixture() {
+  const variants = [60,20,10,5,5].map((n,i)=>({id:`g/v${i}`,group_id:'g',rank:i+1,activities:['A',String(i),'A'],case_ids:Array.from({length:n},(_,j)=>`v${i}/c${j}`),example_case_id:`v${i}/c0`,event_ids:[`v${i}/e0`,`v${i}/e1`,`v${i}/e2`],cumulative_case_count:[60,80,90,95,100][i]}));
+  return {kind:'trace_catalog',id:'catalog',title:'Variants',description:'Original sequences',catalog_id:'source-profile-id',groups:[{id:'g',name:'정상 <script>',case_ids:variants.flatMap(v=>v.case_ids),variant_ids:variants.map(v=>v.id),selected_variant_ids:[variants[0].id]}],variants,source_case_count:100,unassigned_case_ids:[],top_variant_percent:20};
+}
+test('catalog selects variant-count prefixes and reports separate case coverage',async()=>{
+  const host=container(), source=documentFor(catalogFixture()), before=structuredClone(source), ui=UI.mount(host,source,{layoutEngine:'native'});await ui.ready;
+  assert.match(host.textContent,/1\/5 variants \(20%\).*60\/100 cases \(60%\)/);
+  assert.equal(host.querySelectorAll('[data-catalog-sequence]').length,1);
+  clickNamed(host,'Top 80% variants');assert.equal(host.querySelectorAll('[data-catalog-sequence]').length,4);
+  assert.match(host.textContent,/4\/5 variants \(80%\).*95\/100 cases \(95%\)/);
+  assert.equal(ui.exportCatalogSelection().groups[0].selected_case_count,95);
+  assert.deepEqual(source,before);assert.equal(host.querySelectorAll('script').length,0);finiteSVG(host);
+});
+test('catalog manual selection, search, persistence and source rejection',async()=>{
+  const host=container(),ui=UI.mount(host,documentFor(catalogFixture()),{layoutEngine:'native'});await ui.ready;
+  const input=host.querySelectorAll('input').find(n=>n.getAttribute('aria-label')==='Select 정상 <script> variant 5');input.checked=true;input.dispatch('change');
+  const state=ui.exportCatalogSelection();assert.equal(state.groups[0].requested_variant_percent,null);assert.equal(state.groups[0].selected_case_count,65);
+  const search=host.querySelectorAll('input').find(n=>n.getAttribute('aria-label')==='Find labels or values');search.value='not present';search.dispatch('input');
+  assert.equal(host.querySelectorAll('[data-catalog-sequence]').length,2);assert.deepEqual(ui.exportCatalogSelection().groups,state.groups);
+  const saved=ui.exportCatalogSelection();clickNamed(host,'Clear variants');assert.equal(host.querySelectorAll('[data-catalog-sequence]').length,0);
+  ui.restoreCatalogSelection(saved);assert.deepEqual(ui.exportCatalogSelection(),saved);assert.match(ui.exportSVG(),/pix.trace_catalog_selection.v1/);
+  assert.throws(()=>ui.restoreCatalogSelection({...saved,catalog_id:'wrong'}),/different catalog/);assert.deepEqual(ui.exportCatalogSelection(),saved);
+  const bad=structuredClone(saved);bad.groups[0].selected_case_count=99;assert.throws(()=>ui.restoreCatalogSelection(bad),/case count/);assert.deepEqual(ui.exportCatalogSelection(),saved);
+});
+test('catalog pagination and render limits preserve full selection',async()=>{
+  const host=container(),ui=UI.mount(host,documentFor(catalogFixture()),{layoutEngine:'native',limits:{tablePageSize:2,comparisonCells:2}});await ui.ready;
+  assert.match(host.textContent,/display cell limit/);assert.equal(ui.exportCatalogSelection().groups[0].selected_case_count,60);
+  assert.match(host.textContent,/1–2 of 5/);clickNamed(host,'Next variants');assert.match(host.textContent,/3–4 of 5/);
+  clickNamed(host,'Top 100% variants');assert.equal(ui.exportCatalogSelection().groups[0].selected_variant_ids.length,5);
+});

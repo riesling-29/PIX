@@ -50,3 +50,6 @@
 .pv-comparison-screen .pv-fields{display:grid;grid-template-columns:minmax(110px,190px) 1fr;gap:8px 18px}
 .pv-comparison-screen .pv-fields dt,.pv-comparison-screen .pv-fields dd{margin:0}
 @media(max-width:680px){.pv-comparison-controls{padding:15px}.pv-comparison-groups{grid-template-columns:1fr}.pv-comparison-screen .pv-fields{grid-template-columns:1fr}.pv-comparison-screen .pv-canvas{height:420px}}
+
+/* Complete catalog table scrolls independently of selected sequence drawing. */
+.pv-catalog-table-wrap{max-height:380px;overflow:auto;max-width:100%;border:1px solid #dbe3e8;border-radius:8px}.pv-catalog-table-wrap .pv-table{min-width:680px}.pv-catalog-table-wrap th{position:sticky;top:0;background:#f2f6f8}.pv-catalog-table-wrap td{white-space:normal;overflow-wrap:anywhere}.pv-comparison-card input[type=number]{width:90px;margin:8px 8px 0 0;padding:6px}.pv-comparison-settings input[type=file]{max-width:220px}.pv-catalog-message{color:#934522;overflow-wrap:anywhere}.pv-comparison-screen .pv-comparison-controls{min-width:0;max-width:100%}
