@@ -10,6 +10,7 @@ import json
 from dataclasses import fields
 
 from pix.case_centric.sequence_alignment import EditMove
+from pix.case_centric.trace_catalog import TraceCatalogGroup, TraceVariant
 from pix.case_centric.trace_comparison import (
     RepresentativeAlignment,
     TraceComparisonGroup,
@@ -29,6 +30,7 @@ from pix.viewer.visual_contracts import (
     TimelineItem,
     TimelineLane,
     TimelinePanel,
+    TraceCatalogPanel,
     TraceComparisonPanel,
     VisualEdge,
     VisualField,
@@ -39,6 +41,8 @@ from pix.viewer.visual_contracts import (
 )
 
 _TYPES = (
+    TraceCatalogGroup,
+    TraceVariant,
     EditMove,
     RepresentativeAlignment,
     TraceComparisonGroup,
@@ -56,6 +60,7 @@ _TYPES = (
     TimelineItem,
     TimelineLane,
     TimelinePanel,
+    TraceCatalogPanel,
     TraceComparisonPanel,
     VisualEdge,
     VisualField,
@@ -65,6 +70,7 @@ _TYPES = (
     VisualProvenance,
 )
 _PANELS = {
+    "trace_catalog": TraceCatalogPanel,
     "graph": GraphPanel,
     "matrix": MatrixPanel,
     "chart": ChartPanel,
@@ -74,6 +80,8 @@ _PANELS = {
     "table": TablePanel,
 }
 _NESTED = {
+    (TraceCatalogPanel, "groups"): TraceCatalogGroup,
+    (TraceCatalogPanel, "variants"): TraceVariant,
     (TraceComparisonPanel, "groups"): TraceComparisonGroup,
     (TraceComparisonPanel, "candidates"): TraceRepresentative,
     (TraceComparisonPanel, "alignments"): RepresentativeAlignment,
@@ -104,6 +112,13 @@ for _owner in (
 ):
     _NESTED[(_owner, "details")] = VisualField
 _SCALAR_LISTS = {
+    (TraceCatalogPanel, "unassigned_case_ids"),
+    (TraceCatalogGroup, "case_ids"),
+    (TraceCatalogGroup, "variant_ids"),
+    (TraceCatalogGroup, "selected_variant_ids"),
+    (TraceVariant, "activities"),
+    (TraceVariant, "case_ids"),
+    (TraceVariant, "event_ids"),
     (TraceComparisonPanel, "unassigned_case_ids"),
     (TraceComparisonGroup, "case_ids"),
     (TraceComparisonGroup, "candidate_ids"),

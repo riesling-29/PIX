@@ -13,6 +13,11 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import TypeAlias
 
+from pix.case_centric.trace_catalog import (
+    TraceCatalogGroup,
+    TraceVariant,
+    TraceVariantCatalog,
+)
 from pix.case_centric.trace_comparison import (
     RepresentativeAlignment,
     TraceComparisonGroup,
@@ -380,6 +385,31 @@ class TimelinePanel:
 
 
 @dataclass(frozen=True, slots=True)
+class TraceCatalogPanel:
+    id: str
+    title: str
+    catalog_id: str
+    groups: tuple[TraceCatalogGroup, ...]
+    variants: tuple[TraceVariant, ...]
+    source_case_count: int
+    unassigned_case_ids: tuple[str, ...]
+    top_variant_percent: int
+    description: str = ""
+    kind: str = field(default="trace_catalog", init=False)
+
+    def __post_init__(self):
+        _panel(self.id, self.title, self.description)
+        _text(self.catalog_id, "catalog ID", nonempty=True)
+        TraceVariantCatalog(
+            self.groups,
+            self.variants,
+            self.source_case_count,
+            self.unassigned_case_ids,
+            self.top_variant_percent,
+        )
+
+
+@dataclass(frozen=True, slots=True)
 class TraceComparisonPanel:
     """Precomputed group candidates and pairwise witnesses in one display."""
 
@@ -525,6 +555,7 @@ VisualPanel: TypeAlias = (
     | MatrixPanel
     | ChartPanel
     | TimelinePanel
+    | TraceCatalogPanel
     | TraceComparisonPanel
     | ChevronPanel
     | TablePanel
@@ -579,6 +610,7 @@ class VisualizationDocument:
                 MatrixPanel,
                 ChartPanel,
                 TimelinePanel,
+                TraceCatalogPanel,
                 TraceComparisonPanel,
                 ChevronPanel,
                 TablePanel,

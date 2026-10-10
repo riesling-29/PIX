@@ -12,6 +12,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from typing import ClassVar
 
+from pix.case_centric._trace_variants import ranked_activity_variants
 from pix.case_centric.sequence_alignment import EditMove, SequenceAlignmentSpec, _edit
 from pix.compute._common import _derived_result
 from pix.contracts.case_log import CaseTraceSpec
@@ -345,10 +346,8 @@ def compare_trace_groups(
     candidates, summaries, issues = [], [], []
     for index, group in enumerate(groups):
         gid = f"group:{index}"
-        variants = defaultdict(list)
-        for cid in group.case_ids:
-            variants[tuple(e.activity for e in by_id[cid].events)].append(cid)
-        ordered = sorted(variants, key=lambda word: (-len(variants[word]), word))
+        variants = dict(ranked_activity_variants(by_id, group.case_ids))
+        ordered = list(variants)
         retained = ordered[: spec.candidates_per_group]
         manual_word = None
         if group.representative_case_id is not None:

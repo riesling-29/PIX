@@ -18,6 +18,7 @@ from .visual_contracts import (
     TimelineItem,
     TimelineLane,
     TimelinePanel,
+    TraceCatalogPanel,
     TraceComparisonPanel,
     VisualEdge,
     VisualField,
@@ -71,6 +72,7 @@ __all__ = (
     "TimelineLane",
     "TimelineItem",
     "TimelinePanel",
+    "TraceCatalogPanel",
     "TraceComparisonPanel",
     "TablePanel",
 )
