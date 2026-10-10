@@ -29,7 +29,32 @@ CI는 Linux 3.10/3.12, Windows 3.13, macOS 3.13 전체 회귀와 격리 wheel,
 통과했고, 기존 간선 라벨 클릭 영역 결함을 발견해 수정했다. 실제 스크린샷 검토에서는
 중복 진단 수백 줄이 화면을 밀어내는 문제를 확인해 동일 문구를 횟수로 요약했다.
 원본 진단의 occurrence/위치는 metadata·계산 JSON에 그대로 보존한다.
-Windows 전체 회귀는 통과했지만 vendor 라이선스의 checkout 줄바꿈 변환으로 wheel provenance hash가 달라졌다. vendor 파일의 원본 bytes 보존을 Git 속성으로 고정했다. 최종 CI 결과는 아래에 갱신한다. workflow 존재만으로 통과를 뜻하지 않는다.
+Windows 전체 회귀는 통과했지만 vendor 라이선스의 checkout 줄바꿈 변환으로 wheel provenance hash가 달라졌다. vendor 파일의 원본 bytes 보존을 Git 속성으로 고정했다. 수정 후 아래 CI의 모든 job이 통과했다.
+
+검증한 제품 코드 SHA: `2a8838832d839f6bb7efcc7fa82228e46d588dc6`.
+[CI run 38039176541](https://github.com/Chanta-Research-Group/PIX/actions/runs/38039176541).
+이후 문서·증거 기록 커밋은 제품/테스트/workflow를 변경하지 않는다.
+
+| 환경 | 전체 pytest | 격리 wheel |
+| --- | --- | --- |
+| Linux Python 3.10.22 | 10,626 passed, 42 skipped, 1,169 subtests | mining·visualization 통과 |
+| Linux Python 3.12.15 | 10,626 passed, 42 skipped, 1,169 subtests | mining·visualization 통과 |
+| macOS Python 3.13.15 | 10,626 passed, 42 skipped, 1,169 subtests | mining·visualization 통과 |
+| Windows Python 3.13.15 | 10,627 passed, 41 skipped, 1,169 subtests | mining·visualization 통과 |
+| Node 24.21.0 | 258 passed (visualization UI 52 포함) | 해당 없음 |
+| Chromium 153.0.8010.12 | 실제 browser suite 42 passed | offline·export 포함 |
+
+CI Python job은 browser extra 없이 실행하고 실제 browser는 별도 job이 담당한다.
+로컬 54 skips와 CI 42 skips는 optional browser 설치 및 조건 수집 차이를 포함한다.
+미실행 XES 외부 corpus·다른 browser engine·대규모 성능을 통과로 세지 않는다.
+Desktop/390px 화면을 직접 열어 확인했고, catalog의 7개 흐름과 선택 SVG metadata,
+외부 HTTP 요청 0건·console/page error 0건을 확인했다.
+
+Linux 3.12 검증 wheel SHA-256:
+`a61c01ec4d959f20783e3f686550d15200c6241fb4cfd9826d47ee08c358afc2`.
+이는 해당 CI 빌드 bytes의 hash이며 재빌드한 ZIP bytes의 동일성까지 약속하지 않는다.
+[기계 판독 실행 기록](variant-catalog-2026-10-10/evidence.json)에 job ID와 원본 파일 hash를 보존한다.
+Actions의 전체 로그·스크린샷·artifact는 보존 정책(현재 14일)을 따른다.
 
 ## 재현과 소비
 

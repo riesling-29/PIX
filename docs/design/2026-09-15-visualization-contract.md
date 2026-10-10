@@ -21,10 +21,11 @@
 | `ChartPanel` | `id, title, chart_type, series, x_type, x_label, y_label, x_unit, y_unit, description` | 막대·선·산점도. |
 | `TimelinePanel` | `id, title, lanes, items, axis_type, unit, description` | 객체·케이스별 실제 시각 또는 상대 순서. |
 | `ChevronPanel` | `id, title, lanes, events, variant_id, frequency, population, description` | 객체 instance별 OC execution의 선행관계 슬롯과 공유 사건. |
+| `TraceCatalogPanel` | `id, title, catalog_id, groups, variants, source_case_count, unassigned_case_ids, top_variant_percent, description` | 2026-10-10 추가. 완전한 빈도 목록과 variant 개수 비중의 복수 선택. |
 | `TraceComparisonPanel` | `id, title, groups, candidates, alignments, reference_group_id, source_case_count, unassigned_case_ids, description` | 2026-10-07 추가. 그룹 대표 후보와 사전 계산한 방향별 편집 witness를 한 패널에서 선택·비교. |
 | `TablePanel` | `id, title, columns, rows, description` | 타입을 유지한 원시 근거와 상세 값. |
 
-패널의 `kind`는 생성자가 설정한다. 각각 `graph`, `matrix`, `chart`, `timeline`, `chevron`, `table`, `trace_comparison`이며 임의로 다른 종류를 선언할 수 없다. 문서의 `status`는 `ok`, `partial`, `unsupported`, `error` 중 하나다. 이는 시각화 문서의 표시 상태다. 원본 계산의 상태는 `VisualProvenance.status`에 원래 문자열 그대로 보존하며, `ok`가 계산의 정확성을 인증하지 않는다.
+패널의 `kind`는 생성자가 설정한다. 각각 `graph`, `matrix`, `chart`, `timeline`, `chevron`, `table`, `trace_comparison`, `trace_catalog`이며 임의로 다른 종류를 선언할 수 없다. 문서의 `status`는 `ok`, `partial`, `unsupported`, `error` 중 하나다. 이는 시각화 문서의 표시 상태다. 원본 계산의 상태는 `VisualProvenance.status`에 원래 문자열 그대로 보존하며, `ok`가 계산의 정확성을 인증하지 않는다.
 
 `VisualProvenance.panel_ids`는 해당 출처에 속하는 패널 ID의 튜플이다. 중복과 빈 ID는 허용하지 않고, 명시한 모든 ID는 문서에 실제로 존재해야 한다. `input_path`는 합성 문서 안에서 입력이 온 위치를 나타내는 0 이상의 정수 튜플이며, bool은 허용하지 않는다. 예를 들어 `(1, 0)`은 두 번째 입력 안의 첫 번째 입력이다. 합성 시 패널 ID에 prefix를 붙이면 이 참조도 함께 변경하고, 중첩 입력 경로도 유지해야 한다. 이 두 필드는 기존 `details` 뒤에 추가되어 기존 위치 인자 호출을 유지한다.
 
@@ -138,3 +139,16 @@ optimal 표시는 계산이 공급한 상태이며 codec이 최적해를 재계�
 사전 계산 evidence의 선택이다. SVG에는 선택한 그룹/대표/기준/필터를 기록한다.
 기준 앞·사이·뒤의 삽입 슬롯은 순서만 보존하며 대상 그룹끼리의 대응을 주장하지 않는다.
 자세한 사용 및 한도는 [그룹 비교 가이드](../user-guide/TRACE_GROUP_COMPARISON_GUIDE.md)에 있다.
+
+
+## 빈도 catalog 추가 계약 (2026-10-10)
+
+`trace_catalog`는 완전한 활동 tuple 빈도 목록이다. 그룹·variant membership이
+원 모집단을 분할하며 rank·누적 case 수·상위 variant 개수 prefix를 codec에서 검증한다.
+0~100 정수 비중은 ceil(V*p/100)개를 뜻한다. case coverage는 다른 분모의 지표다.
+빈 그룹의 비율은 N/A, 빈 sequence는 유효하며 미라벨 case를 별도 보존한다.
+브라우저 선택은 `pix.trace_catalog_selection.v1`이고 원 계산을 수정하지 않는다.
+source·계산·payload에 결합된 catalog_id와 그룹·선택 ID·count·prefix를 검증한다.
+SVG는 선택 metadata와 원본 근거를 보존한다. 중복 진단은 화면에서 횟수로 요약하되
+원 occurrence 근거는 제거하지 않는다. 새 kind를 모르는 기존 reader는 거부한다.
+[가이드](../user-guide/TRACE_VARIANT_CATALOG_GUIDE.md)와 [검증](../reports/2026-10-10_PIX_VARIANT_CATALOG_HANDOFF.md)을 참고한다.
